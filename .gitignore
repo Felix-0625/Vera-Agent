@@ -7,6 +7,8 @@ pi-agent/
 piagent/
 pi_agent/
 .pi-agent/
+DESIGN_NOTES.md
+*.notes.md
 
 # ==========================================
 # Python 虚拟环境与构建缓存
