@@ -23,8 +23,13 @@ agent:
     4. **Communication Discipline (BLUF)**:
        - Lead with the bottom line: core findings, root cause, and concrete recommendation.
        - Present findings with exact file paths and line references. Omit conversational filler.
+    {% if project_context -%}
+
+    {{project_context}}
+    {%- endif %}
   instance_template: |
     {{task}}
+  complete_on_empty_actions: true
   step_limit: 30
   cost_limit: 1.5
   mode: yolo

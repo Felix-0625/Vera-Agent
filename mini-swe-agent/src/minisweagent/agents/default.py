@@ -12,8 +12,43 @@ from jinja2 import StrictUndefined, Template
 from pydantic import BaseModel
 
 from minisweagent import Environment, Model, __version__
-from minisweagent.exceptions import FormatError, InterruptAgentFlow, LimitsExceeded, TimeExceeded
+from minisweagent.exceptions import FormatError, InterruptAgentFlow, LimitsExceeded, Submitted, TimeExceeded
 from minisweagent.utils.serialize import recursive_merge
+
+
+def load_project_context(start_dir: Path | None = None) -> str:
+    """Load AGENTS.md or CLAUDE.md from the directory hierarchy, similar to pi-agent."""
+    current = Path(start_dir or Path.cwd()).resolve()
+    found_files = []
+    while True:
+        for name in ("AGENTS.md", "CLAUDE.md"):
+            candidate = current / name
+            if candidate.is_file():
+                found_files.append(candidate)
+                break
+        if (current / ".git").exists() or current.parent == current:
+            break
+        current = current.parent
+
+    if not found_files:
+        return ""
+
+    sections = []
+    start = Path(start_dir or Path.cwd()).resolve()
+    for file_path in reversed(found_files):
+        try:
+            content = file_path.read_text(encoding="utf-8")
+            try:
+                display_path = str(file_path.relative_to(start))
+            except ValueError:
+                display_path = file_path.name
+            sections.append(f'<project_instructions path="{display_path}">\n{content}\n</project_instructions>')
+        except Exception:
+            pass
+
+    if sections:
+        return "# Project Context\n\nThe following project context files have been loaded:\n\n" + "\n\n".join(sections)
+    return ""
 
 
 class AgentConfig(BaseModel):
@@ -25,6 +60,8 @@ class AgentConfig(BaseModel):
     """Template for the first user message specifying the task (the second message overall)."""
     role: str = "main"
     """Agent role (e.g., 'main', 'researcher', 'reviewer')."""
+    complete_on_empty_actions: bool = False
+    """Automatically submit and complete turn when the model produces no actions (Pi-agent style for subagents/batch)."""
     step_limit: int = 0
     """Maximum number of steps the agent can take."""
     cost_limit: float = 3.0
@@ -60,6 +97,7 @@ class DefaultAgent:
                 "n_model_calls": self.n_calls,
                 "model_cost": self.cost,
                 "elapsed_seconds": int(time.time() - self._start_time),
+                "project_context": load_project_context(),
             },
             self.extra_template_vars,
             kwargs,
@@ -155,7 +193,16 @@ class DefaultAgent:
 
     def execute_actions(self, message: dict) -> list[dict]:
         """Execute actions in message, add observation messages, return them."""
-        outputs = [self.env.execute(action) for action in message.get("extra", {}).get("actions", [])]
+        actions = message.get("extra", {}).get("actions", [])
+        if not actions and self.config.complete_on_empty_actions:
+            raise Submitted(
+                {
+                    "role": "exit",
+                    "content": message.get("content", ""),
+                    "extra": {"exit_status": "Submitted", "submission": message.get("content", "")},
+                }
+            )
+        outputs = [self.env.execute(action) for action in actions]
         return self.add_messages(*self.model.format_observation_messages(message, outputs, self.get_template_vars()))
 
     def serialize(self, *extra_dicts) -> dict:

@@ -23,8 +23,13 @@ agent:
     4. **Communication Discipline (BLUF)**:
        - Lead with the verdict upfront: clearly state `[STATUS: PASS]` or `[STATUS: BLOCKED / FAIL]` with a one-sentence bottom-line summary.
        - Provide clear, actionable bullet points directly pointing to file paths and line ranges. Avoid unsolicited lectures.
+    {% if project_context -%}
+
+    {{project_context}}
+    {%- endif %}
   instance_template: |
     {{task}}
+  complete_on_empty_actions: true
   step_limit: 30
   cost_limit: 1.5
   mode: yolo

@@ -19,6 +19,10 @@ agent:
        - **Lead with Conclusion**: Deliver the direct answer, result, or core recommendation upfront at the beginning.
        - **No Unsolicited Elaboration**: Keep responses concise and factual. Do not provide unrequested explanations, deep dives, or lectures unless the user explicitly prompts for details.
        - **Zero Fluff**: Omit conversational filler, obvious self-narration, and repetitive action recaps.
+    {% if project_context -%}
+
+    {{project_context}}
+    {%- endif %}
   instance_template: |
     {{task}}
   step_limit: 0
