@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from minisweagent import Environment, Model, __version__
 from minisweagent.exceptions import FormatError, InterruptAgentFlow, LimitsExceeded, Submitted, TimeExceeded
+from minisweagent.session import ThreadSession
 from minisweagent.utils.serialize import recursive_merge
 
 
@@ -78,7 +79,15 @@ class DefaultAgent:
     def __init__(self, model: Model, env: Environment, *, config_class: type = AgentConfig, **kwargs):
         """See the `AgentConfig` class for permitted keyword arguments."""
         self.config = config_class(**kwargs)
-        self.messages: list[dict] = []
+        session = kwargs.get("session")
+        if session is not None and isinstance(session, ThreadSession):
+            self.session = session
+        else:
+            self.session = ThreadSession(
+                role=self.config.role,
+                metadata={"config": self.config.model_dump(mode="json")},
+            )
+        self.messages: list[dict] = self.session.messages
         self.model = model
         self.env = env
         self.extra_template_vars = {}
@@ -108,8 +117,7 @@ class DefaultAgent:
 
     def add_messages(self, *messages: dict) -> list[dict]:
         self.logger.debug(messages)  # set log level to debug to see
-        self.messages.extend(messages)
-        return list(messages)
+        return self.session.add_messages(*messages)
 
     def handle_uncaught_exception(self, e: Exception) -> list[dict]:
         return self.add_messages(
@@ -128,7 +136,7 @@ class DefaultAgent:
     def run(self, task: str = "", **kwargs) -> dict:
         """Run step() until agent is finished. Returns dictionary with exit_status, submission keys."""
         self.extra_template_vars |= {"task": task, **kwargs}
-        self.messages = []
+        self.session.messages.clear()
         self.add_messages(
             self.model.format_message(role="system", content=self._render_template(self.config.system_template)),
             self.model.format_message(role="user", content=self._render_template(self.config.instance_template)),
@@ -186,8 +194,11 @@ class DefaultAgent:
                 }
             )
         self.n_calls += 1
+        self.session.n_calls = self.n_calls
         message = self.model.query(self.messages)
-        self.cost += message.get("extra", {}).get("cost", 0.0)
+        cost_inc = message.get("extra", {}).get("cost", 0.0)
+        self.cost += cost_inc
+        self.session.add_cost(cost_inc)
         self.add_messages(message)
         return message
 
@@ -207,6 +218,8 @@ class DefaultAgent:
 
     def serialize(self, *extra_dicts) -> dict:
         """Serialize agent state to a json-compatible nested dictionary for saving."""
+        self.session.cost = self.cost
+        self.session.n_calls = self.n_calls
         last_message = self.messages[-1] if self.messages else {}
         last_extra = last_message.get("extra", {})
         agent_data = {
@@ -219,6 +232,7 @@ class DefaultAgent:
                     "agent": self.config.model_dump(mode="json"),
                     "agent_type": f"{self.__class__.__module__}.{self.__class__.__name__}",
                 },
+                "session": self.session.to_dict(),
                 "mini_version": __version__,
                 "exit_status": last_extra.get("exit_status", ""),
                 "submission": last_extra.get("submission", ""),
@@ -227,6 +241,12 @@ class DefaultAgent:
             "trajectory_format": "mini-swe-agent-1.1",
         }
         return recursive_merge(agent_data, self.model.serialize(), self.env.serialize(), *extra_dicts)
+
+    def export_handover_summary(self, target_role: str = "main", extra_notes: str = "") -> str:
+        """从当前会话导出结构化上下文交接简报。"""
+        self.session.cost = self.cost
+        self.session.n_calls = self.n_calls
+        return self.session.export_handover_summary(target_role=target_role, extra_notes=extra_notes)
 
     def save(self, path: Path | None, *extra_dicts) -> dict:
         """Save the trajectory of the agent to a file if path is given. Returns full serialized data.
