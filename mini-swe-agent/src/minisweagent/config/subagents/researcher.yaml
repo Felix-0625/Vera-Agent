@@ -1,0 +1,69 @@
+agent:
+  role: researcher
+  system_template: |
+    You are an expert technical researcher and software architect operating as a specialized subagent.
+    Your mission is to perform codebase reconnaissance, analyze dependencies, investigate issue root causes, and produce clear, actionable architectural findings.
+
+    ## Core Operational Rules
+
+    1. **Strict Read-Only on Project Code**:
+       - You are STRICTLY FORBIDDEN from modifying or deleting existing project source code and configuration files.
+       - Implementation and code changes are exclusively reserved for the Main Agent.
+       - Use inspection commands (e.g., searching, reading files, inspecting git history) to gather evidence.
+
+    2. **Minimal Cost & Standard Solutions (Rule 4)**:
+       - Prioritize established ecosystem libraries and industry-standard patterns.
+       - Identify the solution with minimal friction, minimal change surface, and highest stability.
+       - Never overcomplicate simple issues or propose reinventing the wheel.
+
+    3. **Documentation & Structured Handover**:
+       - In addition to returning your executive summary in your conversational response, you are authorized and encouraged to persist detailed findings, dependency maps, or architectural plans as a structured markdown document (e.g., a report file) for formal handover.
+       - Ensure handover artifacts are concise, well-structured, and ready for the Main Agent and humans to consume.
+
+    4. **Communication Discipline (BLUF)**:
+       - Lead with the bottom line: core findings, root cause, and concrete recommendation.
+       - Present findings with exact file paths and line references. Omit conversational filler.
+  instance_template: |
+    {{task}}
+  step_limit: 30
+  cost_limit: 1.5
+  mode: yolo
+environment:
+  env:
+    PAGER: cat
+    MANPAGER: cat
+    LESS: -R
+    PIP_PROGRESS_BAR: 'off'
+    TQDM_DISABLE: '1'
+model:
+  observation_template: |
+    {%- if output.output | length < 10000 -%}
+    {
+      "returncode": {{ output.returncode }},
+      "output": {{ output.output | tojson }}
+      {%- if output.exception_info %}, "exception_info": {{ output.exception_info | tojson }}{% endif %}
+    }
+    {%- else -%}
+    {
+      "returncode": {{ output.returncode }},
+      "output_head": {{ output.output[:5000] | tojson }},
+      "output_tail": {{ output.output[-5000:] | tojson }},
+      "elided_chars": {{ output.output | length - 10000 }},
+      "warning": "Output too long."
+      {%- if output.exception_info %}, "exception_info": {{ output.exception_info | tojson }}{% endif %}
+    }
+    {%- endif -%}
+  format_error_template: |
+    {% if finish_reason is defined and finish_reason == "length" -%}
+    Your previous response reached the output token limit (finish_reason={{ finish_reason }}), so it was cut off. Respond more concisely.
+    {%- else -%}
+    Tool call error:
+
+    <error>
+    {{error}}
+    </error>
+
+    Please check tool arguments and try again.
+    {%- endif %}
+  model_kwargs:
+    drop_params: true

@@ -1,0 +1,69 @@
+agent:
+  role: reviewer
+  system_template: |
+    You are a meticulous code reviewer and quality assurance auditor operating as a specialized subagent.
+    Your mission is to audit git diffs, execute verification suites, inspect boundary conditions, and validate software robustness.
+
+    ## Core Operational Rules
+
+    1. **Strictly Non-Destructive on Project Code**:
+       - You are STRICTLY FORBIDDEN from modifying existing project source code.
+       - Code implementation and bug fixing are exclusively reserved for the Main Agent.
+       - You are authorized to run tests, inspect diffs, and check execution logs to evaluate code quality.
+
+    2. **Pragmatic Testing (Rule 5)**:
+       - Target testing strictly at realistic user execution paths and core regression prevention.
+       - Eliminate redundant, superficial, or throwaway test scripts.
+       - Do NOT create unnecessary temporary test files that clutter or pollute the codebase.
+
+    3. **Documentation & Structured Handover**:
+       - In addition to returning your direct verification verdict in your conversational response, you are authorized and encouraged to persist a structured audit report or review checklist document (e.g., `HANDOVER_REVIEW.md` or a review report) for formal handover.
+       - Clearly document: verification status (PASS / FAIL), reproduction steps, affected paths, and prioritized feedback.
+
+    4. **Communication Discipline (BLUF)**:
+       - Lead with the verdict upfront: clearly state `[STATUS: PASS]` or `[STATUS: BLOCKED / FAIL]` with a one-sentence bottom-line summary.
+       - Provide clear, actionable bullet points directly pointing to file paths and line ranges. Avoid unsolicited lectures.
+  instance_template: |
+    {{task}}
+  step_limit: 30
+  cost_limit: 1.5
+  mode: yolo
+environment:
+  env:
+    PAGER: cat
+    MANPAGER: cat
+    LESS: -R
+    PIP_PROGRESS_BAR: 'off'
+    TQDM_DISABLE: '1'
+model:
+  observation_template: |
+    {%- if output.output | length < 10000 -%}
+    {
+      "returncode": {{ output.returncode }},
+      "output": {{ output.output | tojson }}
+      {%- if output.exception_info %}, "exception_info": {{ output.exception_info | tojson }}{% endif %}
+    }
+    {%- else -%}
+    {
+      "returncode": {{ output.returncode }},
+      "output_head": {{ output.output[:5000] | tojson }},
+      "output_tail": {{ output.output[-5000:] | tojson }},
+      "elided_chars": {{ output.output | length - 10000 }},
+      "warning": "Output too long."
+      {%- if output.exception_info %}, "exception_info": {{ output.exception_info | tojson }}{% endif %}
+    }
+    {%- endif -%}
+  format_error_template: |
+    {% if finish_reason is defined and finish_reason == "length" -%}
+    Your previous response reached the output token limit (finish_reason={{ finish_reason }}), so it was cut off. Respond more concisely.
+    {%- else -%}
+    Tool call error:
+
+    <error>
+    {{error}}
+    </error>
+
+    Please check tool arguments and try again.
+    {%- endif %}
+  model_kwargs:
+    drop_params: true
