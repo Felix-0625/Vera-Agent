@@ -38,18 +38,7 @@ def parse_toolcall_actions(
     """
     template_kwargs = template_kwargs or {}
     if not tool_calls:
-        raise FormatError(
-            {
-                "role": "user",
-                "content": Template(format_error_template, undefined=StrictUndefined).render(
-                    error="No tool calls found in the response. Every response MUST include at least one tool call.",
-                    actions=[],
-                    has_tool_calls=False,
-                    **template_kwargs,
-                ),
-                "extra": {"interrupt_type": "FormatError"},
-            }
-        )
+        return []
     actions = []
     for tool_call in tool_calls:
         error_msg = ""

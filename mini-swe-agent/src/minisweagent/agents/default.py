@@ -23,6 +23,8 @@ class AgentConfig(BaseModel):
     """Template for the system message (the first message)."""
     instance_template: str
     """Template for the first user message specifying the task (the second message overall)."""
+    role: str = "main"
+    """Agent role (e.g., 'main', 'researcher', 'reviewer')."""
     step_limit: int = 0
     """Maximum number of steps the agent can take."""
     cost_limit: float = 3.0

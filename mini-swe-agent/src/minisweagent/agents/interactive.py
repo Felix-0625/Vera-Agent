@@ -124,6 +124,20 @@ class InteractiveAgent(DefaultAgent):
     def execute_actions(self, message: dict) -> list[dict]:
         # Override to handle user confirmation and confirm_exit, with try/finally to preserve partial outputs
         actions = message.get("extra", {}).get("actions", [])
+        if not actions:
+            # Model responded with plain text (natural chat, report, or question)
+            prompt = "\n[bold yellow]>[/bold yellow] "
+            user_input = self._prompt_and_handle_slash_commands(prompt).strip()
+            if not user_input:
+                raise Submitted(
+                    {
+                        "role": "exit",
+                        "content": message.get("content", ""),
+                        "extra": {"exit_status": "UserExit", "submission": message.get("content", "")},
+                    }
+                )
+            return self.add_messages({"role": "user", "content": user_input})
+
         commands = [action["command"] for action in actions]
         outputs = []
         try:
