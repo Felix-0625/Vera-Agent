@@ -4,7 +4,7 @@ import pytest
 
 from minisweagent.exceptions import FormatError
 from minisweagent.models.litellm_model import LitellmModel, LitellmModelConfig
-from minisweagent.models.utils.actions_toolcall import BASH_TOOL
+from minisweagent.models.utils.actions_toolcall import ALL_TOOLS, BASH_TOOL
 
 
 class TestLitellmModelConfig:
@@ -24,7 +24,7 @@ def _mock_litellm_response(tool_calls):
 class TestLitellmModel:
     @patch("minisweagent.models.litellm_model.litellm.completion")
     @patch("minisweagent.models.litellm_model.litellm.cost_calculator.completion_cost")
-    def test_query_includes_bash_tool(self, mock_cost, mock_completion):
+    def test_query_includes_all_tools(self, mock_cost, mock_completion):
         tool_call = MagicMock()
         tool_call.function.name = "bash"
         tool_call.function.arguments = '{"command": "echo test"}'
@@ -36,7 +36,7 @@ class TestLitellmModel:
         model.query([{"role": "user", "content": "test"}])
 
         mock_completion.assert_called_once()
-        assert mock_completion.call_args.kwargs["tools"] == [BASH_TOOL]
+        assert mock_completion.call_args.kwargs["tools"] == ALL_TOOLS
 
     @patch("minisweagent.models.litellm_model.litellm.completion")
     @patch("minisweagent.models.litellm_model.litellm.cost_calculator.completion_cost")

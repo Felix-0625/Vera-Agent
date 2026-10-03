@@ -2,11 +2,13 @@ import os
 import platform
 import signal
 import subprocess
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
 
 from minisweagent.exceptions import Submitted
+from minisweagent.tools import edit_file_op, read_file_op, write_file_op
 from minisweagent.utils.serialize import recursive_merge
 
 
@@ -18,15 +20,38 @@ class LocalEnvironmentConfig(BaseModel):
 
 class LocalEnvironment:
     def __init__(self, *, config_class: type = LocalEnvironmentConfig, **kwargs):
-        """This class executes bash commands directly on the local machine."""
+        """This class executes tools and bash commands directly on the local machine."""
         self.config = config_class(**kwargs)
 
     def execute(self, action: dict, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
-        """Execute a command in the local environment and return the result as a dict."""
+        """Execute a tool action (read, write, edit, bash) in the local environment."""
+        tool_name = action.get("tool_name")
+        cwd_path = Path(cwd or self.config.cwd or os.getcwd()).resolve()
+
+        if tool_name == "read":
+            return read_file_op(
+                path=action["path"],
+                offset=action.get("offset", 1),
+                limit=action.get("limit", 2000),
+                base_dir=cwd_path,
+            )
+        elif tool_name == "write":
+            return write_file_op(
+                path=action["path"],
+                content=action["content"],
+                base_dir=cwd_path,
+            )
+        elif tool_name == "edit":
+            return edit_file_op(
+                path=action["path"],
+                edits=action.get("edits", []),
+                base_dir=cwd_path,
+            )
+
         command = action.get("command", "")
-        cwd = cwd or self.config.cwd or os.getcwd()
+        cwd_str = str(cwd_path)
         try:
-            result = _run(command, cwd, os.environ | self.config.env, timeout or self.config.timeout)
+            result = _run(command, cwd_str, os.environ | self.config.env, timeout or self.config.timeout)
             output = {"output": result.stdout, "returncode": result.returncode, "exception_info": ""}
         except Exception as e:
             raw_output = getattr(e, "output", None)
@@ -46,7 +71,16 @@ class LocalEnvironment:
         """Raises Submitted if the output indicates task completion."""
         lines = output.get("output", "").lstrip().splitlines(keepends=True)
         if lines and lines[0].strip().strip("'\"") == "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT" and output["returncode"] == 0:
-            submission = "".join(lines[1:])
+            if os.name == "nt":
+                submission_lines = []
+                for l in lines[1:]:
+                    stripped = l.strip()
+                    if (stripped.startswith("'") and stripped.endswith("'")) or (stripped.startswith('"') and stripped.endswith('"')):
+                        stripped = stripped[1:-1]
+                    submission_lines.append(stripped)
+                submission = "\n".join(submission_lines) + ("\n" if lines[1:] else "")
+            else:
+                submission = "".join(lines[1:])
             raise Submitted(
                 {
                     "role": "exit",
@@ -71,6 +105,8 @@ class LocalEnvironment:
 
 def _run(command: str, cwd: str, env: dict[str, str], timeout: int) -> subprocess.CompletedProcess[str]:
     """Like subprocess.run, but kills the whole process group on timeout so no children are orphaned."""
+    if os.name == "nt" and "\n" in command:
+        command = " & ".join(line.strip() for line in command.splitlines() if line.strip())
     process = subprocess.Popen(
         command,
         shell=True,

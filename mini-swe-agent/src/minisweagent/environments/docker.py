@@ -1,3 +1,5 @@
+import base64
+import json
 import logging
 import os
 import platform
@@ -98,12 +100,116 @@ class DockerEnvironment:
         self.logger.info(f"Started container {container_name} with ID {result.stdout.strip()}")
         self.container_id = result.stdout.strip()
 
+    def _execute_tool_in_container(self, action: dict, cwd: str, timeout: int | None = None) -> dict[str, Any]:
+        """Execute read, write, or edit inside the Docker container using Python."""
+        tool_name = action.get("tool_name")
+        payload = {
+            "tool_name": tool_name,
+            "path": action.get("path"),
+            "content": action.get("content"),
+            "edits": action.get("edits"),
+            "offset": action.get("offset", 1),
+            "limit": action.get("limit", 2000),
+            "cwd": cwd,
+        }
+        b64_payload = base64.b64encode(json.dumps(payload).encode("utf-8")).decode("ascii")
+        runner_code = (
+            "import base64, json, sys, difflib\n"
+            "from pathlib import Path\n"
+            f"payload = json.loads(base64.b64decode('{b64_payload}').decode('utf-8'))\n"
+            "tool_name = payload['tool_name']\n"
+            "cwd_path = Path(payload['cwd']).resolve()\n"
+            "target = (cwd_path / payload['path']).resolve()\n"
+            "\n"
+            "if tool_name == 'read':\n"
+            "    if not target.exists():\n"
+            "        res = {'output': f\"Error: File '{payload['path']}' not found.\", 'returncode': 1, 'exception_info': 'FileNotFound'}\n"
+            "    elif target.is_dir():\n"
+            "        res = {'output': f\"Error: '{payload['path']}' is a directory, not a file.\", 'returncode': 1, 'exception_info': 'IsADirectoryError'}\n"
+            "    else:\n"
+            "        try:\n"
+            "            content = target.read_text(encoding='utf-8', errors='replace')\n"
+            "            lines = content.splitlines()\n"
+            "            start_idx = max(0, payload['offset'] - 1)\n"
+            "            limit = payload['limit']\n"
+            "            end_idx = len(lines) if limit is None else min(len(lines), start_idx + limit)\n"
+            "            numbered = [f'{i+1:6d} | {l}' for i, l in enumerate(lines[start_idx:end_idx], start=start_idx)]\n"
+            "            out = f\"[File: {payload['path']} | Total lines: {len(lines)} | Showing lines {start_idx+1}-{end_idx}]\\n\" + '\\n'.join(numbered)\n"
+            "            if end_idx < len(lines):\n"
+            "                out += f\"\\n[... {len(lines) - end_idx} more lines truncated. Use offset={end_idx+1} to continue reading ...]\"\n"
+            "            res = {'output': out, 'returncode': 0, 'exception_info': ''}\n"
+            "        except Exception as e:\n"
+            "            res = {'output': f'Error reading file: {e}', 'returncode': 1, 'exception_info': str(e)}\n"
+            "\n"
+            "elif tool_name == 'write':\n"
+            "    try:\n"
+            "        target.parent.mkdir(parents=True, exist_ok=True)\n"
+            "        target.write_text(payload['content'], encoding='utf-8')\n"
+            "        res = {'output': f\"Successfully wrote {len(payload['content'])} characters ({len(payload['content'].splitlines())} lines) to '{payload['path']}'.\", 'returncode': 0, 'exception_info': ''}\n"
+            "    except Exception as e:\n"
+            "        res = {'output': f'Error writing file: {e}', 'returncode': 1, 'exception_info': str(e)}\n"
+            "\n"
+            "elif tool_name == 'edit':\n"
+            "    if not target.exists():\n"
+            "        res = {'output': f\"Error: File '{payload['path']}' not found.\", 'returncode': 1, 'exception_info': 'FileNotFound'}\n"
+            "    elif target.is_dir():\n"
+            "        res = {'output': f\"Error: '{payload['path']}' is a directory, not a file.\", 'returncode': 1, 'exception_info': 'IsADirectoryError'}\n"
+            "    else:\n"
+            "        try:\n"
+            "            orig = target.read_text(encoding='utf-8', errors='replace')\n"
+            "            content = orig.replace('\\r\\n', '\\n')\n"
+            "            err = None\n"
+            "            for i, ed in enumerate(payload['edits'], start=1):\n"
+            "                old_text = ed.get('oldText', '').replace('\\r\\n', '\\n')\n"
+            "                new_text = ed.get('newText', '').replace('\\r\\n', '\\n')\n"
+            "                if not old_text:\n"
+            "                    err = f\"Error in edit #{i}: 'oldText' cannot be empty.\"; break\n"
+            "                cnt = content.count(old_text)\n"
+            "                if cnt == 0:\n"
+            "                    err = f\"Error in edit #{i}: 'oldText' not found in '{payload['path']}'. Ensure exact match.\"; break\n"
+            "                if cnt > 1:\n"
+            "                    err = f\"Error in edit #{i}: 'oldText' matched {cnt} times in '{payload['path']}'. Provide more context.\"; break\n"
+            "                content = content.replace(old_text, new_text, 1)\n"
+            "            if err:\n"
+            "                res = {'output': err, 'returncode': 1, 'exception_info': 'EditError'}\n"
+            "            else:\n"
+            "                diff = ''.join(difflib.unified_diff(orig.replace('\\r\\n','\\n').splitlines(True), content.splitlines(True), fromfile=f\"a/{payload['path']}\", tofile=f\"b/{payload['path']}\"))\n"
+            "                final_content = content.replace('\\n', '\\r\\n') if '\\r\\n' in orig else content\n"
+            "                target.write_text(final_content, encoding='utf-8')\n"
+            "                res = {'output': f\"Successfully applied {len(payload['edits'])} edit(s) to '{payload['path']}':\\n\\n```diff\\n{diff}```\", 'returncode': 0, 'exception_info': ''}\n"
+            "        except Exception as e:\n"
+            "            res = {'output': f'Error editing file: {e}', 'returncode': 1, 'exception_info': str(e)}\n"
+            "print('__MSWEA_JSON_START__' + json.dumps(res))\n"
+        )
+        cmd = [self.config.executable, "exec", self.container_id, "python3", "-c", runner_code]
+        try:
+            result = subprocess.run(
+                cmd,
+                text=True,
+                timeout=timeout or self.config.timeout,
+                encoding="utf-8",
+                errors="replace",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+            stdout = result.stdout or ""
+            if "__MSWEA_JSON_START__" in stdout:
+                json_part = stdout.split("__MSWEA_JSON_START__", 1)[1].strip()
+                return json.loads(json_part)
+            return {"output": stdout, "returncode": result.returncode, "exception_info": ""}
+        except Exception as e:
+            return {"output": f"Error running tool '{tool_name}' in container: {e}", "returncode": 1, "exception_info": str(e)}
+
     def execute(self, action: dict, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
-        """Execute a command in the Docker container and return the result as a dict."""
-        command = action.get("command", "")
+        """Execute a tool action (read, write, edit, bash) in the Docker container."""
+        tool_name = action.get("tool_name")
         cwd = cwd or self.config.cwd
         assert self.container_id, "Container not started"
 
+        if tool_name in ("read", "write", "edit"):
+            return self._execute_tool_in_container(action, cwd, timeout=timeout)
+
+        command = action.get("command", "")
         cmd = [self.config.executable, "exec", "-w", cwd]
         for key in self.config.forward_env:
             if (value := os.getenv(key)) is not None:
