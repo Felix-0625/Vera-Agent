@@ -143,7 +143,11 @@ class InteractiveAgent(DefaultAgent):
         try:
             self._ask_confirmation_or_interrupt(commands)
             for action in actions:
-                outputs.append(self.env.execute(action))
+                tool_name = action.get("tool_name")
+                if tool_name in ("delegate_research", "delegate_review"):
+                    outputs.append(self.execute_subagent_tool(action))
+                else:
+                    outputs.append(self.env.execute(action))
         except Submitted as e:
             self._check_for_new_task_or_submit(e)
         finally:
@@ -209,8 +213,20 @@ class InteractiveAgent(DefaultAgent):
                 f"[bold green]/y[/bold green] to switch to [bold yellow]yolo[/bold yellow] mode (execute LM commands without confirmation)\n"
                 f"[bold green]/c[/bold green] to switch to [bold yellow]confirmation[/bold yellow] mode (ask for confirmation before executing LM commands)\n"
                 f"[bold green]/u[/bold green] to switch to [bold yellow]human[/bold yellow] mode (execute commands issued by the user)\n"
+                f"[bold green]/research [task][/bold green] to invoke Researcher subagent under context isolation\n"
+                f"[bold green]/review [task][/bold green] to invoke Reviewer subagent for quality audit\n"
                 f"[bold green]/m[/bold green] to enter multiline comment",
             )
+            return self._prompt_and_handle_slash_commands(prompt)
+        if user_input.startswith("/research ") or user_input == "/research":
+            task_arg = user_input[len("/research "):].strip() or "Perform codebase reconnaissance and dependency audit."
+            res = self.execute_subagent_tool({"tool_name": "delegate_research", "task": task_arg})
+            console.print(f"\n[bold cyan]{res['output']}[/bold cyan]\n")
+            return self._prompt_and_handle_slash_commands(prompt)
+        if user_input.startswith("/review ") or user_input == "/review":
+            task_arg = user_input[len("/review "):].strip() or "Perform pre-merge code review and edge case verification."
+            res = self.execute_subagent_tool({"tool_name": "delegate_review", "task": task_arg})
+            console.print(f"\n[bold magenta]{res['output']}[/bold magenta]\n")
             return self._prompt_and_handle_slash_commands(prompt)
         if user_input in self._MODE_COMMANDS_MAPPING:
             if self.config.mode == self._MODE_COMMANDS_MAPPING[user_input]:

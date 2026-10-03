@@ -213,8 +213,23 @@ class DefaultAgent:
                     "extra": {"exit_status": "Submitted", "submission": message.get("content", "")},
                 }
             )
-        outputs = [self.env.execute(action) for action in actions]
+        outputs = []
+        for action in actions:
+            tool_name = action.get("tool_name")
+            if tool_name in ("delegate_research", "delegate_review"):
+                outputs.append(self.execute_subagent_tool(action))
+            else:
+                outputs.append(self.env.execute(action))
         return self.add_messages(*self.model.format_observation_messages(message, outputs, self.get_template_vars()))
+
+    def execute_subagent_tool(self, action: dict) -> dict[str, Any]:
+        """Dispatch subagent execution (delegate_research or delegate_review) under context isolation."""
+        from minisweagent.tools.subagent_tools import execute_subagent
+
+        tool_name = action.get("tool_name", "")
+        role = "researcher" if tool_name == "delegate_research" else "reviewer"
+        task = action.get("task", "")
+        return execute_subagent(self, role=role, task=task)
 
     def serialize(self, *extra_dicts) -> dict:
         """Serialize agent state to a json-compatible nested dictionary for saving."""

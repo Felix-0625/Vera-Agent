@@ -144,6 +144,20 @@ def parse_toolcall_actions_response(
                             "tool_call_id": call_id,
                         }
                     )
+            elif tool_name in ("delegate_research", "delegate_review"):
+                task_text = args.get("task") or args.get("command") or ""
+                if not task_text:
+                    error_msg += f"Missing 'task' argument in {tool_name} tool call."
+                else:
+                    preview = (task_text[:50] + "...") if len(task_text) > 50 else task_text
+                    actions.append(
+                        {
+                            "tool_name": tool_name,
+                            "task": task_text,
+                            "command": f"{tool_name} {preview}",
+                            "tool_call_id": call_id,
+                        }
+                    )
         if error_msg:
             error_text = Template(format_error_template, undefined=StrictUndefined).render(
                 error=error_msg.strip(), actions=[], has_tool_calls=True, **template_kwargs
