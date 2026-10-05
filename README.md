@@ -1,30 +1,82 @@
-# Multi-Agents
+# VeraAgent (`vera-agent`)
 
-本项目工作空间包含用于学习与开发的 Coding Agent 相关项目。
+> **Minimalist Multi-Agent GitFlow Collaboration Engine**
+> 
+> *以“Radical Minimalism（极致极简）”与“物理真实（Ground Truth）”为核心哲学的高可靠多智能体软件工程协同系统。*
 
-## 目录结构
+---
+
+## 一、 为什么叫 VeraAgent？
+
+**Vera** 源自拉丁语 *verus*（真理、真实、经过验证的）：
+1. **抗幻觉与物理真实（Ground Truth）**：代码状态不依赖大模型的模糊自然语言记忆，而是直接锚定在 Git 文件系统、真实 Diff 与真实单元测试执行结果上；
+2. **零文件踩踏（Zero Collision）**：基于原生 **Git Worktree** 实现多特性分支、多团队任务级物理隔离；
+3. **彻底根除长上下文污染（No Context Contamination）**：三层动态剪枝与 Session Rebirth 自动换血流水线，确保上下文永远纯净。
+
+---
+
+## 二、 核心架构全景
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  Web 控制层 & 动态图谱 (Starlette ASGI API / React Flow JSON)            │
+│  • GET /api/topology  | POST /api/groups  | POST /api/sessions/attach  │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│  会话路由与 PR 仲裁层 (SessionRouter & In-Memory 3-Way Merge Review)   │
+│  • 基于 asyncio.Queue 的跨线程异步邮箱，点对点投递、组内广播与 PR 预检     │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│  物理隔离与快照层 (Git Worktree Manager & Aider-style Checkpoints)     │
+│  • .agents/worktrees/{branch}/ 零拷贝独立目录，并发无踩踏                │
+│  • 临时 Checkpoint 提交，工作树改崩时一键 reset_worktree(hard=True) 秒级自愈 │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+┌───────────────────────────────────▼────────────────────────────────────┐
+│  智能体调度与换血层 (Subagent Golden Triangle & Handoff Pipeline)       │
+│  • Main Implementer (主实施) + Researcher (调研) + Reviewer (质检)     │
+│  • WatermarkPolicy 监控线触发 Session Rebirth 纯净换血                 │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 三、 目录结构与模块说明
 
 ```text
 .
-├── mini-coding-agent/   # 学习项目：用于学习 Coding Agent 核心原理与实现机制（Python 单文件）
-├── mini-swe-agent/      # 开发基座：用于后续二次开发与多智能体系统搭建的工程基座（Python 模块化）
-├── pi-agent/            # 参考/扩展项目：高度可扩展的终端 Coding Agent 框架体系（TypeScript）
-└── README.md            # 项目说明文档
+├── mini-swe-agent/          # VeraAgent 核心引擎实现
+│   ├── src/
+│   │   ├── vera_agent/      # VeraAgent 统一主导入包
+│   │   └── minisweagent/    # 引擎底层实现
+│   │       ├── models/      # 强类型契约 (contracts.py: AgentDeps, HandoverPayload, MergeReviewResult)
+│   │       ├── session/     # Worktree 管理、GitFlowGraph 拓扑、SessionRouter、HandoffPipeline
+│   │       ├── tools/       # 四基元工具、网络检索、AST 符号导航、Skill 动态发现
+│   │       ├── server/      # Starlette ASGI Web API 服务
+│   │       └── agents/      # DefaultAgent 与 InteractiveAgent [Y/N/O] 人机确认
+│   └── tests/               # 结构化分类测试套件
+│       ├── core/            # 基元工具、沙箱安全、Session 抽象测试 (13项)
+│       ├── multiagent/      # 子智能体门禁、动态压缩、Handoff 换血测试 (15项)
+│       ├── gitflow/         # Worktree 隔离、临时快照、SessionRouter 测试 (9项)
+│       ├── server/          # Web API 服务、代码智能、Skill 发现测试 (3项)
+│       └── e2e/             # 10 步真实电商微服务端到端生产场景测试 (1项)
+└── DESIGN_NOTES.md          # 核心架构设计与工程备忘录
 ```
 
-## 目录与文件说明
+---
 
-- **`mini-coding-agent/`**
-  - **定位**：学习项目。
-  - **说明**：基于单文件实现的轻量级 Coding Agent，用于直观学习 Agent Loop、工具调用和上下文处理等核心机制。
+## 四、 快速开始与测试验证
 
-- **`mini-swe-agent/`**
-  - **定位**：开发基座。
-  - **说明**：模块化、工程级的软件工程 Agent 基座，具备环境隔离、模型接入与可扩展架构，用于后续二次开发与 Multi-agent 拓展。
+### 1. 运行全量结构化测试套件 (62 项测试 100% 绿灯)
+在 `mini-swe-agent` 目录下执行：
+```bash
+pytest tests/core tests/multiagent tests/gitflow tests/server tests/e2e -v
+```
 
-- **`pi-agent/`**
-  - **定位**：参考与扩展项目。
-  - **说明**：基于 TypeScript 的极简、高扩展性终端 Coding Agent 工具体系，支持多模型热切换、会话分支树（Branching Sessions）、MCP 协议及插件扩展。
-
-- **`README.md`**
-  - **说明**：当前工作空间的总览说明文档。
+### 2. 启动 Web 控制 API 服务
+```bash
+python -m uvicorn minisweagent.server.app:create_app --factory --port 8000
+```
+访问 `http://localhost:8000/api/topology` 即可获取 React Flow 标准的拓扑节点与连线数据。
