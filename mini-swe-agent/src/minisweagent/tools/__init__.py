@@ -42,6 +42,11 @@ from minisweagent.tools.web_tools import (
     fetch_web_page_op,
     web_search_op,
 )
+from minisweagent.tools.handoff_tools import (
+    transfer_to_main_op,
+    transfer_to_researcher_op,
+    transfer_to_reviewer_op,
+)
 
 __all__ = [
     "ALL_TOOLS",
@@ -80,6 +85,9 @@ __all__ = [
     "execute_subagent",
     "fetch_web_page_op",
     "read_file_op",
+    "transfer_to_main_op",
+    "transfer_to_researcher_op",
+    "transfer_to_reviewer_op",
     "web_search_op",
     "write_file_op",
 ]
