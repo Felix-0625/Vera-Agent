@@ -66,10 +66,12 @@ class LitellmModel:
 
     def get_tools_for_role(self, role: str = "main") -> list[dict]:
         """Return dynamic tool schema definitions matching the agent's role (Pi-agent philosophy)."""
-        from minisweagent.tools import ALL_TOOLS, MAIN_AGENT_TOOLS
+        from minisweagent.tools import MAIN_AGENT_TOOLS, RESEARCHER_TOOLS, REVIEWER_TOOLS
         if role == "main":
             return MAIN_AGENT_TOOLS
-        return ALL_TOOLS
+        elif role == "researcher":
+            return RESEARCHER_TOOLS
+        return REVIEWER_TOOLS
 
     def _query(self, messages: list[dict[str, str]], tools: list[dict] | None = None, **kwargs):
         call_kwargs = dict(

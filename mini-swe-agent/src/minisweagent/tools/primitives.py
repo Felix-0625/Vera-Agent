@@ -1,4 +1,4 @@
-"""Pi-agent style 4 orthogonal primitive tool definitions (read, write, edit, bash)."""
+""" 4 orthogonal primitive tool definitions (read, write, edit, bash)."""
 
 READ_TOOL = {
     "type": "function",
@@ -165,12 +165,30 @@ from minisweagent.tools.subagent_tools import (
     SUBAGENT_TOOLS,
     SUBAGENT_TOOLS_RESPONSE_API,
 )
+from minisweagent.tools.web_tools import (
+    FETCH_WEB_PAGE_TOOL,
+    FETCH_WEB_PAGE_TOOL_RESPONSE_API,
+    WEB_SEARCH_TOOL,
+    WEB_SEARCH_TOOL_RESPONSE_API,
+    WEB_TOOL_NAMES,
+    WEB_TOOLS,
+    WEB_TOOLS_RESPONSE_API,
+)
 
-# Full toolset for Main Agent (4 primitives + 2 explicit subagent delegation tools)
-MAIN_AGENT_TOOLS = ALL_TOOLS + SUBAGENT_TOOLS
-MAIN_AGENT_TOOLS_RESPONSE_API = ALL_TOOLS_RESPONSE_API + SUBAGENT_TOOLS_RESPONSE_API
+# Role-specific tool configurations following Pi-agent philosophy:
+# 1. Main Agent gets full arsenal: 4 primitives + 2 subagents + 2 web search & fetch tools
+MAIN_AGENT_TOOLS = ALL_TOOLS + SUBAGENT_TOOLS + WEB_TOOLS
+MAIN_AGENT_TOOLS_RESPONSE_API = ALL_TOOLS_RESPONSE_API + SUBAGENT_TOOLS_RESPONSE_API + WEB_TOOLS_RESPONSE_API
 
-# Complete set of allowed tool names
-TOOL_NAMES = {"read", "write", "edit", "bash"} | SUBAGENT_TOOL_NAMES
+# 2. Researcher Subagent gets 4 primitives + 2 web search & fetch tools (strictly NO delegation)
+RESEARCHER_TOOLS = ALL_TOOLS + WEB_TOOLS
+RESEARCHER_TOOLS_RESPONSE_API = ALL_TOOLS_RESPONSE_API + WEB_TOOLS_RESPONSE_API
+
+# 3. Reviewer Subagent gets 4 primitives only (pure code/test inspection)
+REVIEWER_TOOLS = ALL_TOOLS
+REVIEWER_TOOLS_RESPONSE_API = ALL_TOOLS_RESPONSE_API
+
+# Complete set of allowed tool names across all roles
+TOOL_NAMES = {"read", "write", "edit", "bash"} | SUBAGENT_TOOL_NAMES | WEB_TOOL_NAMES
 
 

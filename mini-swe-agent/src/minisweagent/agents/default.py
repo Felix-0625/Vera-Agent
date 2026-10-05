@@ -222,18 +222,21 @@ class DefaultAgent:
     def get_tools(self) -> list[dict]:
         """Return dynamic tool definitions based on agent role following Pi-agent principles.
 
-        - Main agent gets 4 orthogonal primitives + 2 subagent delegation tools (MAIN_AGENT_TOOLS)
-        - Subagents (researcher, reviewer) get strictly the 4 primitives (ALL_TOOLS) with NO delegation
+        - Main agent gets 4 orthogonal primitives + 2 subagents + 2 web search & fetch tools (MAIN_AGENT_TOOLS)
+        - Researcher subagent gets 4 primitives + 2 web search & fetch tools (RESEARCHER_TOOLS)
+        - Reviewer subagent gets 4 primitives (REVIEWER_TOOLS)
         """
         if getattr(self.config, "tools", None) is not None:
             return self.config.tools
         role = getattr(self.config, "role", "main")
         if hasattr(self.model, "get_tools_for_role"):
             return self.model.get_tools_for_role(role)
-        from minisweagent.tools import ALL_TOOLS, MAIN_AGENT_TOOLS
+        from minisweagent.tools import MAIN_AGENT_TOOLS, RESEARCHER_TOOLS, REVIEWER_TOOLS
         if role == "main":
             return MAIN_AGENT_TOOLS
-        return ALL_TOOLS
+        elif role == "researcher":
+            return RESEARCHER_TOOLS
+        return REVIEWER_TOOLS
 
     def compact(self, summary: str | None = None, keep_last_n_turns: int = 4) -> bool:
         """Execute Level 2 Boundary Compaction on current session."""
@@ -255,6 +258,8 @@ class DefaultAgent:
             tool_name = action.get("tool_name")
             if tool_name in ("delegate_research", "delegate_review"):
                 outputs.append(self.execute_subagent_tool(action))
+            elif tool_name in ("web_search", "fetch_web_page"):
+                outputs.append(self.execute_web_tool(action))
             else:
                 outputs.append(self.env.execute(action))
         return self.add_messages(*self.model.format_observation_messages(message, outputs, self.get_template_vars()))
@@ -267,6 +272,23 @@ class DefaultAgent:
         role = "researcher" if tool_name == "delegate_research" else "reviewer"
         task = action.get("task", "")
         return execute_subagent(self, role=role, task=task)
+
+    def execute_web_tool(self, action: dict) -> dict[str, Any]:
+        """Dispatch external web search or web page fetch."""
+        from minisweagent.tools.web_tools import fetch_web_page_op, web_search_op
+
+        tool_name = action.get("tool_name", "")
+        if tool_name == "web_search":
+            return web_search_op(
+                query=action.get("query", ""),
+                num_results=action.get("num_results", 5),
+            )
+        elif tool_name == "fetch_web_page":
+            return fetch_web_page_op(
+                url=action.get("url", ""),
+                max_chars=action.get("max_chars", 8000),
+            )
+        return {"output": f"Unknown web tool '{tool_name}'", "returncode": 1}
 
     def serialize(self, *extra_dicts) -> dict:
         """Serialize agent state to a json-compatible nested dictionary for saving."""

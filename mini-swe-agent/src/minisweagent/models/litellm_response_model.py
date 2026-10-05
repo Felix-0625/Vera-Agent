@@ -41,10 +41,16 @@ class LitellmResponseModel(LitellmModel):
 
     def get_tools_for_role(self, role: str = "main") -> list[dict]:
         """Return dynamic Response API tool definitions matching the agent's role."""
-        from minisweagent.tools import ALL_TOOLS_RESPONSE_API, MAIN_AGENT_TOOLS_RESPONSE_API
+        from minisweagent.tools import (
+            MAIN_AGENT_TOOLS_RESPONSE_API,
+            RESEARCHER_TOOLS_RESPONSE_API,
+            REVIEWER_TOOLS_RESPONSE_API,
+        )
         if role == "main":
             return MAIN_AGENT_TOOLS_RESPONSE_API
-        return ALL_TOOLS_RESPONSE_API
+        elif role == "researcher":
+            return RESEARCHER_TOOLS_RESPONSE_API
+        return REVIEWER_TOOLS_RESPONSE_API
 
     def _query(self, messages: list[dict[str, str]], tools: list[dict] | None = None, **kwargs):
         call_kwargs = dict(

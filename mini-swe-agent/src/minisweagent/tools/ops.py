@@ -1,4 +1,4 @@
-"""Operations for file read, write, and edit tools (Pi-agent compatible)."""
+"""Operations for file read, write, and edit tools."""
 
 from __future__ import annotations
 
@@ -19,8 +19,10 @@ def validate_safe_path(
         (resolved_path, error_message). If error_message is not None, operation should be blocked.
     """
     base = Path(base_dir or Path.cwd()).resolve()
+    """ Resolve the absolute path of the project root directory and the target file. """
     try:
         target = (base / path).resolve()
+        """ Root directory/relative path --> absolute path """
     except Exception as e:
         return None, f"Invalid path syntax '{path}': {e}"
 
