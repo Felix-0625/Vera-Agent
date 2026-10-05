@@ -5,19 +5,19 @@ import subprocess
 from pathlib import Path
 import pytest
 
-from minisweagent.models.contracts import (
+from vera_agent.models.contracts import (
     AgentDeps,
     GraphTopology,
     HandoverPayload,
     MergeReviewResult,
 )
-from minisweagent.session.graph import GitFlowGraph
-from minisweagent.session.router import (
+from vera_agent.session.graph import GitFlowGraph
+from vera_agent.session.router import (
     SessionMessage,
     SessionRouter,
     prompt_structured_choice,
 )
-from minisweagent.session.worktree import WorktreeManager
+from vera_agent.session.worktree import WorktreeManager
 
 
 @pytest.fixture

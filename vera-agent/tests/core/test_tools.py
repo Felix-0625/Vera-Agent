@@ -11,10 +11,10 @@ from pathlib import Path
 from types import SimpleNamespace
 import pytest
 
-from minisweagent.exceptions import FormatError
-from minisweagent.models.utils.actions_toolcall import parse_toolcall_actions
-from minisweagent.models.utils.actions_toolcall_response import parse_toolcall_actions_response
-from minisweagent.tools.ops import edit_file_op, read_file_op, write_file_op
+from vera_agent.exceptions import FormatError
+from vera_agent.models.utils.actions_toolcall import parse_toolcall_actions
+from vera_agent.models.utils.actions_toolcall_response import parse_toolcall_actions_response
+from vera_agent.tools.ops import edit_file_op, read_file_op, write_file_op
 
 
 # ============================================================================

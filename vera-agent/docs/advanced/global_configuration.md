@@ -132,8 +132,8 @@ MSWEA_BUBBLEWRAP_EXECUTABLE="bwrap"
 
 ```bash
 # Default run script entry point for the main CLI
-# (default: "minisweagent.run.mini")
-MSWEA_DEFAULT_RUN="minisweagent.run.mini"
+# (default: "vera_agent.run.mini")
+MSWEA_DEFAULT_RUN="vera_agent.run.mini"
 ```
 
 {% include-markdown "_footer.md" %}

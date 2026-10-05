@@ -13,10 +13,10 @@ from pathlib import Path
 import tempfile
 import pytest
 
-from minisweagent.agents.default import AgentConfig, DefaultAgent
-from minisweagent.environments.local import LocalEnvironment
-from minisweagent.models.test_models import DeterministicModel
-from minisweagent.session import ThreadSession
+from vera_agent.agents.default import AgentConfig, DefaultAgent
+from vera_agent.environments.local import LocalEnvironment
+from vera_agent.models.test_models import DeterministicModel
+from vera_agent.session import ThreadSession
 
 
 # ============================================================================

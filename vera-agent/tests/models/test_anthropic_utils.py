@@ -1,6 +1,6 @@
 import pytest
 
-from minisweagent.models.utils.anthropic_utils import _reorder_anthropic_thinking_blocks
+from vera_agent.models.utils.anthropic_utils import _reorder_anthropic_thinking_blocks
 
 
 @pytest.mark.parametrize(

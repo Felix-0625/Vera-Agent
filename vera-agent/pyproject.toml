@@ -49,10 +49,10 @@ dependencies = [
 
 [project.optional-dependencies]
 full = [
-    "mini-swe-agent[dev]",
+    "vera-agent[dev]",
     "swe-rex>=1.4.0",
-    "mini-swe-agent[modal]",
-    "mini-swe-agent[contree]",
+    "vera-agent[modal]",
+    "vera-agent[contree]",
 ]
 
 modal = [
@@ -87,25 +87,25 @@ Repository = "https://github.com/SWE-agent/mini-swe-agent"
 "Bug Tracker" = "https://github.com/SWE-agent/mini-swe-agent/issues"
 
 [project.scripts]
-vera = "minisweagent.run.mini:app"
-vera-agent = "minisweagent.run.mini:app"
-mini = "minisweagent.run.mini:app"
-mini-swe-agent = "minisweagent.run.mini:app"
-mini-extra = "minisweagent.run.utilities.mini_extra:main"
-mini-e= "minisweagent.run.utilities.mini_extra:main"
+vera = "vera_agent.run.mini:app"
+vera-agent = "vera_agent.run.mini:app"
+mini = "vera_agent.run.mini:app"
+mini-swe-agent = "vera_agent.run.mini:app"
+mini-extra = "vera_agent.run.utilities.mini_extra:main"
+mini-e= "vera_agent.run.utilities.mini_extra:main"
 
 [tool.setuptools]
 include-package-data = true
 
 [tool.setuptools.dynamic]
-version = {attr = "minisweagent.__version__"}
+version = {attr = "vera_agent.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["minisweagent*", "vera_agent*"]
+include = ["vera_agent*", "vera_agent*"]
 
 [tool.setuptools.package-data]
-minisweagent = ["config/**/*"]
+vera_agent = ["config/**/*"]
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.

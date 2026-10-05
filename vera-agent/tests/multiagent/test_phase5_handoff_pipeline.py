@@ -3,11 +3,11 @@
 from pathlib import Path
 import pytest
 
-from minisweagent.models.contracts import HandoverPayload
-from minisweagent.session.graph import GitFlowGraph
-from minisweagent.session.pipeline import HandoffPipeline, WatermarkPolicy
-from minisweagent.session.thread import ThreadSession
-from minisweagent.tools.handoff_tools import (
+from vera_agent.models.contracts import HandoverPayload
+from vera_agent.session.graph import GitFlowGraph
+from vera_agent.session.pipeline import HandoffPipeline, WatermarkPolicy
+from vera_agent.session.thread import ThreadSession
+from vera_agent.tools.handoff_tools import (
     transfer_to_main_op,
     transfer_to_researcher_op,
     transfer_to_reviewer_op,

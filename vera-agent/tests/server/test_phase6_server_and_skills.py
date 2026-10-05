@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 from starlette.testclient import TestClient
 
-from minisweagent.server.app import create_app
-from minisweagent.tools.code_tools import check_syntax_op, find_references_op, symbol_search_op
-from minisweagent.tools.skill_tools import SkillManager
+from vera_agent.server.app import create_app
+from vera_agent.tools.code_tools import check_syntax_op, find_references_op, symbol_search_op
+from vera_agent.tools.skill_tools import SkillManager
 
 
 @pytest.fixture

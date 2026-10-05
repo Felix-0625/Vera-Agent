@@ -95,7 +95,7 @@ Tool calling is the default. The CLI uses `mini.yaml` and `swebench.yaml` which 
 ```bash
 # Default (tool calling)
 mini
-python -m minisweagent.run.benchmarks.swebench
+python -m vera_agent.run.benchmarks.swebench
 mini-extra swebench
 
 # Text-based parsing
@@ -218,7 +218,7 @@ def save(self, path: Path | None, *extra_dicts) -> dict: ...
 
 ### Exception changes
 
-All flow control exceptions now inherit from `InterruptAgentFlow` and moved to `minisweagent.exceptions`:
+All flow control exceptions now inherit from `InterruptAgentFlow` and moved to `vera_agent.exceptions`:
 
 ```python
 InterruptAgentFlow (base)
@@ -236,10 +236,10 @@ InterruptAgentFlow (base)
 
 ```python
 # Old
-from minisweagent.agents.default import Submitted, FormatError
+from vera_agent.agents.default import Submitted, FormatError
 
 # New
-from minisweagent.exceptions import Submitted, FormatError
+from vera_agent.exceptions import Submitted, FormatError
 ```
 
 ### Agent.run() return value

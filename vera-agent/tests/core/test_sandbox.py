@@ -3,10 +3,10 @@
 import pytest
 from pathlib import Path
 
-from minisweagent.environments.local import LocalEnvironment
-from minisweagent.models.litellm_model import LitellmModel
-from minisweagent.models.utils.actions_toolcall import parse_toolcall_actions
-from minisweagent.tools.ops import (
+from vera_agent.environments.local import LocalEnvironment
+from vera_agent.models.litellm_model import LitellmModel
+from vera_agent.models.utils.actions_toolcall import parse_toolcall_actions
+from vera_agent.tools.ops import (
     edit_file_op,
     read_file_op,
     validate_safe_path,
@@ -146,7 +146,7 @@ def test_parse_toolcall_actions_allow_empty():
 
 def test_default_agent_auto_enables_allow_empty_tool_calls(tmp_path: Path):
     """Test that DefaultAgent with complete_on_empty_actions=True auto-enables model.config.allow_empty_tool_calls."""
-    from minisweagent.agents.default import DefaultAgent
+    from vera_agent.agents.default import DefaultAgent
     model = LitellmModel(model_name="mock-model", model_kwargs={"drop_params": True})
     assert model.config.allow_empty_tool_calls is False
 

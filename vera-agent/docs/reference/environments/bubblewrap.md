@@ -1,5 +1,5 @@
 # Bubblewrap
 
-::: minisweagent.environments.extra.bubblewrap
+::: vera_agent.environments.extra.bubblewrap
 
 {% include-markdown "../../_footer.md" %}

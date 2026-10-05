@@ -47,10 +47,9 @@
 
 ```text
 .
-├── mini-swe-agent/          # VeraAgent 核心引擎实现
+├── vera-agent/              # VeraAgent 核心引擎实现
 │   ├── src/
-│   │   ├── vera_agent/      # VeraAgent 统一主导入包
-│   │   └── minisweagent/    # 引擎底层实现
+│   │   └── vera_agent/      # 引擎核心源码包
 │   │       ├── models/      # 强类型契约 (contracts.py: AgentDeps, HandoverPayload, MergeReviewResult)
 │   │       ├── session/     # Worktree 管理、GitFlowGraph 拓扑、SessionRouter、HandoffPipeline
 │   │       ├── tools/       # 四基元工具、网络检索、AST 符号导航、Skill 动态发现
@@ -70,13 +69,13 @@
 ## 四、 快速开始与测试验证
 
 ### 1. 运行全量结构化测试套件 (62 项测试 100% 绿灯)
-在 `mini-swe-agent` 目录下执行：
+在 `vera-agent` 目录下执行：
 ```bash
 pytest tests/core tests/multiagent tests/gitflow tests/server tests/e2e -v
 ```
 
 ### 2. 启动 Web 控制 API 服务
 ```bash
-python -m uvicorn minisweagent.server.app:create_app --factory --port 8000
+python -m uvicorn vera_agent.server.app:create_app --factory --port 8000
 ```
 访问 `http://localhost:8000/api/topology` 即可获取 React Flow 标准的拓扑节点与连线数据。

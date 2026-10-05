@@ -6,11 +6,11 @@
 The project is structured as
 
 ```bash
-minisweagent/__init__  # Protocols/interfaces for all base classes
-minisweagent/agents  # Agent control flow & loop
-minisweagent/environments  # Executing agent actions
-minisweagent/models  # LM interfaces
-minisweagent/run  # Run scripts that serve as an entry point
+vera_agent/__init__  # Protocols/interfaces for all base classes
+vera_agent/agents  # Agent control flow & loop
+vera_agent/environments  # Executing agent actions
+vera_agent/models  # LM interfaces
+vera_agent/run  # Run scripts that serve as an entry point
 ```
 
 - The project embraces polymorphism: Every individual class should be simple, but we offer alternatives

@@ -1,8 +1,8 @@
 import re
 from unittest.mock import patch
 
-from minisweagent.models.test_models import DeterministicModel, make_output
-from minisweagent.run.mini import DEFAULT_CONFIG_FILE, main
+from vera_agent.models.test_models import DeterministicModel, make_output
+from vera_agent.run.mini import DEFAULT_CONFIG_FILE, main
 from tests.conftest import assert_observations_match
 
 
@@ -27,11 +27,11 @@ def test_local_end_to_end(local_test_data):
     expected_observations = local_test_data["expected_observations"]
 
     with (
-        patch("minisweagent.run.mini.configure_if_first_time"),
-        patch("minisweagent.models.litellm_model.LitellmModel") as mock_model_class,
-        patch("minisweagent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
+        patch("vera_agent.run.mini.configure_if_first_time"),
+        patch("vera_agent.models.litellm_model.LitellmModel") as mock_model_class,
+        patch("vera_agent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
         patch(
-            "minisweagent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
+            "vera_agent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
         ),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):

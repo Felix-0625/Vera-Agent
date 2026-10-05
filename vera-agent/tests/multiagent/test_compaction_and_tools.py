@@ -3,11 +3,11 @@
 import pytest
 from unittest.mock import MagicMock
 
-from minisweagent.session.thread import ThreadSession
-from minisweagent.models.litellm_model import LitellmModel, LitellmModelConfig
-from minisweagent.models.litellm_response_model import LitellmResponseModel, LitellmResponseModelConfig
-from minisweagent.agents.default import DefaultAgent, AgentConfig
-from minisweagent.tools import (
+from vera_agent.session.thread import ThreadSession
+from vera_agent.models.litellm_model import LitellmModel, LitellmModelConfig
+from vera_agent.models.litellm_response_model import LitellmResponseModel, LitellmResponseModelConfig
+from vera_agent.agents.default import DefaultAgent, AgentConfig
+from vera_agent.tools import (
     ALL_TOOLS,
     MAIN_AGENT_TOOLS,
     RESEARCHER_TOOLS,
@@ -108,7 +108,7 @@ def test_agent_get_tools_respects_role():
 
 def test_web_search_and_fetch_ops():
     """Verify web search and fetch tools operation."""
-    from minisweagent.tools.web_tools import fetch_web_page_op, web_search_op
+    from vera_agent.tools.web_tools import fetch_web_page_op, web_search_op
 
     # 1. Empty query validation
     empty_res = web_search_op("")

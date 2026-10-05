@@ -13,13 +13,13 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 import pytest
 
-from minisweagent.agents.default import DefaultAgent
-from minisweagent.environments.local import LocalEnvironment
-from minisweagent.models.test_models import DeterministicModel
-from minisweagent.models.utils.actions_toolcall import parse_toolcall_actions
-from minisweagent.models.utils.actions_toolcall_response import parse_toolcall_actions_response
-from minisweagent.session import ThreadSession
-from minisweagent.tools.subagent_tools import (
+from vera_agent.agents.default import DefaultAgent
+from vera_agent.environments.local import LocalEnvironment
+from vera_agent.models.test_models import DeterministicModel
+from vera_agent.models.utils.actions_toolcall import parse_toolcall_actions
+from vera_agent.models.utils.actions_toolcall_response import parse_toolcall_actions_response
+from vera_agent.session import ThreadSession
+from vera_agent.tools.subagent_tools import (
     DELEGATE_RESEARCH_TOOL,
     DELEGATE_REVIEW_TOOL,
     SUBAGENT_TOOL_NAMES,
@@ -220,7 +220,7 @@ def test_default_agent_dispatches_subagent_tool():
 def test_interactive_agent_slash_commands():
     """Test InteractiveAgent /research and /review slash commands."""
     from tests.agents.test_interactive import mock_prompts
-    from minisweagent.agents.interactive import InteractiveAgent
+    from vera_agent.agents.interactive import InteractiveAgent
 
     calls = []
 

@@ -10,10 +10,10 @@ import tempfile
 from pathlib import Path
 import pytest
 
-from minisweagent.models.contracts import HandoverPayload
-from minisweagent.session.graph import GitFlowGraph
-from minisweagent.session.router import SessionRouter
-from minisweagent.session.worktree import WorktreeManager
+from vera_agent.models.contracts import HandoverPayload
+from vera_agent.session.graph import GitFlowGraph
+from vera_agent.session.router import SessionRouter
+from vera_agent.session.worktree import WorktreeManager
 
 
 def run_git(args: list[str], cwd: Path) -> str:
