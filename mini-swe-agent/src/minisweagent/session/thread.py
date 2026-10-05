@@ -84,10 +84,11 @@ class ThreadSession:
                     texts = [item.get("text", "") for item in content if isinstance(item, dict) and "text" in item]
                     if texts:
                         return "\n".join(texts).strip()
-            elif msg.get("role") == "exit":
-                sub = msg.get("extra", {}).get("submission") or msg.get("content", "")
-                """ Prevent agent from executing to the limit. """
-                if sub:
+        # Fallback to exit submission if no assistant message text was found
+        for msg in reversed(self.messages):
+            if msg.get("role") == "exit":
+                sub = msg.get("extra", {}).get("submission")
+                if sub and str(sub) not in ("LimitsExceeded", "TimeExceeded", "RepeatedFormatError"):
                     return str(sub).strip()
         return ""
 
@@ -171,7 +172,9 @@ class ThreadSession:
         obs_indices = []
         for idx, msg in enumerate(self.messages):
             role = msg.get("role")
-            if role == "tool" or (role == "user" and ("<output>" in str(msg.get("content", "")) or msg.get("name"))):
+            msg_content = msg.get("content")
+            content_str = str(msg_content or "")
+            if role == "tool" or (role == "user" and ("<output>" in content_str or msg.get("name"))):
                 obs_indices.append(idx)
 
         # Observation messages that should be kept intact
@@ -180,7 +183,7 @@ class ThreadSession:
         pruned_history = []
         for idx, msg in enumerate(self.messages):
             if idx in obs_indices and idx not in preserve_indices:
-                content = str(msg.get("content", ""))
+                content = str(msg.get("content") or "")
                 if len(content) > max_observation_chars:
                     pruned_msg = dict(msg)
                     tool_name = msg.get("name") or "tool"

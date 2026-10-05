@@ -11,8 +11,21 @@ This file provides:
 __version__ = "2.4.6"
 
 import os
+import sys
 from pathlib import Path
 from typing import Any, Protocol
+
+# Defuse Windows GBK terminal encoding landmine for Unicode datasets
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 import dotenv
 from platformdirs import user_config_dir
