@@ -1,10 +1,10 @@
-"""Pi-agent 正交 4 基元工具（read, write, edit, bash）单元测试套件。
+"""Orthogonal 4-primitive tools (read, write, edit, bash) unit test suite.
 
-覆盖范围：
-1. read_file_op: 只读检查、行号显示、越界保护与窗口分页。
-2. write_file_op: 自动递归建目录、整文件原子写入与覆盖。
-3. edit_file_op: 精确上下文查找替换、歧义多处匹配拦截、多块顺序替换及 Unified Diff 生成。
-4. parse_toolcall_actions & parse_toolcall_actions_response: Function Calling 与 Responses API 双格式解析。
+Coverage:
+1. read_file_op: read-only checking, line numbering, bounds protection, and pagination.
+2. write_file_op: automatic directory creation, atomic full-file write and overwrite.
+3. edit_file_op: precise contextual search-and-replace, ambiguous match prevention, sequential multi-edits, and unified diff generation.
+4. parse_toolcall_actions & parse_toolcall_actions_response: Function Calling and Responses API dual-format parsing.
 """
 
 from pathlib import Path
@@ -18,11 +18,11 @@ from minisweagent.tools.ops import edit_file_op, read_file_op, write_file_op
 
 
 # ============================================================================
-# 1. read_file_op 基元测试
+# 1. read_file_op Primitive Tests
 # ============================================================================
 
 def test_read_file_op_success(tmp_path: Path):
-    """测试常规文件读取，验证行号与格式。"""
+    """Test standard file reading with line numbers and formatting."""
     test_file = tmp_path / "sample.py"
     test_file.write_text("line 1\nline 2\nline 3\n", encoding="utf-8")
 
@@ -35,12 +35,12 @@ def test_read_file_op_success(tmp_path: Path):
 
 
 def test_read_file_op_pagination(tmp_path: Path):
-    """测试分页偏移量 (offset) 与限制条数 (limit)。"""
+    """Test pagination offset and limit parameters."""
     test_file = tmp_path / "long.txt"
     lines = [f"data_{i}" for i in range(1, 11)]
     test_file.write_text("\n".join(lines), encoding="utf-8")
 
-    # 从第 4 行开始读，读取 3 行 (4, 5, 6)
+    # Read 3 lines starting from line 4 (lines 4, 5, 6)
     res = read_file_op("long.txt", offset=4, limit=3, base_dir=tmp_path)
     assert res["returncode"] == 0
     assert "Showing lines 4-6" in res["output"]
@@ -50,7 +50,7 @@ def test_read_file_op_pagination(tmp_path: Path):
 
 
 def test_read_file_op_not_found(tmp_path: Path):
-    """测试读取不存在的文件返回友好错误与 returncode 1。"""
+    """Test reading a non-existent file returns error and returncode 1."""
     res = read_file_op("nonexistent.txt", base_dir=tmp_path)
     assert res["returncode"] == 1
     assert "not found" in res["output"]
@@ -58,7 +58,7 @@ def test_read_file_op_not_found(tmp_path: Path):
 
 
 def test_read_file_op_directory_error(tmp_path: Path):
-    """测试读取目录路径时返回错误，避免崩溃。"""
+    """Test reading a directory path returns error without crashing."""
     sub_dir = tmp_path / "sub_dir"
     sub_dir.mkdir()
     res = read_file_op("sub_dir", base_dir=tmp_path)
@@ -67,11 +67,11 @@ def test_read_file_op_directory_error(tmp_path: Path):
 
 
 # ============================================================================
-# 2. write_file_op 基元测试
+# 2. write_file_op Primitive Tests
 # ============================================================================
 
 def test_write_file_op_auto_mkdir(tmp_path: Path):
-    """测试写入新文件并自动创建多级不存在的父目录。"""
+    """Test writing a new file automatically creates missing parent directories."""
     target = "nested/deep/directory/test.py"
     content = "print('hello world')\n"
 
@@ -83,7 +83,7 @@ def test_write_file_op_auto_mkdir(tmp_path: Path):
 
 
 def test_write_file_op_overwrite(tmp_path: Path):
-    """测试全量覆盖已存在的文件。"""
+    """Test overwriting an existing file."""
     target_file = tmp_path / "override.txt"
     target_file.write_text("old content", encoding="utf-8")
 
@@ -94,11 +94,11 @@ def test_write_file_op_overwrite(tmp_path: Path):
 
 
 # ============================================================================
-# 3. edit_file_op 基元测试
+# 3. edit_file_op Primitive Tests
 # ============================================================================
 
 def test_edit_file_op_success(tmp_path: Path):
-    """测试精准文本查找与替换，并检查返回的 Unified Diff。"""
+    """Test precise string matching and replacement with unified diff output."""
     target_file = tmp_path / "calculator.py"
     initial_code = (
         "def add(a, b):\n"
@@ -118,14 +118,14 @@ def test_edit_file_op_success(tmp_path: Path):
     assert "-    return a - b  # bug here" in res["output"]
     assert "+    return a + b" in res["output"]
 
-    # 验证磁盘文件内容确实更新
+    # Verify disk file is updated
     updated = target_file.read_text(encoding="utf-8")
     assert "return a + b" in updated
     assert "return a - b" not in updated
 
 
 def test_edit_file_op_not_found(tmp_path: Path):
-    """测试旧代码片段不存在时报错并提供友好指导。"""
+    """Test error feedback when old text snippet is not found."""
     target_file = tmp_path / "test.py"
     target_file.write_text("def hello(): pass\n", encoding="utf-8")
 
@@ -137,7 +137,7 @@ def test_edit_file_op_not_found(tmp_path: Path):
 
 
 def test_edit_file_op_ambiguous_match(tmp_path: Path):
-    """测试匹配多处时拦截替换，要求模型提供更多上下文避免误伤。"""
+    """Test blocking replacement when multiple occurrences match to prevent unintended edits."""
     target_file = tmp_path / "duplicate.py"
     target_file.write_text("value = 1\n# separator\nvalue = 1\n", encoding="utf-8")
 
@@ -149,7 +149,7 @@ def test_edit_file_op_ambiguous_match(tmp_path: Path):
 
 
 def test_edit_file_op_multiple_sequential_edits(tmp_path: Path):
-    """测试单次调用中按序执行多处互不冲突的局部编辑。"""
+    """Test applying multiple non-conflicting edits sequentially in a single invocation."""
     target_file = tmp_path / "multi.py"
     target_file.write_text("x = 10\ny = 20\n", encoding="utf-8")
 
@@ -164,27 +164,27 @@ def test_edit_file_op_multiple_sequential_edits(tmp_path: Path):
 
 
 # ============================================================================
-# 4. 解析器测试 (Function Calling & Responses API)
+# 4. Parser Tests (Function Calling & Responses API)
 # ============================================================================
 
 def test_parse_toolcall_actions_all_primitives():
-    """验证标准 OpenAI Function Calling 格式对 4 基元的解析。"""
-    # 模拟 bash
+    """Verify standard OpenAI Function Calling parser for all 4 primitives."""
+    # Simulate bash
     bash_call = SimpleNamespace(
         id="call_bash_1",
         function=SimpleNamespace(name="bash", arguments='{"command": "pytest"}'),
     )
-    # 模拟 read
+    # Simulate read
     read_call = SimpleNamespace(
         id="call_read_1",
         function=SimpleNamespace(name="read", arguments='{"path": "foo.py", "offset": 10}'),
     )
-    # 模拟 write
+    # Simulate write
     write_call = SimpleNamespace(
         id="call_write_1",
         function=SimpleNamespace(name="write", arguments='{"path": "bar.py", "content": "hello"}'),
     )
-    # 模拟 edit
+    # Simulate edit
     edit_call = SimpleNamespace(
         id="call_edit_1",
         function=SimpleNamespace(name="edit", arguments='{"path": "baz.py", "oldText": "a", "newText": "b"}'),
@@ -212,7 +212,7 @@ def test_parse_toolcall_actions_all_primitives():
 
 
 def test_parse_toolcall_actions_response_all_primitives():
-    """验证 OpenAI Responses API 扁平格式对 4 基元的解析。"""
+    """Verify OpenAI Responses API flat parser for all 4 primitives."""
     output = [
         {"type": "function_call", "call_id": "call_1", "name": "read", "arguments": '{"path": "test.py"}'},
         {"type": "function_call", "call_id": "call_2", "name": "bash", "arguments": '{"command": "ls -la"}'},
@@ -225,7 +225,7 @@ def test_parse_toolcall_actions_response_all_primitives():
 
 
 def test_parse_toolcall_unknown_tool_raises_format_error():
-    """验证非法工具名称触发 FormatError。"""
+    """Verify unknown tool name raises FormatError."""
     bad_call = SimpleNamespace(
         id="bad_1",
         function=SimpleNamespace(name="unknown_tool", arguments='{}'),

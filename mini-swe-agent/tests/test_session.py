@@ -1,12 +1,12 @@
-"""ThreadSession 会话管理层与上下文交接接口单元测试套件。
+"""ThreadSession session management layer and context handover test suite.
 
-覆盖范围：
-1. ThreadSession 初始化、ID 唯一性与默认参数。
-2. 消息多轮追加、最近更新时间戳更新、开销与调用计数累加。
-3. get_touched_files 从消息动作中精准提取触碰的文件清单。
-4. export_handover_summary 生成标准化 Markdown 上下文交接文档。
-5. to_dict / from_dict 以及 save / load 磁盘 JSON 持久化与反序列化还原。
-6. DefaultAgent / InteractiveAgent 对 ThreadSession 的原生挂载、同步与状态序列化。
+Coverage:
+1. ThreadSession initialization, unique ID generation, and default parameters.
+2. Multi-turn message appending, timestamp updates, cost and call count metrics accumulation.
+3. get_touched_files extracting read/modified file lists from action history.
+4. export_handover_summary generating standardized Markdown context handover documentation.
+5. to_dict / from_dict and save / load disk JSON persistence and deserialization.
+6. DefaultAgent native ThreadSession binding, state synchronization, and serialization.
 """
 
 from pathlib import Path
@@ -20,11 +20,11 @@ from minisweagent.session import ThreadSession
 
 
 # ============================================================================
-# 1. ThreadSession 核心实体测试
+# 1. ThreadSession Core Entity Tests
 # ============================================================================
 
 def test_thread_session_initialization():
-    """测试会话实体的默认初始化属性。"""
+    """Test default initialization properties of the session entity."""
     session = ThreadSession(role="researcher", group_id="grp_core")
 
     assert session.thread_id.startswith("th_")
@@ -38,7 +38,7 @@ def test_thread_session_initialization():
 
 
 def test_thread_session_messages_and_metrics():
-    """测试多轮消息追加与调用度量指标累加。"""
+    """Test multi-turn message appending and metric counters accumulation."""
     session = ThreadSession()
     msg1 = {"role": "user", "content": "hello"}
     msg2 = {"role": "assistant", "content": "world"}
@@ -58,7 +58,7 @@ def test_thread_session_messages_and_metrics():
 
 
 def test_thread_session_get_touched_files():
-    """测试从对话历史动作中自动提取涉及变动的文件列表。"""
+    """Test extracting touched files from historical actions without duplicates."""
     session = ThreadSession()
     msg = {
         "role": "assistant",
@@ -67,7 +67,7 @@ def test_thread_session_get_touched_files():
             "actions": [
                 {"tool_name": "read", "path": "src/utils.py"},
                 {"tool_name": "edit", "path": "src/main.py", "edits": []},
-                {"tool_name": "read", "path": "src/utils.py"},  # 重复读取应去重
+                {"tool_name": "read", "path": "src/utils.py"},  # Duplicate read should be deduplicated
             ]
         },
     }
@@ -80,16 +80,16 @@ def test_thread_session_get_touched_files():
 
 
 def test_thread_session_export_handover_summary():
-    """测试导出标准化上下文交接简报（Markdown）。"""
+    """Test generating a standardized Markdown context handover summary."""
     session = ThreadSession(role="researcher", parent_thread_id="th_main_01")
     session.add_cost(0.015)
     session.increment_calls()
 
-    # 模拟历史操作与总结答复
+    # Simulate historical actions and final conclusion
     session.add_messages(
         {
             "role": "assistant",
-            "content": "已完成架构摸底，发现核心缺陷位于 database.py 连接池未释放。",
+            "content": "Reconnaissance complete: root cause is connection leak in database.py.",
             "extra": {
                 "actions": [
                     {"tool_name": "read", "path": "src/db/connection.py"},
@@ -100,21 +100,21 @@ def test_thread_session_export_handover_summary():
 
     summary = session.export_handover_summary(
         target_role="coder",
-        extra_notes="请重点修复 connection.py 中的 close_all() 逻辑",
+        extra_notes="Please focus on fixing the close_all() logic in connection.py",
     )
 
-    assert "# 上下文交接简报 (Handover Summary)" in summary
+    assert "# Context Handover Summary" in summary
     assert f"`{session.thread_id}`" in summary
-    assert "**发起角色 (Source Role)**: `researcher`" in summary
-    assert "**目标角色 (Target Role)**: `coder`" in summary
+    assert "**Source Role**: `researcher`" in summary
+    assert "**Target Role**: `coder`" in summary
     assert "`th_main_01`" in summary
     assert "`[read]` src/db/connection.py" in summary
-    assert "核心缺陷位于 database.py" in summary
-    assert "请重点修复 connection.py" in summary
+    assert "connection leak in database.py" in summary
+    assert "Please focus on fixing the close_all() logic" in summary
 
 
 def test_thread_session_save_and_load(tmp_path: Path):
-    """测试会话快照持久化到 JSON 文件并完整反序列化还原。"""
+    """Test persisting session snapshot to JSON and full deserialization."""
     original = ThreadSession(
         role="reviewer",
         group_id="grp_pr_123",
@@ -140,16 +140,16 @@ def test_thread_session_save_and_load(tmp_path: Path):
 
 
 # ============================================================================
-# 2. Agent 深度集成测试
+# 2. Agent Integration Tests
 # ============================================================================
 
 def test_default_agent_session_binding():
-    """测试 DefaultAgent 自动挂载与同步 ThreadSession。"""
+    """Test DefaultAgent automatically attaches and synchronizes ThreadSession."""
     model = DeterministicModel(
         outputs=[
             {
                 "role": "assistant",
-                "content": "任务已全部搞定，核心模块已修复。",
+                "content": "Task completed successfully, core module fixed.",
                 "extra": {"cost": 0.002, "actions": []},
             },
         ]
@@ -164,26 +164,26 @@ def test_default_agent_session_binding():
         complete_on_empty_actions=True,
     )
 
-    # 验证初始会话绑定
+    # Verify initial session binding
     assert isinstance(agent.session, ThreadSession)
     assert agent.session.role == "coder"
     assert agent.messages is agent.session.messages
 
-    # 运行一次任务
+    # Execute one task
     info = agent.run("Fix the issue")
     assert info["exit_status"] == "Submitted"
 
-    # 验证状态已同步至 session 实体
+    # Verify state synchronized to session entity
     assert agent.session.cost == pytest.approx(0.002)
     assert agent.session.n_calls == 1
     assert len(agent.session.messages) > 0
 
-    # 验证序列化包含 session
+    # Verify serialized output includes session
     serialized = agent.serialize()
     assert "session" in serialized["info"]
     assert serialized["info"]["session"]["thread_id"] == agent.session.thread_id
 
-    # 验证 Agent 直接导出交接简报
+    # Verify Agent exports handover summary directly
     handover = agent.export_handover_summary(target_role="reviewer")
-    assert "上下文交接简报" in handover
+    assert "Context Handover Summary" in handover
     assert f"`{agent.session.thread_id}`" in handover

@@ -10,6 +10,7 @@ agent:
        - You are STRICTLY FORBIDDEN from modifying existing project source code.
        - Code implementation and bug fixing are exclusively reserved for the Main Agent.
        - You are authorized to run tests, inspect diffs, and check execution logs to evaluate code quality.
+       - You have dedicated write/edit permissions inside your designated scratchpad directory (`.agents/scratch/...`) where you can create review checklists, reproduction tests, or audit reports.
 
     2. **Pragmatic Testing (Rule 5)**:
        - Target testing strictly at realistic user execution paths and core regression prevention.
@@ -17,7 +18,7 @@ agent:
        - Do NOT create unnecessary temporary test files that clutter or pollute the codebase.
 
     3. **Documentation & Structured Handover**:
-       - In addition to returning your direct verification verdict in your conversational response, you are authorized and encouraged to persist a structured audit report or review checklist document (e.g., `HANDOVER_REVIEW.md` or a review report) for formal handover.
+       - In addition to returning your direct verification verdict in your conversational response, you are authorized and encouraged to persist a structured audit report or review checklist document (e.g., `HANDOVER_REVIEW.md`) inside your scratchpad directory for formal handover.
        - Clearly document: verification status (PASS / FAIL), reproduction steps, affected paths, and prioritized feedback.
 
     4. **Communication Discipline (BLUF)**:

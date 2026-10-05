@@ -21,12 +21,14 @@ def load_project_context(start_dir: Path | None = None) -> str:
     """Load AGENTS.md or CLAUDE.md from the directory hierarchy, similar to pi-agent."""
     current = Path(start_dir or Path.cwd()).resolve()
     found_files = []
+    """ Look up engineering specification documents. UsuallyAGENTS.md or CLAUDE.md. """
     while True:
         for name in ("AGENTS.md", "CLAUDE.md"):
             candidate = current / name
             if candidate.is_file():
                 found_files.append(candidate)
                 break
+        """ if the current directory is the root directory of the files, stop searching """
         if (current / ".git").exists() or current.parent == current:
             break
         current = current.parent
@@ -36,6 +38,7 @@ def load_project_context(start_dir: Path | None = None) -> str:
 
     sections = []
     start = Path(start_dir or Path.cwd()).resolve()
+    """ Add the file contents to the sections list. """
     for file_path in reversed(found_files):
         try:
             content = file_path.read_text(encoding="utf-8")
@@ -90,6 +93,9 @@ class DefaultAgent:
         self.messages: list[dict] = self.session.messages
         self.model = model
         self.env = env
+        if getattr(self.config, "complete_on_empty_actions", False):
+            if hasattr(self.model, "config") and hasattr(self.model.config, "allow_empty_tool_calls"):
+                self.model.config.allow_empty_tool_calls = True
         self.extra_template_vars = {}
         self.logger = logging.getLogger("agent")
         self.cost = 0.0
@@ -98,6 +104,7 @@ class DefaultAgent:
         self._start_time = time.time()
 
     def get_template_vars(self, **kwargs) -> dict:
+        """Recursively merge dictionaries, Integrating data from multiple sources"""
         return recursive_merge(
             self.config.model_dump(),
             self.env.get_template_vars(),
@@ -133,14 +140,23 @@ class DefaultAgent:
             )
         )
 
-    def run(self, task: str = "", **kwargs) -> dict:
+    def run(self, task: str = "", clear_messages: bool = True, **kwargs) -> dict:
         """Run step() until agent is finished. Returns dictionary with exit_status, submission keys."""
         self.extra_template_vars |= {"task": task, **kwargs}
-        self.session.messages.clear()
-        self.add_messages(
-            self.model.format_message(role="system", content=self._render_template(self.config.system_template)),
-            self.model.format_message(role="user", content=self._render_template(self.config.instance_template)),
-        )
+        if clear_messages:
+            self.session.messages.clear()
+            self.add_messages(
+                self.model.format_message(role="system", content=self._render_template(self.config.system_template)),
+                self.model.format_message(role="user", content=self._render_template(self.config.instance_template)),
+            )
+        else:
+            # Multi-turn continuation: pop trailing 'exit' marker from previous run if present
+            while self.session.messages and self.session.messages[-1].get("role") == "exit":
+                self.session.messages.pop()
+            if task:
+                self.add_messages(
+                    self.model.format_message(role="user", content=self._render_template(self.config.instance_template)),
+                )
         while True:
             try:
                 self.step()
@@ -258,7 +274,7 @@ class DefaultAgent:
         return recursive_merge(agent_data, self.model.serialize(), self.env.serialize(), *extra_dicts)
 
     def export_handover_summary(self, target_role: str = "main", extra_notes: str = "") -> str:
-        """从当前会话导出结构化上下文交接简报。"""
+        """ Export a structured context handover brief from the current session."""
         self.session.cost = self.cost
         self.session.n_calls = self.n_calls
         return self.session.export_handover_summary(target_role=target_role, extra_notes=extra_notes)

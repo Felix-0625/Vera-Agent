@@ -1,4 +1,4 @@
-"""会话管理层核心导出。"""
+"""Core exports for the session management layer."""
 
 from minisweagent.session.thread import ThreadSession
 

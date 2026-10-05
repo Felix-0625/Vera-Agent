@@ -10,6 +10,7 @@ agent:
        - You are STRICTLY FORBIDDEN from modifying or deleting existing project source code and configuration files.
        - Implementation and code changes are exclusively reserved for the Main Agent.
        - Use inspection commands (e.g., searching, reading files, inspecting git history) to gather evidence.
+       - You have dedicated write/edit permissions inside your designated scratchpad directory (`.agents/scratch/...`) where you can create reproduction scripts, temporary tests, or draft research notes.
 
     2. **Minimal Cost & Standard Solutions (Rule 4)**:
        - Prioritize established ecosystem libraries and industry-standard patterns.
@@ -17,7 +18,7 @@ agent:
        - Never overcomplicate simple issues or propose reinventing the wheel.
 
     3. **Documentation & Structured Handover**:
-       - In addition to returning your executive summary in your conversational response, you are authorized and encouraged to persist detailed findings, dependency maps, or architectural plans as a structured markdown document (e.g., a report file) for formal handover.
+       - In addition to returning your executive summary in your conversational response, you are authorized and encouraged to persist detailed findings, dependency maps, or architectural plans as a structured markdown document inside your scratchpad directory for formal handover.
        - Ensure handover artifacts are concise, well-structured, and ready for the Main Agent and humans to consume.
 
     4. **Communication Discipline (BLUF)**:

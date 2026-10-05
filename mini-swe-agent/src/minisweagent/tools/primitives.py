@@ -120,7 +120,7 @@ BASH_TOOL = {
 ALL_TOOLS = [READ_TOOL, WRITE_TOOL, EDIT_TOOL, BASH_TOOL]
 TOOL_NAMES = {"read", "write", "edit", "bash"}
 
-# OpenAI Responses API 扁平格式定义（无内层 function 键嵌套）
+# OpenAI Responses API flat schema definitions (without nested function dictionary)
 READ_TOOL_RESPONSE_API = {
     "type": "function",
     "name": "read",
@@ -166,11 +166,11 @@ from minisweagent.tools.subagent_tools import (
     SUBAGENT_TOOLS_RESPONSE_API,
 )
 
-# 主 Agent 专用的全量重武器工具集（4 基元 + 2 Subagent 显式重武器）
+# Full toolset for Main Agent (4 primitives + 2 explicit subagent delegation tools)
 MAIN_AGENT_TOOLS = ALL_TOOLS + SUBAGENT_TOOLS
 MAIN_AGENT_TOOLS_RESPONSE_API = ALL_TOOLS_RESPONSE_API + SUBAGENT_TOOLS_RESPONSE_API
 
-# 允许解析的工具名称全集
+# Complete set of allowed tool names
 TOOL_NAMES = {"read", "write", "edit", "bash"} | SUBAGENT_TOOL_NAMES
 
 

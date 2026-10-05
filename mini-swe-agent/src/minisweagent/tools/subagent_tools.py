@@ -1,15 +1,17 @@
-"""Subagent 显式重武器调度工具（delegate_research / delegate_review）与门禁执行器。
+"""Subagent explicit delegation tools (delegate_research / delegate_review) and gating executor.
 
-严格遵循微观黄金三角协作哲学：
-1. 显式调用（Explicit Invocation）：主 Agent 工具集显式暴露，严禁黑盒后台自循环。
-2. 严苛门禁（Strict Gating）：调研员限 2 次复杂架构探索；审查员限 1 次交付前最终审核。
-3. 上下文防火墙（Context Firewall）：主从 Agent 会话隔离，仅回传提炼后的交接简报。
-4. 沙箱复用：主从 Agent 共享同一个 Environment 实例。
+Follows the core multi-agent coordination principles:
+1. Explicit Invocation: Explicitly exposed in the main agent's toolset; no uncontrolled hidden loops.
+2. Strict Gating: Researcher is limited to 2 exploratory calls; Reviewer is limited to 1 final pre-merge audit.
+3. Context Firewall: Complete conversation isolation between parent and child agents; returns only a refined Handover Summary.
+4. Sandbox Reuse: Parent and child agents share the same runtime Environment instance.
 """
 
 from __future__ import annotations
 
 import logging
+import os
+from pathlib import Path
 from typing import Any
 
 from minisweagent.config import get_config_from_spec
@@ -18,7 +20,7 @@ from minisweagent.session import ThreadSession
 logger = logging.getLogger("subagent_tools")
 
 # ============================================================================
-# 1. OpenAI Function Calling 规范
+# 1. OpenAI Function Calling Schema
 # ============================================================================
 
 DELEGATE_RESEARCH_TOOL = {
@@ -66,7 +68,7 @@ DELEGATE_REVIEW_TOOL = {
 }
 
 # ============================================================================
-# 2. OpenAI Responses API 扁平规范
+# 2. OpenAI Responses API Flat Schema
 # ============================================================================
 
 DELEGATE_RESEARCH_TOOL_RESPONSE_API = {
@@ -89,10 +91,10 @@ SUBAGENT_TOOL_NAMES = {"delegate_research", "delegate_review"}
 
 
 # ============================================================================
-# 3. 门禁检查与执行引擎 (Gatekeeper & Executor)
+# 3. Gatekeeper and Execution Engine
 # ============================================================================
 
-# 单次主任务会话内允许调用的最大次数约束
+# Maximum permitted invocation limits per main session
 MAX_SUBAGENT_CALLS = {
     "researcher": 2,
     "reviewer": 1,
@@ -100,7 +102,7 @@ MAX_SUBAGENT_CALLS = {
 
 
 def check_subagent_gating(parent_agent: Any, role: str) -> str | None:
-    """检查 Subagent 调用门禁。若违规返回拦截原因，合规返回 None。"""
+    """Check gating limits for subagent invocation. Returns error reason if blocked, else None."""
     counts = getattr(parent_agent, "_subagent_call_counts", None)
     if counts is None:
         parent_agent._subagent_call_counts = {}
@@ -133,14 +135,14 @@ def execute_subagent(
     *,
     config_spec: str | None = None,
 ) -> dict[str, Any]:
-    """在共享沙箱环境中安全派发并执行子 Agent。
+    """Safely dispatch and execute a subagent within the shared environment.
 
-    - 门禁校验：严格拦截超额调用，避免死循环；
-    - 上下文隔离：构建专属子会话，主会话历史不向子 Agent 泄露；
-    - 成本与统计：子 Agent 消耗实时回传累加至主会话；
-    - 简报交接：输出标准化 Markdown 交接内容，充当上下文防火墙。
+    - Gating Validation: Blocks excess invocations to prevent infinite loops.
+    - Context Firewall: Spawns dedicated child session; parent history is not leaked to subagent.
+    - Metrics Aggregation: Subagent cost and calls are synchronized back to the parent session.
+    - Handover Delivery: Generates standardized Markdown summary as the sole cross-session observation.
     """
-    # 1. 门禁前置拦截
+    # 1. Pre-execution gating check
     gate_error = check_subagent_gating(parent_agent, role)
     if gate_error:
         logger.warning(f"Subagent '{role}' gated: {gate_error}")
@@ -150,10 +152,10 @@ def execute_subagent(
             "exception_info": "SubagentGatingBlocked",
         }
 
-    # 累加调用次数
+    # Increment invocation count
     parent_agent._subagent_call_counts[role] = parent_agent._subagent_call_counts.get(role, 0) + 1
 
-    # 2. 加载子 Agent 配置
+    # 2. Load subagent configuration
     cfg_name = config_spec or f"subagents/{role}.yaml"
     try:
         sub_config_dict = get_config_from_spec(cfg_name)
@@ -165,7 +167,7 @@ def execute_subagent(
             "exception_info": "ConfigLoadError",
         }
 
-    # 3. 构造子会话（挂载父级 thread_id）
+    # 3. Construct child session (linking parent thread_id)
     parent_session_id = parent_agent.session.thread_id if hasattr(parent_agent, "session") else None
     sub_session = ThreadSession(
         role=role,
@@ -173,18 +175,34 @@ def execute_subagent(
         metadata={"delegated_task": task, "config": sub_config_dict.get("agent", {})},
     )
 
-    # 4. 实例化子 Agent（共享模型与执行环境，上下文彻底隔离）
+    # 4. Create dedicated scratchpad workspace and sandboxed subagent environment
     from minisweagent.agents.default import DefaultAgent
+    from minisweagent.environments.local import LocalEnvironment
+
+    parent_workspace = Path(getattr(parent_agent.env.config, "cwd", os.getcwd())).resolve()
+    sub_scratch = parent_workspace / ".agents" / "scratch" / f"{role}_{sub_session.thread_id}"
+    sub_scratch.mkdir(parents=True, exist_ok=True)
+
+    # Subagent environment: workspace root for reads, strict scratchpad restriction for writes
+    if isinstance(parent_agent.env, LocalEnvironment):
+        sub_env = LocalEnvironment(
+            cwd=str(parent_workspace),
+            allowed_write_prefix=str(sub_scratch),
+            timeout=getattr(parent_agent.env.config, "timeout", 30),
+            env=dict(getattr(parent_agent.env.config, "env", {})),
+        )
+    else:
+        sub_env = parent_agent.env
 
     agent_kwargs = dict(sub_config_dict.get("agent", {}))
     agent_kwargs["session"] = sub_session
-    # 强制子 Agent 在无动作输出时自动交付
+    # Ensure subagent finishes when no further actions are generated
     agent_kwargs["complete_on_empty_actions"] = True
 
     try:
         sub_agent = DefaultAgent(
             model=parent_agent.model,
-            env=parent_agent.env,
+            env=sub_env,
             **agent_kwargs,
         )
         logger.info(f"Dispatching subagent '{role}' with task: {task[:60]}...")
@@ -197,16 +215,21 @@ def execute_subagent(
             "exception_info": str(e),
         }
 
-    # 5. 成本与调用计数同步至主 Agent
+    # 5. Synchronize cost and call counts back to parent agent
     if hasattr(parent_agent, "cost"):
         parent_agent.cost += sub_agent.cost
     if hasattr(parent_agent, "session"):
         parent_agent.session.add_cost(sub_agent.cost)
 
-    # 6. 生成标准交付简报 (Handover Summary)
+    # 6. Generate standardized handover summary
+    created_files = [str(p.relative_to(parent_workspace)) for p in sub_scratch.glob("**/*") if p.is_file()]
+    extra_notes = f"Subagent execution exit status: {info.get('exit_status', 'Unknown')}"
+    if created_files:
+        extra_notes += f"\n- **Generated Artifacts**: {', '.join(created_files)}"
+
     handover_report = sub_agent.export_handover_summary(
         target_role=getattr(parent_agent.config, "role", "main"),
-        extra_notes=f"Subagent execution exit status: {info.get('exit_status', 'Unknown')}",
+        extra_notes=extra_notes,
     )
 
     output = f"[Subagent Delivery: {role.upper()}]\n\n{handover_report}"

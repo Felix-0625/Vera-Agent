@@ -16,6 +16,9 @@ class LocalEnvironmentConfig(BaseModel):
     cwd: str = ""
     env: dict[str, str] = {}
     timeout: int = 30
+    allowed_write_prefix: str | None = None
+    max_output_lines: int = 800
+    max_output_bytes: int = 40000
 
 
 class LocalEnvironment:
@@ -29,42 +32,60 @@ class LocalEnvironment:
         cwd_path = Path(cwd or self.config.cwd or os.getcwd()).resolve()
 
         if tool_name == "read":
-            return read_file_op(
+            output = read_file_op(
                 path=action["path"],
                 offset=action.get("offset", 1),
                 limit=action.get("limit", 2000),
                 base_dir=cwd_path,
             )
         elif tool_name == "write":
-            return write_file_op(
+            output = write_file_op(
                 path=action["path"],
                 content=action["content"],
                 base_dir=cwd_path,
+                allowed_write_prefix=self.config.allowed_write_prefix,
             )
         elif tool_name == "edit":
-            return edit_file_op(
+            output = edit_file_op(
                 path=action["path"],
                 edits=action.get("edits", []),
                 base_dir=cwd_path,
+                allowed_write_prefix=self.config.allowed_write_prefix,
+            )
+        else:
+            command = action.get("command", "")
+            cwd_str = str(cwd_path)
+            try:
+                result = _run(command, cwd_str, os.environ | self.config.env, timeout or self.config.timeout)
+                output = {"output": result.stdout, "returncode": result.returncode, "exception_info": ""}
+            except Exception as e:
+                raw_output = getattr(e, "output", None)
+                raw_output = (
+                    raw_output.decode("utf-8", errors="replace") if isinstance(raw_output, bytes) else (raw_output or "")
+                )
+                output = {
+                    "output": raw_output,
+                    "returncode": -1,
+                    "exception_info": f"An error occurred while executing the command: {e}",
+                    "extra": {"exception_type": type(e).__name__, "exception": str(e)},
+                }
+            self._check_finished(output)
+
+        # Truncation guard for excessively long outputs
+        text = output.get("output", "")
+        lines = text.splitlines()
+        max_lines = self.config.max_output_lines
+        max_bytes = self.config.max_output_bytes
+
+        if len(lines) > max_lines or len(text) > max_bytes:
+            truncated_lines = lines[:max_lines]
+            truncated_text = "\n".join(truncated_lines)
+            if len(truncated_text) > max_bytes:
+                truncated_text = truncated_text[:max_bytes]
+            output["output"] = (
+                truncated_text + f"\n\n[... Warning: Tool output truncated. Exceeded limit ({max_lines} lines / {max_bytes} bytes). ...]"
             )
 
-        command = action.get("command", "")
-        cwd_str = str(cwd_path)
-        try:
-            result = _run(command, cwd_str, os.environ | self.config.env, timeout or self.config.timeout)
-            output = {"output": result.stdout, "returncode": result.returncode, "exception_info": ""}
-        except Exception as e:
-            raw_output = getattr(e, "output", None)
-            raw_output = (
-                raw_output.decode("utf-8", errors="replace") if isinstance(raw_output, bytes) else (raw_output or "")
-            )
-            output = {
-                "output": raw_output,
-                "returncode": -1,
-                "exception_info": f"An error occurred while executing the command: {e}",
-                "extra": {"exception_type": type(e).__name__, "exception": str(e)},
-            }
-        self._check_finished(output)
         return output
 
     def _check_finished(self, output: dict):

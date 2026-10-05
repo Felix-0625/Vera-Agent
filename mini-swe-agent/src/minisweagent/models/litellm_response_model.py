@@ -30,6 +30,8 @@ class LitellmResponseModel(LitellmModel):
         """Flatten response objects into their output items for stateless API calls."""
         result = []
         for msg in messages:
+            if msg.get("role") == "exit":
+                continue
             if msg.get("object") == "response":
                 for item in msg.get("output", []):
                     result.append({k: v for k, v in item.items() if k != "extra"})

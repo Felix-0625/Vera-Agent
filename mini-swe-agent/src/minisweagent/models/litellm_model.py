@@ -45,6 +45,8 @@ class LitellmModelConfig(BaseModel):
     """Template used to render the observation after executing an action."""
     multimodal_regex: str = ""
     """Regex to extract multimodal content. Empty string disables multimodal processing."""
+    allow_empty_tool_calls: bool = False
+    """Allow empty tool calls (natural language response without actions)."""
 
 
 class LitellmModel:
@@ -75,7 +77,7 @@ class LitellmModel:
             raise e
 
     def _prepare_messages_for_api(self, messages: list[dict]) -> list[dict]:
-        prepared = [{k: v for k, v in msg.items() if k != "extra"} for msg in messages]
+        prepared = [{k: v for k, v in msg.items() if k != "extra"} for msg in messages if msg.get("role") != "exit"]
         prepared = _reorder_anthropic_thinking_blocks(prepared)
         return set_cache_control(prepared, mode=self.config.set_cache_control)
 
@@ -133,6 +135,7 @@ class LitellmModel:
             tool_calls,
             format_error_template=self.config.format_error_template,
             template_kwargs={"finish_reason": response.choices[0].finish_reason},
+            allow_empty=getattr(self.config, "allow_empty_tool_calls", False),
         )
 
     def format_message(self, **kwargs) -> dict:

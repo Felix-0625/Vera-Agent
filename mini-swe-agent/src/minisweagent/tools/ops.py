@@ -7,6 +7,39 @@ from pathlib import Path
 from typing import Any
 
 
+def validate_safe_path(
+    path: str | Path,
+    base_dir: Path | None = None,
+    allowed_write_prefix: Path | str | None = None,
+    is_write: bool = False,
+) -> tuple[Path | None, str | None]:
+    """Validate path safety against workspace boundary and optional write prefix restriction.
+
+    Returns:
+        (resolved_path, error_message). If error_message is not None, operation should be blocked.
+    """
+    base = Path(base_dir or Path.cwd()).resolve()
+    try:
+        target = (base / path).resolve()
+    except Exception as e:
+        return None, f"Invalid path syntax '{path}': {e}"
+
+    # 1. Boundary check: must be inside base workspace
+    if not target.is_relative_to(base):
+        return None, f"AccessDenied: Path '{path}' escapes workspace boundary '{base}'."
+
+    # 2. Write restriction: if allowed_write_prefix is specified, writes must stay within it
+    if is_write and allowed_write_prefix is not None:
+        prefix = Path(allowed_write_prefix).resolve()
+        if not target.is_relative_to(prefix):
+            return None, (
+                f"PermissionDenied: Write operation to '{path}' blocked. "
+                f"Subagents are restricted to their designated scratchpad workspace: '{prefix}'."
+            )
+
+    return target, None
+
+
 def read_file_op(
     path: str | Path,
     offset: int = 1,
@@ -14,8 +47,13 @@ def read_file_op(
     base_dir: Path | None = None,
 ) -> dict[str, Any]:
     """Read file content with line numbers and pagination."""
-    base = Path(base_dir or Path.cwd()).resolve()
-    target = (base / path).resolve()
+    target, err = validate_safe_path(path, base_dir=base_dir, is_write=False)
+    if err:
+        return {
+            "output": f"Error: {err}",
+            "returncode": 1,
+            "exception_info": "AccessDenied" if "AccessDenied" in err else "PathError",
+        }
     if not target.exists():
         return {
             "output": f"Error: File '{path}' not found.",
@@ -58,10 +96,18 @@ def write_file_op(
     path: str | Path,
     content: str,
     base_dir: Path | None = None,
+    allowed_write_prefix: Path | str | None = None,
 ) -> dict[str, Any]:
     """Create or overwrite a file, creating parent directories automatically."""
-    base = Path(base_dir or Path.cwd()).resolve()
-    target = (base / path).resolve()
+    target, err = validate_safe_path(
+        path, base_dir=base_dir, allowed_write_prefix=allowed_write_prefix, is_write=True
+    )
+    if err:
+        return {
+            "output": f"Error: {err}",
+            "returncode": 1,
+            "exception_info": "PermissionDenied" if "PermissionDenied" in err else "AccessDenied",
+        }
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(content, encoding="utf-8")
@@ -83,10 +129,18 @@ def edit_file_op(
     path: str | Path,
     edits: list[dict[str, str]],
     base_dir: Path | None = None,
+    allowed_write_prefix: Path | str | None = None,
 ) -> dict[str, Any]:
     """Apply surgical find-and-replace edits to a file, returning a unified diff."""
-    base = Path(base_dir or Path.cwd()).resolve()
-    target = (base / path).resolve()
+    target, err = validate_safe_path(
+        path, base_dir=base_dir, allowed_write_prefix=allowed_write_prefix, is_write=True
+    )
+    if err:
+        return {
+            "output": f"Error: {err}",
+            "returncode": 1,
+            "exception_info": "PermissionDenied" if "PermissionDenied" in err else "AccessDenied",
+        }
     if not target.exists():
         return {
             "output": f"Error: File '{path}' not found.",
