@@ -152,6 +152,142 @@ class ThreadSession:
 
         return "\n".join(lines) + "\n"
 
+    def get_chat_history(
+        self,
+        prune_stale_observations: bool = True,
+        keep_last_n_observations: int = 4,
+        max_observation_chars: int = 500,
+    ) -> list[dict]:
+        """Return prepared chat history for model invocation with Level 1 observation pruning.
+
+        Preserves complete causal structure and tool_call_id pairs while replacing
+        bulky stale execution outputs (> max_observation_chars) from older turns with
+        compact summaries to drastically cut prompt token consumption.
+        """
+        if not prune_stale_observations or not self.messages:
+            return list(self.messages)
+
+        # 1. Identify indices of all observation messages
+        obs_indices = []
+        for idx, msg in enumerate(self.messages):
+            role = msg.get("role")
+            if role == "tool" or (role == "user" and ("<output>" in str(msg.get("content", "")) or msg.get("name"))):
+                obs_indices.append(idx)
+
+        # Observation messages that should be kept intact
+        preserve_indices = set(obs_indices[-keep_last_n_observations:]) if obs_indices else set()
+
+        pruned_history = []
+        for idx, msg in enumerate(self.messages):
+            if idx in obs_indices and idx not in preserve_indices:
+                content = str(msg.get("content", ""))
+                if len(content) > max_observation_chars:
+                    pruned_msg = dict(msg)
+                    tool_name = msg.get("name") or "tool"
+                    lines = content.count("\n")
+                    pruned_content = (
+                        f"[Output pruned: {tool_name} ({len(content)} chars, {lines} lines omitted. "
+                        "Result already incorporated into earlier turn)]"
+                    )
+                    # If XML wrapped (<output>...</output>), retain tags
+                    if "<output>" in content and "</output>" in content:
+                        import re
+                        pruned_msg["content"] = re.sub(
+                            r"<output>.*?</output>",
+                            f"<output>\n{pruned_content}\n</output>",
+                            content,
+                            flags=re.DOTALL,
+                        )
+                    else:
+                        pruned_msg["content"] = pruned_content
+                    pruned_history.append(pruned_msg)
+                    continue
+            pruned_history.append(msg)
+        return pruned_history
+
+    def compact(
+        self,
+        summary: str | None = None,
+        keep_last_n_turns: int = 4,
+    ) -> bool:
+        """Execute Level 2 Boundary Compaction.
+
+        Folds older conversational turns into a structured 4-slot context anchor block:
+        1. Goals & Milestones
+        2. Architectural Decisions & Invariants
+        3. Touched Files
+        4. Current WIP & Next Actions
+
+        Preserves initial system and instance templates, along with recent hot turns.
+        Returns True if compaction was performed, False if session is too short.
+        """
+        min_turns_needed = 2 + 2 + keep_last_n_turns
+        if len(self.messages) < min_turns_needed:
+            return False
+
+        # Determine cutoff boundary for hot turns
+        cut_idx = len(self.messages) - keep_last_n_turns
+        # Ensure cut_idx does not land on an orphaned 'tool' observation
+        while cut_idx < len(self.messages) and self.messages[cut_idx].get("role") == "tool":
+            cut_idx += 1
+
+        if cut_idx <= 2:
+            return False
+
+        if not summary:
+            touched = self.get_touched_files()
+            touched_str = "\n".join([f"- `[{t['action']}]` {t['path']}" for t in touched]) if touched else "- None"
+            last_text = self.get_last_assistant_text() or "- In progress"
+            task_desc = self.messages[1].get("content", "")[:400] if len(self.messages) > 1 else "Task in progress"
+            summary = (
+                "<context_compaction>\n"
+                "## 1. 原始目标与当前里程碑 (Goals & Milestones)\n"
+                f"{task_desc.strip()}\n\n"
+                "## 2. 关键架构决策与不可变契约 (Architectural Decisions & Invariants)\n"
+                "- 严格践行 7 大核心工程准则 (BLUF、范围授权、沙箱隔离)\n\n"
+                "## 3. 已触碰与修改的核心文件 (Touched Files)\n"
+                f"{touched_str}\n\n"
+                "## 4. 当前进行中状态与遗留阻碍 (Current WIP & Next Actions)\n"
+                f"{last_text}\n"
+                "</context_compaction>"
+            )
+
+        compacted_msg = {
+            "role": "user",
+            "content": f"[SYSTEM COMPACTION ANCHOR: Earlier dialogue turns folded to conserve context window]\n\n{summary}",
+            "extra": {"compaction": True, "timestamp": time.time()},
+        }
+
+        system_and_first = self.messages[:2]
+        hot_turns = self.messages[cut_idx:]
+        self.messages = system_and_first + [compacted_msg] + hot_turns
+        self.updated_at = time.time()
+        return True
+
+    def create_derived_session(
+        self,
+        new_role: str = "main",
+        extra_notes: str = "",
+    ) -> ThreadSession:
+        """Execute Level 3 Epoch Compaction / Session Rebirth.
+
+        Derives a clean new ThreadSession linked to parent_thread_id,
+        inheriting the structured Handover Summary and metadata.
+        """
+        handover_text = self.export_handover_summary(target_role=new_role, extra_notes=extra_notes)
+        new_session = ThreadSession(
+            role=new_role,
+            parent_thread_id=self.thread_id,
+            group_id=self.group_id,
+            metadata={"parent_cost": self.cost, "parent_calls": self.n_calls},
+        )
+        new_session.add_messages({
+            "role": "user",
+            "content": f"[INHERITED CONTEXT FROM SESSION {self.thread_id}]\n\n{handover_text}",
+            "extra": {"inherited": True, "parent_thread_id": self.thread_id},
+        })
+        return new_session
+
     def to_dict(self) -> dict[str, Any]:
         """Serialize the current session into a dictionary."""
         return asdict(self)

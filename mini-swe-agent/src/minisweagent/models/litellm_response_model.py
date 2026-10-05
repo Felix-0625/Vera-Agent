@@ -39,22 +39,33 @@ class LitellmResponseModel(LitellmModel):
                 result.append({k: v for k, v in msg.items() if k != "extra"})
         return result
 
-    def _query(self, messages: list[dict[str, str]], **kwargs):
+    def get_tools_for_role(self, role: str = "main") -> list[dict]:
+        """Return dynamic Response API tool definitions matching the agent's role."""
+        from minisweagent.tools import ALL_TOOLS_RESPONSE_API, MAIN_AGENT_TOOLS_RESPONSE_API
+        if role == "main":
+            return MAIN_AGENT_TOOLS_RESPONSE_API
+        return ALL_TOOLS_RESPONSE_API
+
+    def _query(self, messages: list[dict[str, str]], tools: list[dict] | None = None, **kwargs):
+        call_kwargs = dict(
+            model=self.config.model_name,
+            input=messages,
+            **(self.config.model_kwargs | kwargs),
+        )
+        tool_list = tools if tools is not None else ALL_TOOLS_RESPONSE_API
+        if tool_list:
+            call_kwargs["tools"] = tool_list
         try:
-            return litellm.responses(
-                model=self.config.model_name,
-                input=messages,
-                tools=ALL_TOOLS_RESPONSE_API,
-                **(self.config.model_kwargs | kwargs),
-            )
+            return litellm.responses(**call_kwargs)
         except litellm.exceptions.AuthenticationError as e:
             e.message += " You can permanently set your API key with `mini-extra config set KEY VALUE`."
             raise e
 
-    def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
+    def query(self, messages: list[dict[str, str]], tools: list[dict] | None = None, **kwargs) -> dict:
+        passed_tools = tools if tools is not None else kwargs.pop("tools", None)
         for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions):
             with attempt:
-                response = self._query(self._prepare_messages_for_api(messages), **kwargs)
+                response = self._query(self._prepare_messages_for_api(messages), tools=passed_tools, **kwargs)
         cost_output = self._calculate_cost(response)
         GLOBAL_MODEL_STATS.add(cost_output["cost"])
         try:

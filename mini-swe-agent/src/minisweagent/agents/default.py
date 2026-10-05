@@ -211,12 +211,33 @@ class DefaultAgent:
             )
         self.n_calls += 1
         self.session.n_calls = self.n_calls
-        message = self.model.query(self.messages)
+        chat_history = self.session.get_chat_history(prune_stale_observations=True)
+        message = self.model.query(chat_history, tools=self.get_tools())
         cost_inc = message.get("extra", {}).get("cost", 0.0)
         self.cost += cost_inc
         self.session.add_cost(cost_inc)
         self.add_messages(message)
         return message
+
+    def get_tools(self) -> list[dict]:
+        """Return dynamic tool definitions based on agent role following Pi-agent principles.
+
+        - Main agent gets 4 orthogonal primitives + 2 subagent delegation tools (MAIN_AGENT_TOOLS)
+        - Subagents (researcher, reviewer) get strictly the 4 primitives (ALL_TOOLS) with NO delegation
+        """
+        if getattr(self.config, "tools", None) is not None:
+            return self.config.tools
+        role = getattr(self.config, "role", "main")
+        if hasattr(self.model, "get_tools_for_role"):
+            return self.model.get_tools_for_role(role)
+        from minisweagent.tools import ALL_TOOLS, MAIN_AGENT_TOOLS
+        if role == "main":
+            return MAIN_AGENT_TOOLS
+        return ALL_TOOLS
+
+    def compact(self, summary: str | None = None, keep_last_n_turns: int = 4) -> bool:
+        """Execute Level 2 Boundary Compaction on current session."""
+        return self.session.compact(summary=summary, keep_last_n_turns=keep_last_n_turns)
 
     def execute_actions(self, message: dict) -> list[dict]:
         """Execute actions in message, add observation messages, return them."""

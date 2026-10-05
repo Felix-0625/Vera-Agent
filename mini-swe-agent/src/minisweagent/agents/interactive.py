@@ -215,8 +215,18 @@ class InteractiveAgent(DefaultAgent):
                 f"[bold green]/u[/bold green] to switch to [bold yellow]human[/bold yellow] mode (execute commands issued by the user)\n"
                 f"[bold green]/research [task][/bold green] to invoke Researcher subagent under context isolation\n"
                 f"[bold green]/review [task][/bold green] to invoke Reviewer subagent for quality audit\n"
+                f"[bold green]/compact[/bold green] to trigger Level 2 conversation compaction\n"
                 f"[bold green]/m[/bold green] to enter multiline comment",
             )
+            return self._prompt_and_handle_slash_commands(prompt)
+        if user_input.startswith("/compact") or user_input == "/compact":
+            before_len = len(self.session.messages)
+            success = self.compact()
+            after_len = len(self.session.messages)
+            if success:
+                console.print(f"\n[bold green]Context compacted successfully: {before_len} messages -> {after_len} messages.[/bold green]\n")
+            else:
+                console.print(f"\n[bold yellow]Session not long enough for boundary compaction ({before_len} messages).[/bold yellow]\n")
             return self._prompt_and_handle_slash_commands(prompt)
         if user_input.startswith("/research ") or user_input == "/research":
             task_arg = user_input[len("/research "):].strip() or "Perform codebase reconnaissance and dependency audit."

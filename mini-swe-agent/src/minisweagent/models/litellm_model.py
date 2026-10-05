@@ -64,14 +64,24 @@ class LitellmModel:
         if self.config.litellm_model_registry and Path(self.config.litellm_model_registry).is_file():
             litellm.utils.register_model(json.loads(Path(self.config.litellm_model_registry).read_text()))
 
-    def _query(self, messages: list[dict[str, str]], **kwargs):
+    def get_tools_for_role(self, role: str = "main") -> list[dict]:
+        """Return dynamic tool schema definitions matching the agent's role (Pi-agent philosophy)."""
+        from minisweagent.tools import ALL_TOOLS, MAIN_AGENT_TOOLS
+        if role == "main":
+            return MAIN_AGENT_TOOLS
+        return ALL_TOOLS
+
+    def _query(self, messages: list[dict[str, str]], tools: list[dict] | None = None, **kwargs):
+        call_kwargs = dict(
+            model=self.config.model_name,
+            messages=messages,
+            **(self.config.model_kwargs | kwargs),
+        )
+        tool_list = tools if tools is not None else ALL_TOOLS
+        if tool_list:
+            call_kwargs["tools"] = tool_list
         try:
-            return litellm.completion(
-                model=self.config.model_name,
-                messages=messages,
-                tools=ALL_TOOLS,
-                **(self.config.model_kwargs | kwargs),
-            )
+            return litellm.completion(**call_kwargs)
         except litellm.exceptions.AuthenticationError as e:
             e.message += " You can permanently set your API key with `mini-extra config set KEY VALUE`."
             raise e
@@ -81,10 +91,11 @@ class LitellmModel:
         prepared = _reorder_anthropic_thinking_blocks(prepared)
         return set_cache_control(prepared, mode=self.config.set_cache_control)
 
-    def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
+    def query(self, messages: list[dict[str, str]], tools: list[dict] | None = None, **kwargs) -> dict:
+        passed_tools = tools if tools is not None else kwargs.pop("tools", None)
         for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions):
             with attempt:
-                response = self._query(self._prepare_messages_for_api(messages), **kwargs)
+                response = self._query(self._prepare_messages_for_api(messages), tools=passed_tools, **kwargs)
         cost_output = self._calculate_cost(response)
         GLOBAL_MODEL_STATS.add(cost_output["cost"])
         # Note: all model.query() implementations must persist the response and cost on FormatError.
