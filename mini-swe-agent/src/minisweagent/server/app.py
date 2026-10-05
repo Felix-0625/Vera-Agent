@@ -45,7 +45,7 @@ def create_app(
     skill_mgr = SkillManager(root_dirs=[root_path])
 
     async def health(request: Request) -> JSONResponse:
-        return JSONResponse({"status": "ok", "version": "2.4.6", "repo_root": str(root_path)})
+        return JSONResponse({"status": "ok", "repo_root": str(root_path)})
 
     async def get_topology(request: Request) -> JSONResponse:
         topo = active_graph.export_topology(graph_id="active_gitflow_topology")
