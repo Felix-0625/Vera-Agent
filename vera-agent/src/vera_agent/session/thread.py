@@ -28,6 +28,9 @@ class ThreadSession:
 
     thread_id: str = field(default_factory=lambda: f"th_{uuid.uuid4().hex[:12]}")
     role: str = "main"
+    title: str = ""
+    is_pinned: bool = False
+    is_archived: bool = False
     parent_thread_id: str | None = None
     group_id: str | None = None
     created_at: float = field(default_factory=time.time)

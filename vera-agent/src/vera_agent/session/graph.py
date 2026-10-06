@@ -28,6 +28,8 @@ class ProjectGroup:
     branch_name: str
     worktree_path: Path
     thread_ids: list[str] = field(default_factory=list)
+    is_pinned: bool = False
+    is_archived: bool = False
     metadata: dict[str, Any] = field(default_factory=dict)
     created_at: float = field(default_factory=time.time)
 
@@ -43,6 +45,19 @@ class ProjectGroup:
 
     def has_thread(self, thread_id: str) -> bool:
         return thread_id in self.thread_ids
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "group_id": self.group_id,
+            "name": self.name,
+            "branch_name": self.branch_name,
+            "worktree_path": str(self.worktree_path),
+            "thread_ids": list(self.thread_ids),
+            "is_pinned": self.is_pinned,
+            "is_archived": self.is_archived,
+            "metadata": self.metadata,
+            "created_at": self.created_at,
+        }
 
 
 class GitFlowGraph:
@@ -78,6 +93,28 @@ class GitFlowGraph:
 
     def get_group(self, group_id: str) -> ProjectGroup | None:
         return self.groups.get(group_id)
+
+    def remove_group(self, group_id: str) -> bool:
+        """Remove a group from the topology graph."""
+        if group_id in self.groups:
+            group = self.groups.pop(group_id)
+            for tid in group.thread_ids:
+                if tid in self.sessions:
+                    self.sessions[tid]["group_id"] = None
+                    self.sessions[tid]["attached_worktree"] = None
+            return True
+        return False
+
+    def remove_session(self, thread_id: str) -> bool:
+        """Remove an agent session node from the graph and groups."""
+        found = False
+        if thread_id in self.sessions:
+            self.sessions.pop(thread_id)
+            found = True
+        for group in self.groups.values():
+            if group.remove_thread(thread_id):
+                found = True
+        return found
 
     def register_session(
         self,
