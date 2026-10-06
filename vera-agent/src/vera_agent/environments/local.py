@@ -39,19 +39,35 @@ class LocalEnvironment:
                 base_dir=cwd_path,
             )
         elif tool_name == "write":
-            output = write_file_op(
-                path=action["path"],
-                content=action["content"],
-                base_dir=cwd_path,
-                allowed_write_prefix=self.config.allowed_write_prefix,
-            )
+            target_path_str = str(action.get("path", "")).replace("\\", "/")
+            if ".agents/registries" in target_path_str:
+                output = {
+                    "output": "Permission Denied: Direct modification of .agents/registries/ by agent is strictly prohibited. The registry is exclusively managed by the host system.",
+                    "returncode": 1,
+                    "exception_info": "Protected system registry",
+                }
+            else:
+                output = write_file_op(
+                    path=action["path"],
+                    content=action["content"],
+                    base_dir=cwd_path,
+                    allowed_write_prefix=self.config.allowed_write_prefix,
+                )
         elif tool_name == "edit":
-            output = edit_file_op(
-                path=action["path"],
-                edits=action.get("edits", []),
-                base_dir=cwd_path,
-                allowed_write_prefix=self.config.allowed_write_prefix,
-            )
+            target_path_str = str(action.get("path", "")).replace("\\", "/")
+            if ".agents/registries" in target_path_str:
+                output = {
+                    "output": "Permission Denied: Direct modification of .agents/registries/ by agent is strictly prohibited. The registry is exclusively managed by the host system.",
+                    "returncode": 1,
+                    "exception_info": "Protected system registry",
+                }
+            else:
+                output = edit_file_op(
+                    path=action["path"],
+                    edits=action.get("edits", []),
+                    base_dir=cwd_path,
+                    allowed_write_prefix=self.config.allowed_write_prefix,
+                )
         else:
             command = action.get("command", "")
             cwd_str = str(cwd_path)

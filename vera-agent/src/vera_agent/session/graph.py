@@ -28,6 +28,8 @@ class ProjectGroup:
     branch_name: str
     worktree_path: Path
     thread_ids: list[str] = field(default_factory=list)
+    topology_type: str = "custom"
+    goal: str = ""
     is_pinned: bool = False
     is_archived: bool = False
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -53,6 +55,8 @@ class ProjectGroup:
             "branch_name": self.branch_name,
             "worktree_path": str(self.worktree_path),
             "thread_ids": list(self.thread_ids),
+            "topology_type": self.topology_type,
+            "goal": self.goal,
             "is_pinned": self.is_pinned,
             "is_archived": self.is_archived,
             "metadata": self.metadata,
@@ -76,6 +80,9 @@ class GitFlowGraph:
         branch_name: str,
         base_branch: str = "main",
         name: str | None = None,
+        topology_type: str = "custom",
+        goal: str = "",
+        metadata: dict[str, Any] | None = None,
     ) -> ProjectGroup:
         """Create or register a ProjectGroup backed by an isolated Git Worktree."""
         if group_id in self.groups:
@@ -87,6 +94,9 @@ class GitFlowGraph:
             name=name or f"Group: {branch_name}",
             branch_name=branch_name,
             worktree_path=wt_path,
+            topology_type=topology_type,
+            goal=goal,
+            metadata=metadata or {},
         )
         self.groups[group_id] = group
         return group
@@ -121,6 +131,7 @@ class GitFlowGraph:
         thread_id: str,
         role: str = "implementer",
         group_id: str | None = None,
+        title: str = "",
         status: str = "idle",
         metrics: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
@@ -133,6 +144,7 @@ class GitFlowGraph:
 
         session_info = {
             "thread_id": thread_id,
+            "title": title or f"Thread {thread_id[:8]}",
             "role": role,
             "group_id": group_id,
             "status": status,
@@ -179,6 +191,15 @@ class GitFlowGraph:
         link = (from_thread, to_thread, label)
         if link not in self.communication_links:
             self.communication_links.append(link)
+
+    def remove_communication(self, from_thread: str, to_thread: str) -> bool:
+        """Remove a communication link between two sessions."""
+        orig_len = len(self.communication_links)
+        self.communication_links = [
+            (f, t, l) for f, t, l in self.communication_links
+            if not (f == from_thread and t == to_thread)
+        ]
+        return len(self.communication_links) != orig_len
 
     def export_topology(self, graph_id: str = "gitflow_graph") -> GraphTopology:
         """Generate a complete React Flow-compatible topology for frontend visualization."""

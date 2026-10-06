@@ -37,6 +37,8 @@ from vera_agent.models.litellm_model import LitellmModel
 from vera_agent.session.graph import GitFlowGraph, ProjectGroup
 from vera_agent.session.pipeline import HandoffPipeline
 from vera_agent.session.router import SessionRouter
+from vera_agent.session.registry import RegistryManager
+from vera_agent.session.templates import list_topology_templates, get_topology_template
 from vera_agent.session.thread import ThreadSession
 from vera_agent.session.worktree import WorktreeManager
 from vera_agent.tools.code_tools import check_syntax_op, symbol_search_op
@@ -79,6 +81,7 @@ def create_app(
         state["router"] = SessionRouter(graph=active_g)
         state["pipeline"] = HandoffPipeline(graph=active_g)
         state["skill_mgr"] = SkillManager(root_dirs=[resolved_root])
+        state["registry_mgr"] = RegistryManager(resolved_root)
 
     init_workspace(Path(repo_root or Path.cwd()))
     if graph is not None:
@@ -220,6 +223,9 @@ def create_app(
             start_time = time.time()
             step_counter = 0
 
+            if session.group_id:
+                state["registry_mgr"].update_agent_status(session.group_id, thread_id, "running")
+
             # 1. Yield initial thinking status
             yield f"event: thinking\ndata: {json.dumps({'step': 0, 'content': 'Analyzing instructions and preparing execution...'}, ensure_ascii=False)}\n\n"
 
@@ -325,6 +331,8 @@ def create_app(
 
             # Persist session state
             session.save(get_sessions_dir() / f"{thread_id}.json")
+            if session.group_id:
+                state["registry_mgr"].update_agent_status(session.group_id, thread_id, "idle")
 
             duration = round(time.time() - start_time, 2)
             finish_payload = {
@@ -569,6 +577,7 @@ def create_app(
         branch_name = group.branch_name
         state["graph"].remove_group(group_id)
         state["wt_manager"].remove_worktree(branch_name, force=True)
+        state["registry_mgr"].delete_group_registry(group_id)
 
         return JSONResponse({"status": "ok", "deleted_group_id": group_id})
 
@@ -616,8 +625,17 @@ def create_app(
         )
         sessions[thread_id] = s
         group.add_thread(thread_id)
-        state["graph"].register_session(thread_id, role=role, group_id=group_id)
+        state["graph"].register_session(thread_id, role=role, group_id=group_id, title=title)
         s.save(get_sessions_dir() / f"{thread_id}.json")
+
+        state["registry_mgr"].register_agent(
+            group_id=group_id,
+            thread_id=thread_id,
+            title=title,
+            role=role,
+            log_uri=f".agents/sessions/{thread_id}.json",
+            status="idle",
+        )
 
         return JSONResponse(s.to_dict())
 
@@ -646,6 +664,13 @@ def create_app(
 
         if "title" in body:
             session.title = str(body["title"])
+            if session.group_id:
+                state["registry_mgr"].register_agent(
+                    group_id=session.group_id,
+                    thread_id=thread_id,
+                    title=session.title,
+                    role=session.role,
+                )
         if "is_pinned" in body:
             session.is_pinned = bool(body["is_pinned"])
         if "is_archived" in body:
@@ -656,6 +681,9 @@ def create_app(
 
     async def delete_thread(request: Request) -> JSONResponse:
         thread_id = request.path_params["thread_id"]
+        session = sessions.get(thread_id)
+        if session and session.group_id:
+            state["registry_mgr"].remove_agent(session.group_id, thread_id)
         sessions.pop(thread_id, None)
         state["graph"].remove_session(thread_id)
 
@@ -665,6 +693,167 @@ def create_app(
             s_file.unlink()
 
         return JSONResponse({"status": "ok", "deleted_thread_id": thread_id})
+
+    # =========================================================================
+    # Module 3+: Topology Provisioning & Explicit Registry Management
+    # =========================================================================
+
+    async def get_templates(request: Request) -> JSONResponse:
+        return JSONResponse({"templates": list_topology_templates()})
+
+    async def provision_group(request: Request) -> JSONResponse:
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+
+        template_id = body.get("template_id", "supervisor_dev")
+        tpl = get_topology_template(template_id)
+        if not tpl:
+            return JSONResponse({"error": f"Template '{template_id}' not found"}, status_code=404)
+
+        group_name = body.get("group_name") or f"Group: {tpl.name}"
+        branch_name = body.get("branch_name")
+        if not branch_name:
+            return JSONResponse({"error": "branch_name is required"}, status_code=400)
+
+        base_branch = body.get("base_branch", "main")
+        goal = body.get("goal", "").strip() or "Execute assigned development tasks."
+        group_id = body.get("group_id") or f"grp_{uuid.uuid4().hex[:8]}"
+
+        # 1. Create Git Worktree & ProjectGroup
+        group = state["graph"].create_group(
+            group_id=group_id,
+            branch_name=branch_name,
+            base_branch=base_branch,
+            name=group_name,
+            topology_type=tpl.topology_type,
+            goal=goal,
+        )
+
+        # 2. Instantiate Nodes (Threads)
+        role_to_thread_id: dict[str, str] = {}
+        created_threads: list[ThreadSession] = []
+
+        for idx, n_bp in enumerate(tpl.nodes):
+            tid = f"th_{n_bp.role_key}_{uuid.uuid4().hex[:6]}"
+            role_to_thread_id[n_bp.role_key] = tid
+
+            rendered_prompt = n_bp.prompt_template.replace("{{goal}}", goal).replace("{{task}}", n_bp.title)
+
+            session = ThreadSession(
+                thread_id=tid,
+                group_id=group_id,
+                role=n_bp.role,
+                title=n_bp.title,
+                metadata={
+                    "role_key": n_bp.role_key,
+                    "responsibilities": n_bp.responsibilities,
+                    "allowed_tools": n_bp.allowed_tools,
+                    "system_prompt": rendered_prompt,
+                },
+            )
+
+            # If entry/lead node, seed kickoff directive
+            if idx == 0:
+                session.add_messages({
+                    "role": "user",
+                    "content": f"[SYSTEM INITIATIVE: Group Goal Activated]\n业务总目标：{goal}\n请按照你的岗位职责（{n_bp.title}）开始拆解方案并引导协作窗口开展工作。",
+                })
+
+            sessions[tid] = session
+            group.add_thread(tid)
+            state["graph"].register_session(
+                thread_id=tid,
+                role=n_bp.role,
+                group_id=group_id,
+                title=n_bp.title,
+            )
+            session.save(get_sessions_dir() / f"{tid}.json")
+            created_threads.append(session)
+
+            # Register in explicit RegistryManager
+            state["registry_mgr"].register_agent(
+                group_id=group_id,
+                thread_id=tid,
+                title=n_bp.title,
+                role=n_bp.role,
+                responsibilities=n_bp.responsibilities,
+                allowed_tools=n_bp.allowed_tools,
+                log_uri=f".agents/sessions/{tid}.json",
+                status="idle",
+            )
+
+        # 3. Instantiate Edges
+        for e_bp in tpl.edges:
+            s_tid = role_to_thread_id.get(e_bp.source_role)
+            t_tid = role_to_thread_id.get(e_bp.target_role)
+            if s_tid and t_tid:
+                state["graph"].record_communication(s_tid, t_tid, label=e_bp.relation)
+                state["registry_mgr"].add_edge(group_id, s_tid, t_tid, relation=e_bp.relation)
+
+        # 4. Save group registry metadata
+        state["registry_mgr"].create_or_update_group(
+            group_id=group_id,
+            group_name=group_name,
+            branch_name=branch_name,
+            worktree_path=str(group.worktree_path),
+            topology_type=tpl.topology_type,
+            goal=goal,
+        )
+
+        reg = state["registry_mgr"].get_group_registry(group_id)
+        return JSONResponse({
+            "status": "ok",
+            "group": group.to_dict(),
+            "threads": [s.to_dict() for s in created_threads],
+            "registry": reg.model_dump() if reg else {},
+        })
+
+    async def get_group_registry(request: Request) -> JSONResponse:
+        group_id = request.path_params["group_id"]
+        reg = state["registry_mgr"].get_group_registry(group_id)
+        if not reg:
+            return JSONResponse({"error": f"Registry for group '{group_id}' not found"}, status_code=404)
+        return JSONResponse(reg.model_dump())
+
+    async def add_group_edge(request: Request) -> JSONResponse:
+        group_id = request.path_params["group_id"]
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+
+        source_tid = body.get("source_thread_id")
+        target_tid = body.get("target_thread_id")
+        relation = body.get("relation", "connected_to")
+        if not source_tid or not target_tid:
+            return JSONResponse({"error": "source_thread_id and target_thread_id required"}, status_code=400)
+
+        state["graph"].record_communication(source_tid, target_tid, label=relation)
+        state["registry_mgr"].add_edge(group_id, source_tid, target_tid, relation=relation)
+        return JSONResponse({
+            "status": "ok",
+            "source_thread_id": source_tid,
+            "target_thread_id": target_tid,
+            "relation": relation,
+        })
+
+    async def remove_group_edge(request: Request) -> JSONResponse:
+        group_id = request.path_params["group_id"]
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+
+        source_tid = body.get("source_thread_id")
+        target_tid = body.get("target_thread_id")
+        if not source_tid or not target_tid:
+            return JSONResponse({"error": "source_thread_id and target_thread_id required"}, status_code=400)
+
+        state["graph"].remove_communication(source_tid, target_tid)
+        state["registry_mgr"].remove_edge(group_id, source_tid, target_tid)
+        return JSONResponse({"status": "ok", "removed": True})
 
     # =========================================================================
     # Module 4: MCP Servers 协议总线管理（参考 Trae 设计）
@@ -1164,6 +1353,13 @@ def create_app(
         Route("/api/threads/{thread_id}/messages", get_thread_messages, methods=["GET"]),
         Route("/api/threads/{thread_id}", update_thread, methods=["PATCH"]),
         Route("/api/threads/{thread_id}", delete_thread, methods=["DELETE"]),
+
+        # Module 3+: Topology Provisioning & Explicit Registry
+        Route("/api/templates/topology", get_templates, methods=["GET"]),
+        Route("/api/groups/provision", provision_group, methods=["POST"]),
+        Route("/api/groups/{group_id}/registry", get_group_registry, methods=["GET"]),
+        Route("/api/groups/{group_id}/edges", add_group_edge, methods=["POST"]),
+        Route("/api/groups/{group_id}/edges", remove_group_edge, methods=["DELETE"]),
 
         # Module 4: MCP Servers Bus
         Route("/api/mcp/servers", get_mcp_servers, methods=["GET"]),
