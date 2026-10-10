@@ -33,6 +33,7 @@ class ThreadSession:
     is_archived: bool = False
     parent_thread_id: str | None = None
     group_id: str | None = None
+    project_id: str | None = None
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
     messages: list[dict] = field(default_factory=list)
@@ -43,6 +44,8 @@ class ThreadSession:
     def add_messages(self, *messages: dict) -> list[dict]:
         """Append messages to the session and update the last modified timestamp."""
         new_msgs = list(messages)
+        for message in new_msgs:
+            message.setdefault("id", f"msg_{uuid.uuid4().hex}")
         self.messages.extend(new_msgs)
         self.updated_at = time.time()
         return new_msgs
@@ -176,12 +179,15 @@ class ThreadSession:
         bulky stale execution outputs (> max_observation_chars) from older turns with
         compact summaries to drastically cut prompt token consumption.
         """
-        if not prune_stale_observations or not self.messages:
-            return list(self.messages)
+        from vera_agent.session.context_management import context_projection
+
+        history = context_projection(self)
+        if not prune_stale_observations or not history:
+            return history
 
         # 1. Identify indices of all observation messages
         obs_indices = []
-        for idx, msg in enumerate(self.messages):
+        for idx, msg in enumerate(history):
             role = msg.get("role")
             msg_content = msg.get("content")
             content_str = str(msg_content or "")
@@ -192,7 +198,7 @@ class ThreadSession:
         preserve_indices = set(obs_indices[-keep_last_n_observations:]) if obs_indices else set()
 
         pruned_history = []
-        for idx, msg in enumerate(self.messages):
+        for idx, msg in enumerate(history):
             if idx in obs_indices and idx not in preserve_indices:
                 content = str(msg.get("content") or "")
                 if len(content) > max_observation_chars:
@@ -219,65 +225,6 @@ class ThreadSession:
             pruned_history.append(msg)
         return pruned_history
 
-    def compact(
-        self,
-        summary: str | None = None,
-        keep_last_n_turns: int = 4,
-    ) -> bool:
-        """Execute Level 2 Boundary Compaction.
-
-        Folds older conversational turns into a structured 4-slot context anchor block:
-        1. Goals & Milestones
-        2. Architectural Decisions & Invariants
-        3. Touched Files
-        4. Current WIP & Next Actions
-
-        Preserves initial system and instance templates, along with recent hot turns.
-        Returns True if compaction was performed, False if session is too short.
-        """
-        min_turns_needed = 2 + 2 + keep_last_n_turns
-        if len(self.messages) < min_turns_needed:
-            return False
-
-        # Determine cutoff boundary for hot turns
-        cut_idx = len(self.messages) - keep_last_n_turns
-        # Ensure cut_idx does not land on an orphaned 'tool' observation
-        while cut_idx < len(self.messages) and self.messages[cut_idx].get("role") == "tool":
-            cut_idx += 1
-
-        if cut_idx <= 2:
-            return False
-
-        if not summary:
-            touched = self.get_touched_files()
-            touched_str = "\n".join([f"- `[{t['action']}]` {t['path']}" for t in touched]) if touched else "- None"
-            last_text = self.get_last_assistant_text() or "- In progress"
-            task_desc = self.messages[1].get("content", "")[:400] if len(self.messages) > 1 else "Task in progress"
-            summary = (
-                "<context_compaction>\n"
-                "## 1. 原始目标与当前里程碑 (Goals & Milestones)\n"
-                f"{task_desc.strip()}\n\n"
-                "## 2. 关键架构决策与不可变契约 (Architectural Decisions & Invariants)\n"
-                "- 严格践行 7 大核心工程准则 (BLUF、范围授权、沙箱隔离)\n\n"
-                "## 3. 已触碰与修改的核心文件 (Touched Files)\n"
-                f"{touched_str}\n\n"
-                "## 4. 当前进行中状态与遗留阻碍 (Current WIP & Next Actions)\n"
-                f"{last_text}\n"
-                "</context_compaction>"
-            )
-
-        compacted_msg = {
-            "role": "user",
-            "content": f"[SYSTEM COMPACTION ANCHOR: Earlier dialogue turns folded to conserve context window]\n\n{summary}",
-            "extra": {"compaction": True, "timestamp": time.time()},
-        }
-
-        system_and_first = self.messages[:2]
-        hot_turns = self.messages[cut_idx:]
-        self.messages = system_and_first + [compacted_msg] + hot_turns
-        self.updated_at = time.time()
-        return True
-
     def create_derived_session(
         self,
         new_role: str = "main",
@@ -293,7 +240,11 @@ class ThreadSession:
             role=new_role,
             parent_thread_id=self.thread_id,
             group_id=self.group_id,
-            metadata={"parent_cost": self.cost, "parent_calls": self.n_calls},
+            metadata={
+                "parent_cost": self.cost,
+                "parent_calls": self.n_calls,
+                "rebirth_timestamp": time.time(),
+            },
         )
         new_session.add_messages({
             "role": "user",

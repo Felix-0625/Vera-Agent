@@ -1,0 +1,12 @@
+{
+  "max_tool_attempts": 3,
+  "whitelist_actions": [
+    "create",
+    "edit",
+    "delete",
+    "terminal",
+    "mcp",
+    "read"
+  ],
+  "default_mode": "confirm"
+}

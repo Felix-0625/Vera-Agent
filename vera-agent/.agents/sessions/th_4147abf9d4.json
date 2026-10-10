@@ -1,0 +1,98 @@
+{
+  "thread_id": "th_4147abf9d4",
+  "role": "main",
+  "title": "请依次输出 1 到 1200，每行格式“编辑",
+  "is_pinned": false,
+  "is_archived": false,
+  "parent_thread_id": null,
+  "group_id": null,
+  "project_id": null,
+  "created_at": 1791564373.7474966,
+  "updated_at": 1791564421.3417013,
+  "messages": [
+    {
+      "role": "user",
+      "content": "请只回复：暂停中的问题已修改并重新发送成功。",
+      "id": "msg_1791564420920_4kdrce",
+      "extra": {
+        "rule_trigger": null,
+        "attached_skills": [],
+        "attached_mcps": [],
+        "images": []
+      }
+    },
+    {
+      "content": "暂停中的问题已修改并重新发送成功。",
+      "role": "assistant",
+      "tool_calls": null,
+      "function_call": null,
+      "provider_specific_fields": null,
+      "extra": {
+        "actions": [],
+        "response": {
+          "id": "fef8cc2a-c15e-4122-9cc1-d3f761f8ea9a",
+          "created": 1791564421,
+          "model": "deepseek-chat",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "暂停中的问题已修改并重新发送成功。",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 10,
+            "prompt_tokens": 1261,
+            "total_tokens": 1271,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": null,
+              "audio_tokens": null,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": null,
+              "text_tokens": 10,
+              "image_tokens": null,
+              "video_tokens": null
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 1024,
+              "text_tokens": null,
+              "image_tokens": null,
+              "video_tokens": null
+            },
+            "cost": 4.4621999999999994e-05
+          }
+        },
+        "cost": 9.923200000000001e-05,
+        "timestamp": 1791564421.3411813,
+        "activity": [
+          {
+            "id": "status-5bfb9088",
+            "kind": "status",
+            "label": "连接模型",
+            "status": "done",
+            "detail": "已连接"
+          },
+          {
+            "id": "status-7dffd0cd",
+            "kind": "status",
+            "label": "生成回答",
+            "status": "done",
+            "detail": "已接收模型输出"
+          }
+        ],
+        "duration": 0.4
+      }
+    }
+  ],
+  "cost": 0.0,
+  "n_calls": 0,
+  "metadata": {}
+}

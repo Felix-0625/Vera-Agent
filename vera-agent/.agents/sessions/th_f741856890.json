@@ -1,0 +1,98 @@
+{
+  "thread_id": "th_f741856890",
+  "role": "main",
+  "title": "请仅回复：第一次验证。",
+  "is_pinned": false,
+  "is_archived": false,
+  "parent_thread_id": null,
+  "group_id": null,
+  "project_id": "proj_3d524d51",
+  "created_at": 1791561500.36207,
+  "updated_at": 1791561515.0900898,
+  "messages": [
+    {
+      "role": "user",
+      "content": "请仅回复：修改后验证。",
+      "id": "msg_1791561514648_p0funo",
+      "extra": {
+        "rule_trigger": null,
+        "attached_skills": [],
+        "attached_mcps": [],
+        "images": []
+      }
+    },
+    {
+      "content": "修改后验证。",
+      "role": "assistant",
+      "tool_calls": null,
+      "function_call": null,
+      "provider_specific_fields": null,
+      "extra": {
+        "actions": [],
+        "response": {
+          "id": "eac96884-e3b5-4e74-8b4b-a72413f4bce2",
+          "created": 1791561514,
+          "model": "deepseek-chat",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "修改后验证。",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 4,
+            "prompt_tokens": 1255,
+            "total_tokens": 1259,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": null,
+              "audio_tokens": null,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": null,
+              "text_tokens": 4,
+              "image_tokens": null,
+              "video_tokens": null
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 1024,
+              "text_tokens": null,
+              "image_tokens": null,
+              "video_tokens": null
+            },
+            "cost": 4.012199999999999e-05
+          }
+        },
+        "cost": 9.503200000000001e-05,
+        "timestamp": 1791561515.0897386,
+        "activity": [
+          {
+            "id": "status-bc2abfe2",
+            "kind": "status",
+            "label": "连接模型",
+            "status": "done",
+            "detail": "已连接"
+          },
+          {
+            "id": "status-7cbbcbdc",
+            "kind": "status",
+            "label": "生成回答",
+            "status": "done",
+            "detail": "已接收模型输出"
+          }
+        ],
+        "duration": 0.42
+      }
+    }
+  ],
+  "cost": 0.0,
+  "n_calls": 0,
+  "metadata": {}
+}

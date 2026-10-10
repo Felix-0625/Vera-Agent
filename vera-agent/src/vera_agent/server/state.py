@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import subprocess
+import threading
 import time
 import uuid
 from pathlib import Path
@@ -53,6 +54,7 @@ class ServerState:
         graph: GitFlowGraph | None = None,
     ):
         self.root_path: Path = Path.cwd()
+        self.projects_config_root: Path = Path(repo_root or Path.cwd()).resolve()
         self.wt_manager: WorktreeManager | None = None
         self.graph: GitFlowGraph | None = None
         self.router: SessionRouter | None = None
@@ -63,6 +65,9 @@ class ServerState:
         self.sessions: dict[str, ThreadSession] = {}
         self.pending_approvals: dict[str, asyncio.Future[str]] = {}
         self.interruption_flags: dict[str, bool] = {}
+        self.paused_chat_threads: set[str] = set()
+        self.chat_pause_events: dict[str, threading.Event] = {}
+        self.active_chat_threads: set[str] = set()
 
         self.init_workspace(Path(repo_root or Path.cwd()))
         if graph is not None:
@@ -71,7 +76,8 @@ class ServerState:
             self.pipeline = HandoffPipeline(graph=graph)
 
     def load_json_config(self, file_name: str, default_data: Any) -> Any:
-        cfg_file = self.root_path / ".agents" / file_name
+        config_root = self.projects_config_root if file_name == "projects_history.json" else self.root_path
+        cfg_file = config_root / ".agents" / file_name
         if cfg_file.exists():
             try:
                 return json.loads(cfg_file.read_text(encoding="utf-8"))
@@ -80,11 +86,18 @@ class ServerState:
         return default_data
 
     def save_json_config(self, file_name: str, data: Any) -> None:
-        cfg_file = self.root_path / ".agents" / file_name
+        config_root = self.projects_config_root if file_name == "projects_history.json" else self.root_path
+        cfg_file = config_root / ".agents" / file_name
         cfg_file.parent.mkdir(parents=True, exist_ok=True)
         cfg_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    def init_workspace(self, target_root: Path) -> None:
+    def init_workspace(
+        self,
+        target_root: Path,
+        project_id: str | None = None,
+        project_name: str | None = None,
+        folders: list[str] | None = None,
+    ) -> None:
         resolved_root = target_root.resolve()
         wt = WorktreeManager(repo_root=resolved_root)
         active_g = GitFlowGraph(repo_root=resolved_root, worktree_manager=wt)
@@ -100,16 +113,21 @@ class ServerState:
         proj_hist = self.load_json_config("projects_history.json", {"projects": []})
         projects = proj_hist.get("projects", [])
         path_str = str(resolved_root)
-        existing = next((p for p in projects if p.get("path") == path_str), None)
+        existing = next((p for p in projects if (project_id and p.get("id") == project_id) or p.get("path") == path_str), None)
         if existing:
+            existing["path"] = path_str
+            if project_name:
+                existing["name"] = project_name
             existing["last_opened_at"] = time.time()
             existing["is_git"] = (resolved_root / ".git").exists()
             existing["active_branch"] = get_git_branch(resolved_root)
+            existing["folders"] = folders or existing.get("folders") or [path_str]
         else:
             projects.append({
-                "id": f"proj_{uuid.uuid4().hex[:8]}",
-                "name": resolved_root.name,
+                "id": project_id or f"proj_{uuid.uuid4().hex[:8]}",
+                "name": project_name or resolved_root.name,
                 "path": path_str,
+                "folders": folders or [path_str],
                 "is_git": (resolved_root / ".git").exists(),
                 "active_branch": get_git_branch(resolved_root),
                 "last_opened_at": time.time(),

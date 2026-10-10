@@ -330,23 +330,41 @@ def test_module6_analytics_dashboard(temp_git_repo: Path):
     data = res_dash.json()
 
     assert "summary" in data
-    assert "total_cost" in data["summary"]
+    assert "total_cost_usd" in data["summary"]
     assert "total_tokens" in data["summary"]
-    assert "active_worktrees" in data["summary"]
-    assert "rebirth_count" in data["summary"]
+    assert "today_cost_usd" in data["summary"]
+    assert len(data["retained_months"]) == 3
 
     assert "daily_trends" in data
     assert isinstance(data["daily_trends"], list)
-    assert len(data["daily_trends"]) > 0
+    assert len(data["daily_trends"]) >= 60
+    assert {row["month"] for row in data["daily_trends"]} == set(data["retained_months"])
 
-    assert "group_distribution" in data
-    assert any(g["group_id"] == "grp_analytics" for g in data["group_distribution"])
+    assert "weekly_trends" in data
+    assert isinstance(data["weekly_trends"], list)
+    assert "monthly_models" in data
+    assert isinstance(data["monthly_models"], list)
 
-    assert "agent_distribution" in data
-    assert "main_calls" in data["agent_distribution"]
+    assert "mcp_usage" in data
+    assert isinstance(data["mcp_usage"], list)
+    assert "skill_usage" in data
+    assert isinstance(data["skill_usage"], list)
 
-    assert "health_events" in data
-    assert isinstance(data["health_events"], list)
+
+def test_context_status_is_available_for_new_draft(temp_git_repo: Path):
+    app = create_app(repo_root=temp_git_repo)
+    client = TestClient(app)
+
+    response = client.get("/api/context-status", params={"model_id": "deepseek/deepseek-chat"})
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["thread_id"] is None
+    assert data["model"] == "deepseek/deepseek-chat"
+    assert data["context_limit"] > 0
+    assert data["used_tokens"] == 0
+    assert data["used_percent"] == 0
+    assert data["rebirth_logs"] == []
 
 
 def test_module1_chat_and_execution_stream(temp_git_repo: Path):
@@ -424,7 +442,13 @@ async def test_module1_chat_confirm_approval(temp_git_repo: Path):
     tid = "th_hitl_test"
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        with patch.object(LitellmModel, "query", side_effect=mock_responses):
+        def mock_query_stream(_messages, _tools=None, *, on_text, **_kwargs):
+            response = mock_responses.pop(0)
+            if response["content"]:
+                on_text(response["content"])
+            return response
+
+        with patch.object(LitellmModel, "query_stream", side_effect=mock_query_stream):
             stream_task = asyncio.create_task(
                 ac.post(
                     "/api/chat/stream",

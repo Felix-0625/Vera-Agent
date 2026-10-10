@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
@@ -16,6 +17,17 @@ def _get_state(request: Request) -> ServerState:
     return request.app.state.server_state
 
 
+def _project_root(state: ServerState, project_id: str | None):
+    if not project_id:
+        return state.root_path
+    history = state.load_json_config("projects_history.json", {"projects": []})
+    project = next((item for item in history.get("projects", []) if item.get("id") == project_id), None)
+    if not project:
+        return None
+    candidates = [project.get("path"), *(project.get("folders") or [])]
+    return next((Path(path).resolve() for path in candidates if isinstance(path, str) and Path(path).is_dir()), None)
+
+
 async def get_topology(request: Request) -> JSONResponse:
     state = _get_state(request)
     if not state.graph:
@@ -26,9 +38,12 @@ async def get_topology(request: Request) -> JSONResponse:
 
 async def get_branches(request: Request) -> JSONResponse:
     state = _get_state(request)
-    code, stdout, _ = state.run_git(["branch", "-a"])
+    root = _project_root(state, request.query_params.get("project_id"))
+    if root is None:
+        return JSONResponse({"error": "项目不存在或项目目录不可用"}, status_code=404)
+    code, stdout, _ = state.run_git(["branch", "-a"], cwd=root)
     branches: list[dict] = []
-    current_branch = get_git_branch(state.root_path)
+    current_branch = get_git_branch(root)
 
     for line in stdout.splitlines():
         line_clean = line.strip()
@@ -59,10 +74,13 @@ async def create_branch(request: Request) -> JSONResponse:
 
     branch_name = body.get("branch_name")
     start_point = body.get("start_point", "HEAD")
+    root = _project_root(state, body.get("project_id"))
+    if root is None:
+        return JSONResponse({"error": "项目不存在或项目目录不可用"}, status_code=404)
     if not branch_name:
         return JSONResponse({"error": "branch_name is required"}, status_code=400)
 
-    code, stdout, stderr = state.run_git(["branch", branch_name, start_point])
+    code, stdout, stderr = state.run_git(["branch", branch_name, start_point], cwd=root)
     if code != 0:
         return JSONResponse({"error": stderr or "Failed to create branch"}, status_code=500)
 
@@ -71,11 +89,14 @@ async def create_branch(request: Request) -> JSONResponse:
 
 async def delete_branch(request: Request) -> JSONResponse:
     state = _get_state(request)
+    root = _project_root(state, request.query_params.get("project_id"))
+    if root is None:
+        return JSONResponse({"error": "项目不存在或项目目录不可用"}, status_code=404)
     branch_name = request.path_params.get("branch_name", "")
     if not branch_name:
         return JSONResponse({"error": "branch_name is required"}, status_code=400)
 
-    code, stdout, stderr = state.run_git(["branch", "-D", branch_name])
+    code, stdout, stderr = state.run_git(["branch", "-D", branch_name], cwd=root)
     if code != 0:
         return JSONResponse({"error": stderr or f"Failed to delete branch {branch_name}"}, status_code=500)
 
@@ -90,10 +111,13 @@ async def checkout_branch(request: Request) -> JSONResponse:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
 
     branch_name = body.get("branch_name")
+    root = _project_root(state, body.get("project_id"))
+    if root is None:
+        return JSONResponse({"error": "项目不存在或项目目录不可用"}, status_code=404)
     if not branch_name:
         return JSONResponse({"error": "branch_name is required"}, status_code=400)
 
-    code, stdout, stderr = state.run_git(["checkout", branch_name])
+    code, stdout, stderr = state.run_git(["checkout", branch_name], cwd=root)
     if code != 0:
         return JSONResponse({"error": stderr or f"Failed to checkout {branch_name}"}, status_code=500)
 
@@ -108,10 +132,13 @@ async def merge_branch(request: Request) -> JSONResponse:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
 
     source = body.get("source_branch")
+    root = _project_root(state, body.get("project_id"))
+    if root is None:
+        return JSONResponse({"error": "项目不存在或项目目录不可用"}, status_code=404)
     if not source:
         return JSONResponse({"error": "source_branch is required"}, status_code=400)
 
-    code, stdout, stderr = state.run_git(["merge", source])
+    code, stdout, stderr = state.run_git(["merge", source], cwd=root)
     return JSONResponse({
         "status": "merged" if code == 0 else "conflict_or_error",
         "returncode": code,

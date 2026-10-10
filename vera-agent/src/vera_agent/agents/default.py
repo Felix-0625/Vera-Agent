@@ -102,6 +102,12 @@ class DefaultAgent:
         self.n_calls = 0
         self.n_consecutive_format_errors = 0
         self._start_time = time.time()
+        self.progress_callback = None
+
+    def report_progress(self, event: dict) -> None:
+        """Report public execution progress when this agent runs as a subagent."""
+        if self.progress_callback:
+            self.progress_callback(event)
 
     def get_template_vars(self, **kwargs) -> dict:
         """Recursively merge dictionaries, Integrating data from multiple sources"""
@@ -145,6 +151,8 @@ class DefaultAgent:
         self.extra_template_vars |= {"task": task, **kwargs}
         if clear_messages:
             self.session.messages.clear()
+            self.session.metadata.pop("context_checkpoints", None)
+            self.session.metadata.pop("context_events", None)
             self.add_messages(
                 self.model.format_message(role="system", content=self._render_template(self.config.system_template)),
                 self.model.format_message(role="user", content=self._render_template(self.config.instance_template)),
@@ -211,12 +219,44 @@ class DefaultAgent:
             )
         self.n_calls += 1
         self.session.n_calls = self.n_calls
+        self.report_progress({"kind": "status", "label": "正在分析任务", "detail": f"第 {self.n_calls} 轮模型调用"})
+        if getattr(self.config, "role", "main") in {"researcher", "reviewer"}:
+            from vera_agent.session.context_management import compact_session, subagent_rebirth_if_needed
+
+            model_name = self.model.config.model_name
+            try:
+                import litellm
+                context_window = int(getattr(self.model, "context_window", None) or litellm.get_model_info(model_name).get("max_input_tokens") or 0)
+            except Exception:
+                context_window = 0
+            try:
+                event = compact_session(
+                    self.session,
+                    model_name,
+                    self.model.config.model_kwargs,
+                    context_window or None,
+                )
+            except Exception:
+                self.logger.exception("Subagent context compaction failed; preserving its current transcript")
+                event = None
+            if event:
+                self.report_progress({"kind": "status", "label": "压缩上下文", "detail": f"{event['before_tokens']:,} → {event['after_tokens']:,} Token"})
+            rebirth = subagent_rebirth_if_needed(
+                self.session,
+                model_name,
+                context_window or None,
+                model_kwargs=self.model.config.model_kwargs,
+            )
+            if rebirth:
+                self.report_progress({"kind": "status", "label": "子智能体换血", "detail": rebirth["detail"]})
         chat_history = self.session.get_chat_history(prune_stale_observations=True)
         message = self.model.query(chat_history, tools=self.get_tools())
         cost_inc = message.get("extra", {}).get("cost", 0.0)
         self.cost += cost_inc
         self.session.add_cost(cost_inc)
         self.add_messages(message)
+        if not message.get("extra", {}).get("actions") and message.get("content"):
+            self.report_progress({"kind": "result", "content": str(message["content"])})
         return message
 
     def get_tools(self) -> list[dict]:
@@ -226,6 +266,8 @@ class DefaultAgent:
         - Researcher subagent gets 4 primitives + 2 web search & fetch tools (RESEARCHER_TOOLS)
         - Reviewer subagent gets 4 primitives (REVIEWER_TOOLS)
         """
+        if getattr(self, "_tools_disabled", False):
+            return []
         if getattr(self.config, "tools", None) is not None:
             return self.config.tools
         role = getattr(self.config, "role", "main")
@@ -238,9 +280,22 @@ class DefaultAgent:
             return RESEARCHER_TOOLS
         return REVIEWER_TOOLS
 
-    def compact(self, summary: str | None = None, keep_last_n_turns: int = 4) -> bool:
-        """Execute Level 2 Boundary Compaction on current session."""
-        return self.session.compact(summary=summary, keep_last_n_turns=keep_last_n_turns)
+    def compact(self) -> bool:
+        """Manually compact the session into a Pi-style context checkpoint."""
+        from vera_agent.session.context_management import compact_session
+
+        model_config = getattr(self.model, "config", None)
+        model_name = getattr(model_config, "model_name", None)
+        if not model_name:
+            return False
+        event = compact_session(
+            self.session,
+            model_name,
+            getattr(model_config, "model_kwargs", {}),
+            getattr(self.model, "context_window", None),
+            force=True,
+        )
+        return event is not None
 
     def execute_actions(self, message: dict) -> list[dict]:
         """Execute actions in message, add observation messages, return them."""
@@ -256,22 +311,26 @@ class DefaultAgent:
         outputs = []
         for action in actions:
             tool_name = action.get("tool_name")
+            labels = {"read": "读取文件", "write": "创建文件", "edit": "修改文件", "web_search": "网页搜索", "fetch_web_page": "读取网页"}
+            label = labels.get(str(tool_name), str(tool_name or "终端命令"))
+            self.report_progress({"kind": "tool", "label": label, "detail": "执行中", "status": "working"})
             if tool_name in ("delegate_research", "delegate_review"):
                 outputs.append(self.execute_subagent_tool(action))
             elif tool_name in ("web_search", "fetch_web_page"):
                 outputs.append(self.execute_web_tool(action))
             else:
                 outputs.append(self.env.execute(action))
+            self.report_progress({"kind": "tool", "label": label, "detail": "已完成", "status": "done"})
         return self.add_messages(*self.model.format_observation_messages(message, outputs, self.get_template_vars()))
 
-    def execute_subagent_tool(self, action: dict) -> dict[str, Any]:
+    def execute_subagent_tool(self, action: dict, on_progress=None) -> dict[str, Any]:
         """Dispatch subagent execution (delegate_research or delegate_review) under context isolation."""
         from vera_agent.tools.subagent_tools import execute_subagent
 
         tool_name = action.get("tool_name", "")
         role = "researcher" if tool_name == "delegate_research" else "reviewer"
         task = action.get("task", "")
-        return execute_subagent(self, role=role, task=task)
+        return execute_subagent(self, role=role, task=task, on_progress=on_progress)
 
     def execute_web_tool(self, action: dict) -> dict[str, Any]:
         """Dispatch external web search or web page fetch."""

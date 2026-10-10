@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -15,6 +17,11 @@ from vera_agent.models.test_models import (
     make_response_api_output,
     make_toolcall_output,
 )
+
+
+def python_command(code: str) -> str:
+    """Build a shell-safe command that works with both cmd.exe and POSIX shells."""
+    return subprocess.list2cmdline([sys.executable, "-c", code])
 
 # --- Helper functions to abstract message format differences ---
 
@@ -189,7 +196,7 @@ def test_timeout_handling(model_factory):
     agent = DefaultAgent(
         model=factory(
             [
-                ("Long sleep", [{"command": "sleep 5"}]),  # This will timeout
+                ("Long sleep", [{"command": python_command("import time; time.sleep(5)")}]),  # This will timeout
                 ("Quick finish", [{"command": "echo 'COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT'\necho 'recovered'"}]),
             ]
         ),
@@ -209,7 +216,7 @@ def test_timeout_captures_partial_output(model_factory):
     """Test that timeout error captures partial output from commands that produce output before timing out."""
     factory, config = model_factory
     num1, num2 = 111, 9
-    calculation_command = f"echo $(({num1}*{num2})); sleep 10"
+    calculation_command = python_command(f"import time; print({num1} * {num2}, flush=True); time.sleep(10)")
     expected_output = str(num1 * num2)
     agent = DefaultAgent(
         model=factory(
@@ -413,7 +420,7 @@ def test_wall_time_limit_enforcement(model_factory):
     agent = DefaultAgent(
         model=factory(
             [
-                ("Slow command", [{"command": "sleep 2"}]),
+                ("Slow command", [{"command": python_command("import time; time.sleep(2)")}]),
                 ("Should not run", [{"command": "echo 'unreachable'"}]),
             ]
         ),

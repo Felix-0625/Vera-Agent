@@ -1,0 +1,100 @@
+{
+  "thread_id": "th_720ea9f62c",
+  "role": "main",
+  "title": "请只回复：上下文面板验证成功。不调用工具，不",
+  "is_pinned": false,
+  "is_archived": false,
+  "parent_thread_id": null,
+  "group_id": null,
+  "project_id": null,
+  "created_at": 1791606446.2274523,
+  "updated_at": 1791606447.1016734,
+  "messages": [
+    {
+      "role": "user",
+      "content": "请只回复：上下文面板验证成功。不调用工具，不修改任何文件。",
+      "id": "msg_1791606446242_saigkh",
+      "extra": {
+        "rule_trigger": null,
+        "attached_skills": [],
+        "attached_mcps": [],
+        "images": [],
+        "timestamp": 1791606446.293426
+      }
+    },
+    {
+      "content": "上下文面板验证成功。",
+      "role": "assistant",
+      "tool_calls": null,
+      "function_call": null,
+      "provider_specific_fields": null,
+      "extra": {
+        "actions": [],
+        "response": {
+          "id": "5bc7a369-57b9-45fb-9e34-e9f4c88bc630",
+          "created": 1791606446,
+          "model": "deepseek-chat",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "上下文面板验证成功。",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null
+              }
+            }
+          ],
+          "usage": {
+            "completion_tokens": 5,
+            "prompt_tokens": 1265,
+            "total_tokens": 1270,
+            "completion_tokens_details": {
+              "accepted_prediction_tokens": null,
+              "audio_tokens": null,
+              "reasoning_tokens": 0,
+              "rejected_prediction_tokens": null,
+              "text_tokens": 5,
+              "image_tokens": null,
+              "video_tokens": null
+            },
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 1024,
+              "text_tokens": null,
+              "image_tokens": null,
+              "video_tokens": null
+            },
+            "cost": 4.2221999999999997e-05
+          }
+        },
+        "cost": 9.825200000000001e-05,
+        "timestamp": 1791606447.1012192,
+        "activity": [
+          {
+            "id": "status-aac56f0a",
+            "kind": "status",
+            "label": "连接模型",
+            "status": "done",
+            "detail": "已连接"
+          },
+          {
+            "id": "status-7c54e5f5",
+            "kind": "status",
+            "label": "生成回答",
+            "status": "done",
+            "detail": "已接收模型输出"
+          }
+        ],
+        "duration": 0.81
+      },
+      "id": "msg_9220db634e164c92977a6cd024cd6ffb"
+    }
+  ],
+  "cost": 0.0,
+  "n_calls": 0,
+  "metadata": {}
+}

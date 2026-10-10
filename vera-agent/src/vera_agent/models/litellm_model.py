@@ -25,6 +25,12 @@ from vera_agent.models.utils.retry import retry
 logger = logging.getLogger("litellm_model")
 
 
+class _StreamFailedAfterOutput(Exception):
+    def __init__(self, original: Exception):
+        super().__init__(str(original))
+        self.original = original
+
+
 class LitellmModelConfig(BaseModel):
     model_name: str
     """Model name. Highly recommended to include the provider in the model name, e.g., `anthropic/claude-sonnet-4-5-20250929`."""
@@ -111,6 +117,111 @@ class LitellmModel:
                 # model_dump failed (e.g. unserializable object); fall back to repr
                 # so the spec contract ("response MUST be persisted") holds unconditionally.
                 e.messages[0]["extra"]["response"] = repr(response)
+            raise
+        message = response.choices[0].message.model_dump()
+        message["extra"] = {
+            "actions": actions,
+            "response": response.model_dump(),
+            **cost_output,
+            "timestamp": time.time(),
+        }
+        return message
+
+    def query_stream(
+        self,
+        messages: list[dict[str, str]],
+        tools: list[dict] | None = None,
+        *,
+        on_text: Callable[[str], None],
+        **kwargs,
+    ) -> dict:
+        """Stream visible assistant text while assembling the normal query result."""
+        passed_tools = tools if tools is not None else kwargs.pop("tools", None)
+        call_kwargs = dict(kwargs)
+        call_kwargs["stream"] = True
+        stream_options = dict(call_kwargs.get("stream_options") or {})
+        stream_options.setdefault("include_usage", True)
+        call_kwargs["stream_options"] = stream_options
+
+        content_parts: list[str] = []
+        tool_calls: dict[int, dict[str, Any]] = {}
+        usage: dict[str, Any] | None = None
+        response_id = None
+        created = None
+        response_model = self.config.model_name
+        finish_reason = None
+        streamed_text = False
+        try:
+            for attempt in retry(
+                logger=logger,
+                abort_exceptions=[*self.abort_exceptions, _StreamFailedAfterOutput],
+            ):
+                with attempt:
+                    chunks = self._query(
+                        self._prepare_messages_for_api(messages), tools=passed_tools, **call_kwargs
+                    )
+                    try:
+                        for chunk in chunks:
+                            response_id = getattr(chunk, "id", response_id)
+                            created = getattr(chunk, "created", created)
+                            response_model = getattr(chunk, "model", response_model)
+                            choices = getattr(chunk, "choices", None) or []
+                            if getattr(chunk, "usage", None) is not None:
+                                usage = chunk.usage.model_dump() if hasattr(chunk.usage, "model_dump") else dict(chunk.usage)
+                            if not choices:
+                                continue
+                            choice = choices[0]
+                            finish_reason = getattr(choice, "finish_reason", None) or finish_reason
+                            delta = getattr(choice, "delta", None)
+                            if delta is None:
+                                continue
+                            text = getattr(delta, "content", None)
+                            if isinstance(text, str) and text:
+                                content_parts.append(text)
+                                streamed_text = True
+                                on_text(text)
+                            for call in getattr(delta, "tool_calls", None) or []:
+                                index = getattr(call, "index", 0)
+                                current = tool_calls.setdefault(index, {"id": "", "type": "function", "function": {"name": "", "arguments": ""}})
+                                if getattr(call, "id", None):
+                                    current["id"] = call.id
+                                if getattr(call, "type", None):
+                                    current["type"] = call.type
+                                function = getattr(call, "function", None)
+                                if function is not None:
+                                    if getattr(function, "name", None):
+                                        current["function"]["name"] += function.name
+                                    if getattr(function, "arguments", None):
+                                        current["function"]["arguments"] += function.arguments
+                    except Exception as error:
+                        if streamed_text:
+                            raise _StreamFailedAfterOutput(error) from error
+                        raise
+        except _StreamFailedAfterOutput as error:
+            raise error.original from error
+
+        response = litellm.ModelResponse(
+            id=response_id,
+            created=created,
+            model=response_model,
+            choices=[{
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "".join(content_parts) or None,
+                    "tool_calls": [tool_calls[index] for index in sorted(tool_calls)] or None,
+                },
+                "finish_reason": finish_reason,
+            }],
+            usage=usage,
+        )
+        cost_output = self._calculate_cost(response)
+        GLOBAL_MODEL_STATS.add(cost_output["cost"])
+        try:
+            actions = self._parse_actions(response)
+        except FormatError as e:
+            e.messages[0]["extra"].update(cost_output)
+            e.messages[0]["extra"]["response"] = response.model_dump(mode="json")
             raise
         message = response.choices[0].message.model_dump()
         message["extra"] = {

@@ -133,10 +133,12 @@ async def get_permissions(request: Request) -> JSONResponse:
     state = _get_state(request)
     default_perm = {
         "default_mode": "confirm",
-        "whitelist_actions": ["read", "symbol_search", "check_syntax"],
+        "whitelist_actions": ["read", "create", "edit", "delete", "terminal", "mcp"],
+        "operation_scope": "project_write_external_readonly",
     }
-    cfg = state.load_json_config("permissions_config.json", default_perm)
-    return JSONResponse(cfg)
+    cfg = state.load_json_config("permissions_config.json", {})
+    merged = {**default_perm, **(cfg if isinstance(cfg, dict) else {})}
+    return JSONResponse(merged)
 
 
 async def save_permissions(request: Request) -> JSONResponse:
@@ -146,6 +148,8 @@ async def save_permissions(request: Request) -> JSONResponse:
     except Exception:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
 
+    if body.get("operation_scope", "project_write_external_readonly") not in {"project_only", "project_write_external_readonly"}:
+        return JSONResponse({"error": "Invalid operation_scope"}, status_code=400)
     state.save_json_config("permissions_config.json", body)
     return JSONResponse({"status": "ok", "permissions": body})
 

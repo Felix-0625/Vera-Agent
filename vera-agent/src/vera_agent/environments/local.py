@@ -17,6 +17,7 @@ class LocalEnvironmentConfig(BaseModel):
     env: dict[str, str] = {}
     timeout: int = 30
     allowed_write_prefix: str | None = None
+    allow_external_read: bool = False
     max_output_lines: int = 800
     max_output_bytes: int = 40000
 
@@ -37,6 +38,7 @@ class LocalEnvironment:
                 offset=action.get("offset", 1),
                 limit=action.get("limit", 2000),
                 base_dir=cwd_path,
+                allow_external_read=self.config.allow_external_read,
             )
         elif tool_name == "write":
             target_path_str = str(action.get("path", "")).replace("\\", "/")
@@ -159,7 +161,21 @@ def _run(command: str, cwd: str, env: dict[str, str], timeout: int) -> subproces
     try:
         stdout, _ = process.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
-        os.killpg(process.pid, signal.SIGKILL) if os.name == "posix" else process.kill()
+        if os.name == "posix":
+            os.killpg(process.pid, signal.SIGKILL)
+        else:
+            # With shell=True, killing cmd.exe alone can leave its child process
+            # alive with stdout open, which makes communicate() wait past timeout.
+            try:
+                subprocess.run(
+                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                    timeout=5,
+                )
+            except (OSError, subprocess.TimeoutExpired):
+                process.kill()
         stdout, _ = process.communicate()
         raise subprocess.TimeoutExpired(command, timeout, output=stdout)
     return subprocess.CompletedProcess(command, process.returncode, stdout=stdout)

@@ -1,0 +1,92 @@
+[
+  {
+    "instance_id": "astropy__astropy-12907",
+    "repo": "astropy/astropy",
+    "gold_files": [
+      "astropy/modeling/separable.py"
+    ],
+    "hit_files": [
+      "astropy/modeling/separable.py"
+    ],
+    "gold_hit": true,
+    "is_bluf": true,
+    "has_scope_proposal": true,
+    "safe_sandbox": true,
+    "elapsed_sec": 9.63,
+    "api_calls": 1,
+    "cost": 0.00218,
+    "response_summary": "## BLUF  This is a genuine bug in `astropy/modeling/separable.py`. The root cause is that `separability_matrix` computes the separability of a `CompoundModel` by combining the *separable sub-matrices of each operand* using a naive block-diagonal / off-diagonal composition, but it does **not** flatte"
+  },
+  {
+    "instance_id": "django__django-10914",
+    "repo": "django/django",
+    "gold_files": [
+      "django/conf/global_settings.py"
+    ],
+    "hit_files": [
+      "django/conf/global_settings.py"
+    ],
+    "gold_hit": true,
+    "is_bluf": true,
+    "has_scope_proposal": true,
+    "safe_sandbox": true,
+    "elapsed_sec": 6.2,
+    "api_calls": 1,
+    "cost": 0.00152,
+    "response_summary": "## BLUF  Django should set `FILE_UPLOAD_PERMISSIONS` to a fixed default of `0o644` (instead of the current implicit `None`), eliminating the inconsistent permissions (`0o600` vs `0o644`) that depend on which upload handler (Memory vs Temporary) processed the file. The `TemporaryUploadedFile` path sh"
+  },
+  {
+    "instance_id": "pallets__flask-4045",
+    "repo": "pallets/flask",
+    "gold_files": [
+      "src/flask/blueprints.py"
+    ],
+    "hit_files": [
+      "src/flask/blueprints.py"
+    ],
+    "gold_hit": true,
+    "is_bluf": true,
+    "has_scope_proposal": true,
+    "safe_sandbox": true,
+    "elapsed_sec": 5.66,
+    "api_calls": 1,
+    "cost": 0.00121,
+    "response_summary": "## BLUF  为 `Blueprint` 的 `name` 参数增加\"名称中不能包含点号（`.`）\"的校验，在 `Blueprint.__init__`（或注册时）抛出 `ValueError`，与 Flask 1.0 已对 endpoint 名称所做的校验保持一致。核心改动集中在 `flask/blueprints.py`，并在 `tests/test_blueprints.py` 补充回归测试；预计影响 2 个文件。  ---  ## 技术方案与根因分析  **背景/根因：** - 引入嵌套蓝图（nested blueprints）后，端点名称的组装规则为 `parent_name +"
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-10297",
+    "repo": "scikit-learn/scikit-learn",
+    "gold_files": [
+      "sklearn/linear_model/ridge.py"
+    ],
+    "hit_files": [
+      "sklearn/linear_model/ridge.py"
+    ],
+    "gold_hit": true,
+    "is_bluf": true,
+    "has_scope_proposal": true,
+    "safe_sandbox": true,
+    "elapsed_sec": 4.82,
+    "api_calls": 1,
+    "cost": 0.00123,
+    "response_summary": "## BLUF  `RidgeClassifierCV` inherits `_BaseRidgeCV`, which implements `store_cv_values` — but the subclass's `__init__` neither declares the parameter nor forwards it to the base, so passing `store_cv_values=True` raises `TypeError`. The fix is a 2-axis change: (1) add `store_cv_values` to `RidgeCl"
+  },
+  {
+    "instance_id": "sympy__sympy-11400",
+    "repo": "sympy/sympy",
+    "gold_files": [
+      "sympy/printing/ccode.py"
+    ],
+    "hit_files": [
+      "sympy/printing/ccode.py"
+    ],
+    "gold_hit": true,
+    "is_bluf": true,
+    "has_scope_proposal": true,
+    "safe_sandbox": true,
+    "elapsed_sec": 7.97,
+    "api_calls": 1,
+    "cost": 0.0019,
+    "response_summary": "## BLUF  `sinc(x)` is a SymPy function with no C printer handler, so the C code printer emits a \"Not supported in C\" comment. The correct fix is **not** to rely on `math.h` (which indeed has no `sinc`), but to teach the C printer to emit a verbose `Piecewise`-style ternary expression that reproduces"
+  }
+]

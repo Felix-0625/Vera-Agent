@@ -180,7 +180,8 @@ from vera_agent.tools.web_tools import (
 MAIN_AGENT_TOOLS = ALL_TOOLS + SUBAGENT_TOOLS + WEB_TOOLS
 MAIN_AGENT_TOOLS_RESPONSE_API = ALL_TOOLS_RESPONSE_API + SUBAGENT_TOOLS_RESPONSE_API + WEB_TOOLS_RESPONSE_API
 
-# 2. Researcher Subagent gets 4 primitives + 2 web search & fetch tools (strictly NO delegation)
+# 2. Researcher can work inside its dedicated workspace. The runtime environment
+# enforces the file boundary; global permission settings still gate each action.
 RESEARCHER_TOOLS = ALL_TOOLS + WEB_TOOLS
 RESEARCHER_TOOLS_RESPONSE_API = ALL_TOOLS_RESPONSE_API + WEB_TOOLS_RESPONSE_API
 

@@ -1,0 +1,200 @@
+{
+  "graph_id": "ecommerce_gitflow_topology",
+  "nodes": [
+    {
+      "id": "br_feat_redis-inventory",
+      "type": "branchNode",
+      "data": {
+        "name": "feat/redis-inventory",
+        "is_main": false
+      },
+      "position": {
+        "x": 50.0,
+        "y": 50.0
+      }
+    },
+    {
+      "id": "br_feat_stripe-payment",
+      "type": "branchNode",
+      "data": {
+        "name": "feat/stripe-payment",
+        "is_main": false
+      },
+      "position": {
+        "x": 310.0,
+        "y": 50.0
+      }
+    },
+    {
+      "id": "wt_grp_payment",
+      "type": "worktreeNode",
+      "data": {
+        "group_id": "grp_payment",
+        "name": "Payment Services Team",
+        "branch": "feat/stripe-payment",
+        "path": "C:\\Users\\FAST\\AppData\\Local\\Temp\\agent_real_scenario_2q5y_sb8\\ecommerce_core\\.agents\\worktrees\\feat_stripe-payment",
+        "is_dirty": false,
+        "dirty_files_count": 0,
+        "head_commit": "a1d3e3a"
+      },
+      "position": {
+        "x": 50.0,
+        "y": 200.0
+      }
+    },
+    {
+      "id": "wt_grp_inventory",
+      "type": "worktreeNode",
+      "data": {
+        "group_id": "grp_inventory",
+        "name": "Inventory Services Team",
+        "branch": "feat/redis-inventory",
+        "path": "C:\\Users\\FAST\\AppData\\Local\\Temp\\agent_real_scenario_2q5y_sb8\\ecommerce_core\\.agents\\worktrees\\feat_redis-inventory",
+        "is_dirty": false,
+        "dirty_files_count": 0,
+        "head_commit": "184faab"
+      },
+      "position": {
+        "x": 310.0,
+        "y": 200.0
+      }
+    },
+    {
+      "id": "session_th_pay_lead",
+      "type": "sessionNode",
+      "data": {
+        "thread_id": "th_pay_lead",
+        "role": "implementer",
+        "group_id": "grp_payment",
+        "status": "active",
+        "attached_worktree": "C:\\Users\\FAST\\AppData\\Local\\Temp\\agent_real_scenario_2q5y_sb8\\ecommerce_core\\.agents\\worktrees\\feat_stripe-payment",
+        "metrics": {
+          "n_calls": 5,
+          "cost": 0.008
+        },
+        "updated_at": 1791216158.416862
+      },
+      "position": {
+        "x": 50.0,
+        "y": 360.0
+      }
+    },
+    {
+      "id": "session_th_pay_reviewer",
+      "type": "sessionNode",
+      "data": {
+        "thread_id": "th_pay_reviewer",
+        "role": "reviewer",
+        "group_id": "grp_payment",
+        "status": "idle",
+        "attached_worktree": "C:\\Users\\FAST\\AppData\\Local\\Temp\\agent_real_scenario_2q5y_sb8\\ecommerce_core\\.agents\\worktrees\\feat_stripe-payment",
+        "metrics": {},
+        "updated_at": 1791216158.4168682
+      },
+      "position": {
+        "x": 250.0,
+        "y": 360.0
+      }
+    },
+    {
+      "id": "session_th_inv_lead",
+      "type": "sessionNode",
+      "data": {
+        "thread_id": "th_inv_lead",
+        "role": "implementer",
+        "group_id": "grp_inventory",
+        "status": "active",
+        "attached_worktree": "C:\\Users\\FAST\\AppData\\Local\\Temp\\agent_real_scenario_2q5y_sb8\\ecommerce_core\\.agents\\worktrees\\feat_redis-inventory",
+        "metrics": {},
+        "updated_at": 1791216158.4168704
+      },
+      "position": {
+        "x": 450.0,
+        "y": 360.0
+      }
+    },
+    {
+      "id": "session_th_senior_rescuer",
+      "type": "sessionNode",
+      "data": {
+        "thread_id": "th_senior_rescuer",
+        "role": "rescue_lead",
+        "group_id": "grp_payment",
+        "status": "idle",
+        "attached_worktree": "C:\\Users\\FAST\\AppData\\Local\\Temp\\agent_real_scenario_2q5y_sb8\\ecommerce_core\\.agents\\worktrees\\feat_stripe-payment",
+        "metrics": {},
+        "updated_at": 1791216159.1723495
+      },
+      "position": {
+        "x": 650.0,
+        "y": 360.0
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_br_feat_stripe-payment_wt_grp_payment",
+      "source": "br_feat_stripe-payment",
+      "target": "wt_grp_payment",
+      "label": "checked_out",
+      "animated": false
+    },
+    {
+      "id": "e_br_feat_redis-inventory_wt_grp_inventory",
+      "source": "br_feat_redis-inventory",
+      "target": "wt_grp_inventory",
+      "label": "checked_out",
+      "animated": false
+    },
+    {
+      "id": "e_session_th_pay_lead_wt_grp_payment",
+      "source": "session_th_pay_lead",
+      "target": "wt_grp_payment",
+      "label": "attached",
+      "animated": true
+    },
+    {
+      "id": "e_session_th_pay_reviewer_wt_grp_payment",
+      "source": "session_th_pay_reviewer",
+      "target": "wt_grp_payment",
+      "label": "attached",
+      "animated": false
+    },
+    {
+      "id": "e_session_th_inv_lead_wt_grp_inventory",
+      "source": "session_th_inv_lead",
+      "target": "wt_grp_inventory",
+      "label": "attached",
+      "animated": true
+    },
+    {
+      "id": "e_session_th_senior_rescuer_wt_grp_payment",
+      "source": "session_th_senior_rescuer",
+      "target": "wt_grp_payment",
+      "label": "attached",
+      "animated": false
+    },
+    {
+      "id": "e_comm_th_pay_lead_th_pay_reviewer",
+      "source": "session_th_pay_lead",
+      "target": "session_th_pay_reviewer",
+      "label": "handover",
+      "animated": true
+    },
+    {
+      "id": "e_comm_th_pay_lead_th_pay_reviewer",
+      "source": "session_th_pay_lead",
+      "target": "session_th_pay_reviewer",
+      "label": "merge_request",
+      "animated": true
+    },
+    {
+      "id": "e_comm_th_pay_lead_th_inv_lead",
+      "source": "session_th_pay_lead",
+      "target": "session_th_inv_lead",
+      "label": "merge_request",
+      "animated": true
+    }
+  ],
+  "updated_at": 1791216160.3366516
+}
