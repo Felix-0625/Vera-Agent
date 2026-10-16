@@ -80,6 +80,8 @@ def test_list_topology_templates(temp_git_repo: Path):
     assert "supervisor" in roles
     assert "implementer" in roles
     assert "reviewer" in roles
+    assert all(node.get("id") and node.get("type") == "agent" for node in sup_tpl["nodes"])
+    assert all(edge.get("source") and edge.get("target") for edge in sup_tpl["edges"])
     assert len(sup_tpl["edges"]) == 3
 
 

@@ -13,6 +13,7 @@ def validate_safe_path(
     allowed_write_prefix: Path | str | None = None,
     is_write: bool = False,
     allow_external_read: bool = False,
+    allowed_read_paths: list[Path | str] | None = None,
 ) -> tuple[Path | None, str | None]:
     """Validate path safety against workspace boundary and optional write prefix restriction.
 
@@ -28,7 +29,10 @@ def validate_safe_path(
         return None, f"Invalid path syntax '{path}': {e}"
 
     # Reads may be explicitly allowed outside the project; writes never are.
-    if not target.is_relative_to(base) and (is_write or not allow_external_read):
+    read_is_allowed = allow_external_read or any(
+        target.is_relative_to(Path(root).resolve()) for root in (allowed_read_paths or [])
+    )
+    if not target.is_relative_to(base) and (is_write or not read_is_allowed):
         return None, f"AccessDenied: Path '{path}' escapes workspace boundary '{base}'."
 
     # 2. Write restriction: if allowed_write_prefix is specified, writes must stay within it
@@ -49,9 +53,16 @@ def read_file_op(
     limit: int | None = 2000,
     base_dir: Path | None = None,
     allow_external_read: bool = False,
+    allowed_read_paths: list[Path | str] | None = None,
 ) -> dict[str, Any]:
     """Read file content with line numbers and pagination."""
-    target, err = validate_safe_path(path, base_dir=base_dir, is_write=False, allow_external_read=allow_external_read)
+    target, err = validate_safe_path(
+        path,
+        base_dir=base_dir,
+        is_write=False,
+        allow_external_read=allow_external_read,
+        allowed_read_paths=allowed_read_paths,
+    )
     if err:
         return {
             "output": f"Error: {err}",

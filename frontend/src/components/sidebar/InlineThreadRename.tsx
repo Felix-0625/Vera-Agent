@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { TextInput } from '../common/Field';
 
 interface InlineThreadRenameProps {
   title: string;
@@ -33,7 +34,7 @@ export const InlineThreadRename: React.FC<InlineThreadRenameProps> = ({ title, o
     }
   };
 
-  return <input
+  return <TextInput
     ref={inputRef}
     aria-label="对话名称"
     value={value}
@@ -51,6 +52,6 @@ export const InlineThreadRename: React.FC<InlineThreadRenameProps> = ({ title, o
       }
     }}
     onBlur={() => void save()}
-    style={{ minWidth: 0, width: '100%', height: 25, padding: '1px 5px', borderRadius: 5, border: '1px solid rgba(75,145,255,.72)', background: 'rgba(75,145,255,.08)', color: 'var(--text-primary)', fontSize: 'inherit', outline: 'none' }}
+    className="inline-thread-rename-input"
   />;
 };

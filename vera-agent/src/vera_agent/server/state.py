@@ -7,6 +7,7 @@ SessionRouter, RegistryManager, and configuration utilities.
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import logging
 import os
@@ -19,8 +20,8 @@ from typing import Any
 
 from vera_agent.session.graph import GitFlowGraph
 from vera_agent.session.pipeline import HandoffPipeline
-from vera_agent.session.router import SessionRouter
 from vera_agent.session.registry import RegistryManager
+from vera_agent.session.router import SessionRouter
 from vera_agent.session.thread import ThreadSession
 from vera_agent.session.worktree import WorktreeManager
 from vera_agent.tools.skill_tools import SkillManager
@@ -65,6 +66,8 @@ class ServerState:
         self.sessions: dict[str, ThreadSession] = {}
         self.pending_approvals: dict[str, asyncio.Future[str]] = {}
         self.interruption_flags: dict[str, bool] = {}
+        self.active_chat_message_ids: dict[str, str] = {}
+        self.pending_chat_interruptions: dict[str, float] = {}
         self.paused_chat_threads: set[str] = set()
         self.chat_pause_events: dict[str, threading.Event] = {}
         self.active_chat_threads: set[str] = set()
@@ -76,17 +79,22 @@ class ServerState:
             self.pipeline = HandoffPipeline(graph=graph)
 
     def load_json_config(self, file_name: str, default_data: Any) -> Any:
-        config_root = self.projects_config_root if file_name == "projects_history.json" else self.root_path
+        application_configs = {"projects_history.json", "mcp_servers.json", "skills_config.json"}
+        config_root = self.projects_config_root if file_name in application_configs else self.root_path
         cfg_file = config_root / ".agents" / file_name
         if cfg_file.exists():
             try:
                 return json.loads(cfg_file.read_text(encoding="utf-8"))
             except Exception:
                 pass
-        return default_data
+        # Routes often mutate a loaded config before saving it. Never hand out a
+        # shared module-level default object: one request could contaminate the
+        # next app instance or test.
+        return copy.deepcopy(default_data)
 
     def save_json_config(self, file_name: str, data: Any) -> None:
-        config_root = self.projects_config_root if file_name == "projects_history.json" else self.root_path
+        application_configs = {"projects_history.json", "mcp_servers.json", "skills_config.json"}
+        config_root = self.projects_config_root if file_name in application_configs else self.root_path
         cfg_file = config_root / ".agents" / file_name
         cfg_file.parent.mkdir(parents=True, exist_ok=True)
         cfg_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -106,7 +114,10 @@ class ServerState:
         self.graph = active_g
         self.router = SessionRouter(graph=active_g)
         self.pipeline = HandoffPipeline(graph=active_g)
-        self.skill_mgr = SkillManager(root_dirs=[resolved_root])
+        skill_roots = [resolved_root]
+        if self.projects_config_root not in skill_roots:
+            skill_roots.append(self.projects_config_root)
+        self.skill_mgr = SkillManager(root_dirs=skill_roots)
         self.registry_mgr = RegistryManager(resolved_root)
 
         # Update projects history
@@ -140,6 +151,48 @@ class ServerState:
         d.mkdir(parents=True, exist_ok=True)
         return d
 
+    def get_project_root(self, project_id: str | None = None) -> Path:
+        if not project_id:
+            return self.root_path
+        projects = self.load_json_config("projects_history.json", {"projects": []}).get("projects", [])
+        project = next((item for item in projects if item.get("id") == project_id), None)
+        if not project or not project.get("path"):
+            raise ValueError(f"Project '{project_id}' not found")
+        project_root = Path(project["path"]).resolve()
+        if not project_root.is_dir():
+            raise ValueError(f"Project directory does not exist: {project_root}")
+        return project_root
+
+    def get_session_file(self, session: ThreadSession) -> Path:
+        project_root = session.metadata.get("project_root")
+        session_dir = Path(project_root) / ".agents" / "sessions" if project_root else self.get_sessions_dir()
+        session_dir.mkdir(parents=True, exist_ok=True)
+        return session_dir / f"{session.thread_id}.json"
+
+    def infer_legacy_session_project_id(
+        self,
+        session_file: Path,
+        session: ThreadSession,
+        fallback_project_id: str | None = None,
+    ) -> str | None:
+        """Infer project ownership only for session files written before project_id was stored.
+
+        A persisted null is an explicit unbound conversation. Treating it as legacy data
+        would silently bind it to whichever project happens to own the containing folder.
+        """
+        if getattr(session, "_project_id_is_explicit", True):
+            return session.project_id
+
+        project = next(
+            (
+                item
+                for item in self.load_json_config("projects_history.json", {"projects": []}).get("projects", [])
+                if item.get("path") and Path(item["path"]).resolve() == session_file.parents[2].resolve()
+            ),
+            None,
+        )
+        return project.get("id") if project else fallback_project_id
+
     def get_or_create_session(
         self,
         thread_id: str,
@@ -156,14 +209,23 @@ class ServerState:
             return s
 
         # Try to restore from disk snapshot
-        s_file = self.get_sessions_dir() / f"{thread_id}.json"
-        if s_file.exists():
-            try:
-                s = ThreadSession.load(s_file)
-                self.sessions[thread_id] = s
-                return s
-            except Exception:
-                pass
+        session_files = [self.get_sessions_dir() / f"{thread_id}.json"]
+        for project in self.load_json_config("projects_history.json", {"projects": []}).get("projects", []):
+            project_path = project.get("path")
+            if project_path:
+                candidate = Path(project_path) / ".agents" / "sessions" / f"{thread_id}.json"
+                if candidate not in session_files:
+                    session_files.append(candidate)
+        for s_file in session_files:
+            if s_file.exists():
+                try:
+                    s = ThreadSession.load(s_file)
+                    s.project_id = self.infer_legacy_session_project_id(s_file, s)
+                    s.metadata.setdefault("project_root", str(s_file.parents[2]))
+                    self.sessions[thread_id] = s
+                    return s
+                except Exception:
+                    continue
 
         # Create new
         s = ThreadSession(

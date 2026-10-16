@@ -1,13 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="theme-color" content="#F7F7F8" />
+    <title>VeraAgent</title>
+    <script>
+      const savedTheme = localStorage.getItem('vera-agent-theme');
+      const initialTheme = savedTheme === 'dark' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = initialTheme;
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', initialTheme === 'dark' ? '#181818' : '#F7F7F8');
+    </script>
+    <style>
+      /* This tiny pre-React palette mirrors tokens.css so the startup screen does not flash before app CSS loads. */
+      :root { --startup-bg: #F7F7F8; --startup-text: #777D86; --startup-track: #D9DDE4; --startup-accent: #3A83F7; --startup-error: #C83D3A; }
+      :root[data-theme="dark"] { --startup-bg: #181818; --startup-text: #929292; --startup-track: #383838; --startup-accent: #3A83F7; --startup-error: #FA423E; }
+      html, body { width: 100%; height: 100%; margin: 0; background: var(--startup-bg); color: var(--startup-text); font-family: "Segoe UI", sans-serif; }
+      #root { width: 100%; height: 100%; }
+      #startup-screen { position: fixed; inset: 0; display: grid; place-content: center; gap: 14px; background: var(--startup-bg); color: var(--startup-text); text-align: center; font-size: 13px; }
+      #startup-indicator { width: 22px; height: 22px; margin: 0 auto; border: 2px solid var(--startup-track); border-top-color: var(--startup-accent); border-radius: 50%; animation: startup-spin .8s linear infinite; }
+      #startup-error { display: none; max-width: 520px; padding: 0 24px; color: var(--startup-error); overflow-wrap: anywhere; }
+      @keyframes startup-spin { to { transform: rotate(360deg); } }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <div id="startup-screen" role="status" aria-live="polite">
+      <div id="startup-indicator" aria-hidden="true"></div>
+      <div id="startup-message">正在启动 VeraAgent…</div>
+      <div id="startup-error"></div>
+    </div>
+    <script>
+      window.setTimeout(() => {
+        const message = document.getElementById('startup-message');
+        if (message) message.textContent = '页面仍在加载，请稍候…';
+      }, 10000);
+      window.addEventListener('error', (event) => {
+        if (!(event instanceof ErrorEvent)) return;
+        const message = document.getElementById('startup-message');
+        const detail = document.getElementById('startup-error');
+        if (message) message.textContent = '页面启动失败';
+        if (detail) {
+          detail.textContent = event.message || '无法加载前端资源，请查看启动日志。';
+          detail.style.display = 'block';
+        }
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        const message = document.getElementById('startup-message');
+        const detail = document.getElementById('startup-error');
+        if (message) message.textContent = '页面启动失败';
+        if (detail) {
+          detail.textContent = String(event.reason?.message || event.reason || '前端初始化失败');
+          detail.style.display = 'block';
+        }
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

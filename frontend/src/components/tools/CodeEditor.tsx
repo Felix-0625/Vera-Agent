@@ -4,13 +4,13 @@ type TokenKind = 'keyword' | 'string' | 'comment' | 'number' | 'key' | 'punctuat
 type Token = { value: string; kind: TokenKind };
 
 const palettes: Record<TokenKind, string> = {
-  keyword: '#C4A7FF',
-  string: '#A8D7A0',
-  comment: '#788396',
-  number: '#E7B87B',
-  key: '#82C8E8',
-  punctuation: '#AEB8C7',
-  plain: '#E3E8F0',
+  keyword: 'var(--accent-primary)',
+  string: 'var(--accent-emerald)',
+  comment: 'var(--text-muted)',
+  number: 'var(--accent-amber)',
+  key: 'var(--accent-cyan)',
+  punctuation: 'var(--text-secondary)',
+  plain: 'var(--text-primary)',
 };
 
 const keywordSet = new Set(('const let var function return if else for while do switch case break continue try catch finally throw new class extends implements interface type enum import from export default as async await void null undefined true false this super public private protected static readonly get set typeof instanceof in of delete yield await def self pass lambda with raise except elif and or not is global nonlocal None True False').split(/\s+/));
@@ -98,9 +98,9 @@ export const CodeEditor: React.FC<{
   const lineCount = Math.max(1, value.split('\n').length);
   const font = 'ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace';
 
-  return <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 360, overflow: 'hidden', border: '1px solid var(--border-subtle)', borderRadius: 10, background: 'var(--bg-surface)' }}>
-    <pre ref={gutterRef} aria-hidden="true" style={{ position: 'absolute', zIndex: 1, top: 0, bottom: 0, left: 0, width: 48, margin: 0, padding: '14px 9px 14px 0', overflow: 'hidden', borderRight: '1px solid var(--border-subtle)', color: 'var(--text-muted)', background: 'var(--bg-surface-elevated)', textAlign: 'right', fontFamily: font, fontSize: 13, lineHeight: 1.65, whiteSpace: 'pre' }}>{Array.from({ length: lineCount }, (_, index) => String(index + 1)).join('\n')}</pre>
-    <pre ref={codeRef} aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 0, padding: '14px 18px 14px 62px', overflow: 'hidden', color: palettes.plain, fontFamily: font, fontSize: 13, lineHeight: 1.65, whiteSpace: 'pre', tabSize: 2 }} dangerouslySetInnerHTML={{ __html: highlighted }} />
+  return <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 360, overflow: 'hidden', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md-wide)', background: 'var(--bg-surface)' }}>
+    <pre ref={gutterRef} aria-hidden="true" style={{ position: 'absolute', zIndex: 1, top: 0, bottom: 0, left: 0, width: 48, margin: 0, padding: 'var(--space-3-5) var(--space-2-25) var(--space-3-5) 0', overflow: 'hidden', borderRight: '1px solid var(--border-subtle)', color: 'var(--text-muted)', background: 'var(--bg-surface-elevated)', textAlign: 'right', fontFamily: font, fontSize: 'var(--font-size-md)', lineHeight: 1.65, whiteSpace: 'pre' }}>{Array.from({ length: lineCount }, (_, index) => String(index + 1)).join('\n')}</pre>
+    <pre ref={codeRef} aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 0, padding: 'var(--space-3-5) var(--space-4-5) var(--space-3-5) 62px', overflow: 'hidden', color: palettes.plain, fontFamily: font, fontSize: 'var(--font-size-md)', lineHeight: 1.65, whiteSpace: 'pre', tabSize: 2 }} dangerouslySetInnerHTML={{ __html: highlighted }} />
     <textarea
       ref={textareaRef}
       aria-label={ariaLabel}
@@ -129,7 +129,7 @@ export const CodeEditor: React.FC<{
       spellCheck={false}
       autoCapitalize="off"
       autoCorrect="off"
-      style={{ position: 'absolute', zIndex: 2, inset: 0, width: '100%', height: '100%', minHeight: 360, resize: 'none', padding: '14px 18px 14px 62px', overflow: 'auto', border: 0, outline: 'none', background: 'transparent', color: 'transparent', caretColor: readOnly ? 'transparent' : 'var(--text-primary)', WebkitTextFillColor: 'transparent', fontFamily: font, fontSize: 13, lineHeight: 1.65, whiteSpace: 'pre', tabSize: 2, cursor: readOnly ? 'text' : 'auto' }}
+      style={{ position: 'absolute', zIndex: 2, inset: 0, width: '100%', height: '100%', minHeight: 360, resize: 'none', padding: 'var(--space-3-5) var(--space-4-5) var(--space-3-5) 62px', overflow: 'auto', border: 0, outline: 'none', background: 'transparent', color: 'transparent', caretColor: readOnly ? 'transparent' : 'var(--text-primary)', WebkitTextFillColor: 'transparent', fontFamily: font, fontSize: 'var(--font-size-md)', lineHeight: 1.65, whiteSpace: 'pre', tabSize: 2, cursor: readOnly ? 'text' : 'auto' }}
     />
   </div>;
 };

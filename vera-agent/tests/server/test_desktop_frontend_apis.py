@@ -16,12 +16,14 @@ Validates:
 import json
 import os
 import subprocess
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 from starlette.testclient import TestClient
 
 from vera_agent.server.app import create_app
+from vera_agent.server.routes.chat import _enabled_attached_skills
 
 
 @pytest.fixture
@@ -87,8 +89,9 @@ def test_scheduled_tasks_api(test_git_repo: Path):
         "/api/tasks/scheduled",
         json={
             "name": "Nightly Regression Suite",
-            "cron": "0 2 * * *",
+            "run_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
             "prompt": "Run full regression test and report defects",
+            "model_id": "test-model",
         },
     )
     assert create_res.status_code == 201
@@ -108,8 +111,8 @@ def test_scheduled_tasks_api(test_git_repo: Path):
 
     # 4. Trigger task
     run_res = client.post(f"/api/tasks/scheduled/{task_id}/run")
-    assert run_res.status_code == 200
-    assert run_res.json()["status"] == "triggered"
+    assert run_res.status_code == 202
+    assert run_res.json()["status"] == "started"
 
     # 5. Delete task
     del_res = client.delete(f"/api/tasks/scheduled/{task_id}")
@@ -152,28 +155,36 @@ def test_threads_and_sidechat_probe(test_git_repo: Path):
 
 
 def test_rules_memory_api(test_git_repo: Path):
-    """Test reading and writing AGENTS.md rules."""
+    """User rules and profile memories stay separate from project instructions."""
     app = create_app(repo_root=test_git_repo)
     client = TestClient(app)
 
-    # Initially AGENTS.md does not exist
+    # Context settings have safe defaults and AGENTS.md remains a separate file.
     get_res = client.get("/api/settings/rules")
     assert get_res.status_code == 200
-    assert get_res.json()["exists"] is False
+    assert get_res.json()["user_rules"] == ""
 
-    # Save rules
+    # Saving personal instructions does not create or overwrite project AGENTS.md.
     save_res = client.post(
         "/api/settings/rules",
         json={"content": "# Project Guidelines\n- Always write tests first.\n- Use conventional commits."},
     )
     assert save_res.status_code == 200
     assert save_res.json()["status"] == "saved"
+    assert not (test_git_repo / "AGENTS.md").exists()
 
-    # Verify updated content
-    get_res_2 = client.get("/api/settings/rules")
+    get_res_2 = client.get("/api/settings/context")
     assert get_res_2.status_code == 200
-    assert get_res_2.json()["exists"] is True
-    assert "Always write tests first" in get_res_2.json()["content"]
+    assert "Always write tests first" in get_res_2.json()["user_rules"]
+    assert get_res_2.json()["include_agents_md"] is True
+    assert get_res_2.json()["memory_enabled"] is True
+
+    created = client.post("/api/settings/user-memories", json={"category": "preference", "content": "Prefers concise answers."})
+    assert created.status_code == 201
+    memory_id = created.json()["memory"]["id"]
+    assert client.get("/api/settings/user-memories").json()["memories"][0]["id"] == memory_id
+    assert client.patch(f"/api/settings/user-memories/{memory_id}", json={"category": "preference", "content": "Prefers detailed explanations."}).status_code == 200
+    assert client.delete(f"/api/settings/user-memories/{memory_id}").status_code == 200
 
 
 def test_file_tree_and_content_preview(test_git_repo: Path):
@@ -244,30 +255,45 @@ def test_gitflow_branch_operations(test_git_repo: Path):
     """Test branch listing, creation, checkout, merge, and deletion."""
     app = create_app(repo_root=test_git_repo)
     client = TestClient(app)
+    project_id = client.get("/api/projects").json()["projects"][0]["id"]
 
     # 1. List branches
-    list_res = client.get("/api/branches")
+    list_res = client.get(f"/api/branches?project_id={project_id}")
     assert list_res.status_code == 200
     assert len(list_res.json()["branches"]) >= 1
 
     # 2. Create branch
-    create_res = client.post("/api/branches", json={"branch_name": "feat/new-api"})
+    create_res = client.post("/api/branches", json={"branch_name": "feat/new-api", "project_id": project_id})
     assert create_res.status_code == 200
     assert create_res.json()["status"] == "created"
 
     # 3. Checkout branch
-    co_res = client.post("/api/branches/checkout", json={"branch_name": "feat/new-api"})
+    co_res = client.post("/api/branches/checkout", json={"branch_name": "feat/new-api", "project_id": project_id})
     assert co_res.status_code == 200
     assert co_res.json()["status"] == "checked_out"
 
     # Checkout back to default branch
     curr = list_res.json()["current_branch"]
-    client.post("/api/branches/checkout", json={"branch_name": curr})
+    client.post("/api/branches/checkout", json={"branch_name": curr, "project_id": project_id})
 
     # 4. Delete branch
-    del_res = client.delete("/api/branches/feat/new-api")
+    del_res = client.delete(f"/api/branches/feat/new-api?project_id={project_id}")
     assert del_res.status_code == 200
     assert del_res.json()["status"] == "deleted"
+
+
+def test_gitflow_topology_uses_repository_commit_history(test_git_repo: Path):
+    client = TestClient(create_app(repo_root=test_git_repo))
+
+    project_id = client.get("/api/projects").json()["projects"][0]["id"]
+    response = client.get(f"/api/gitflow/topology?project_id={project_id}")
+
+    assert response.status_code == 200
+    topology = response.json()
+    assert topology["repo_name"] == test_git_repo.name
+    assert len(topology["commits"]) == 1
+    assert topology["commits"][0]["subject"] == "Initial commit"
+    assert topology["branches"][0]["head"] == topology["commits"][0]["hash"]
 
 
 def test_terminal_exec(test_git_repo: Path):
@@ -290,6 +316,12 @@ def test_mcp_and_skills_and_models_enhancements(test_git_repo: Path):
     app = create_app(repo_root=test_git_repo)
     client = TestClient(app)
 
+    # Seed settings-owned entities before exercising update/toggle contracts.
+    created_mcp = client.post("/api/mcp/servers", json={"id": "mcp-server-dev", "name": "Dev MCP", "type": "local", "command": "python", "args": ["server.py"]})
+    assert created_mcp.status_code == 200
+    installed_skill = client.post("/api/skills/install", json={"name": "gitflow-spec", "description": "GitFlow test skill", "instructions": "# GitFlow\n"})
+    assert installed_skill.status_code == 200
+
     # 1. Edit MCP server preserving fields
     edit_mcp_res = client.put(
         "/api/mcp/servers/mcp-server-dev",
@@ -302,6 +334,14 @@ def test_mcp_and_skills_and_models_enhancements(test_git_repo: Path):
     toggle_sk_res = client.patch("/api/skills/gitflow-spec/toggle")
     assert toggle_sk_res.status_code == 200
     assert toggle_sk_res.json()["status"] == "ok"
+    listed_skill = next(skill for skill in client.get("/api/skills").json()["skills"] if skill["name"] == "gitflow-spec")
+    assert listed_skill["enabled"] is False
+    assert _enabled_attached_skills(client.app.state.server_state, ["gitflow-spec"]) == []
+    assert client.patch("/api/skills/missing-skill/toggle").status_code == 404
+    assert client.patch("/api/skills/gitflow-spec/toggle").status_code == 200
+    listed_skill = next(skill for skill in client.post("/api/skills/scan").json()["skills"] if skill["name"] == "gitflow-spec")
+    assert listed_skill["enabled"] is True
+    assert _enabled_attached_skills(client.app.state.server_state, ["gitflow-spec"]) == ["gitflow-spec"]
 
     # 3. Patch model config
     patch_model_res = client.patch(

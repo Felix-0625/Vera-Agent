@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useChatStore } from '../../stores/chatStore';
-import { useLayoutStore } from '../../stores/layoutStore';
 import { useToolTabsStore } from '../../stores/toolTabsStore';
 import { useSideChatStore } from '../../stores/sideChatStore';
+import { ensureRightSidebarOpen, getActiveConversationKey } from '../../stores/rightSidebarLayout';
 import { MessageItem } from './MessageItem';
 
 export const MessageStream: React.FC = () => {
@@ -17,9 +17,10 @@ export const MessageStream: React.FC = () => {
     const index = messages.indexOf(message);
     const context = messages.slice(0, index + 1);
     const title = threads.find((thread) => thread.thread_id === activeThreadId)?.title || '主对话';
-    useSideChatStore.getState().openFromContext(activeThreadId, title, context);
-    useToolTabsStore.getState().openTab('sidechat');
-    if (useLayoutStore.getState().rightCollapsed) useLayoutStore.getState().toggleRight();
+    const sideChatId = useSideChatStore.getState().openFromContext(activeThreadId, title, context);
+    const conversationKey = getActiveConversationKey();
+    useToolTabsStore.getState().openSideChatTab(sideChatId, title || '侧边聊天', conversationKey);
+    ensureRightSidebarOpen(conversationKey);
   };
 
   const streamingAssistantIndex = isStreaming ? messages.findLastIndex((message) => message.role === 'assistant') : -1;
@@ -42,7 +43,7 @@ export const MessageStream: React.FC = () => {
       style={{
         flex: 1,
         overflowY: 'auto',
-        padding: '16px 20px',
+        padding: 'var(--space-4) var(--space-5)',
         display: 'flex',
         flexDirection: 'column',
       }}

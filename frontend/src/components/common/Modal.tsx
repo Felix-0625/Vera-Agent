@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { IconButton } from './IconButton';
 
 interface ModalProps {
   isOpen: boolean;
@@ -26,9 +27,11 @@ export const Modal: React.FC<ModalProps> = ({
   headerStyle,
   contentStyle,
 }) => {
+  const titleId = React.useId();
   useEffect(() => {
+    if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onClose();
+      if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -45,15 +48,16 @@ export const Modal: React.FC<ModalProps> = ({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.72)',
+        backgroundColor: 'var(--overlay-scrim)',
         backdropFilter: 'blur(8px)',
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
       }}
     >
       <div
         className="animate-fade-in glass-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={hideHeader ? undefined : titleId}
+        aria-label={hideHeader ? title : undefined}
         style={{
           position: 'relative',
           width,
@@ -68,7 +72,7 @@ export const Modal: React.FC<ModalProps> = ({
       >
         {!hideHeader && <div
           style={{
-            padding: '16px 20px',
+            padding: 'var(--space-4) var(--space-5)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -76,26 +80,17 @@ export const Modal: React.FC<ModalProps> = ({
             ...headerStyle,
           }}
         >
-          <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', ...titleStyle }}>
+          <h3 id={titleId} style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, color: 'var(--text-primary)', ...titleStyle }}>
             {title}
           </h3>
-          <button
-            onClick={onClose}
-            style={{
-              padding: 4,
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--text-muted)',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-          >
+          <IconButton label="关闭" onClick={onClose} size="sm">
             <X size={18} />
-          </button>
+          </IconButton>
         </div>}
-        {hideHeader && <button onClick={onClose} aria-label="关闭" title="关闭" style={{ position: 'absolute', top: 12, right: 14, zIndex: 2, padding: 5, borderRadius: 7, color: 'var(--text-muted)', background: 'rgba(15,18,25,.68)' }}><X size={18} /></button>}
+        {hideHeader && <IconButton label="关闭" onClick={onClose} size="sm" style={{ position: 'absolute', top: 12, right: 14, zIndex: 2, background: 'var(--bg-card-hover)' }}><X size={18} /></IconButton>}
 
         {/* Content */}
-        <div style={{ padding: 20, overflowY: 'auto', flex: 1, ...contentStyle }}>
+        <div style={{ padding: 'var(--space-5)', overflowY: 'auto', flex: 1, ...contentStyle }}>
           {children}
         </div>
 
@@ -103,12 +98,12 @@ export const Modal: React.FC<ModalProps> = ({
         {footer && (
           <div
             style={{
-              padding: '12px 20px',
+              padding: 'var(--space-3) var(--space-5)',
               borderTop: '1px solid var(--border-subtle)',
               display: 'flex',
               justifyContent: 'flex-end',
-              gap: 10,
-              backgroundColor: 'rgba(10, 11, 15, 0.5)',
+              gap: 'var(--space-2-5)',
+              backgroundColor: 'var(--bg-surface-elevated)',
             }}
           >
             {footer}

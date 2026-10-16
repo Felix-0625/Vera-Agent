@@ -5,6 +5,7 @@ import {
   ScheduledTask,
   AnalyticsDashboard,
   BranchInfo,
+  GitFlowTopology,
   FilePreviewData,
   WorktreeCommitRef,
 } from '../types/tool';
@@ -124,8 +125,10 @@ export async function fetchScheduledTasks(): Promise<{ tasks: ScheduledTask[] }>
 
 export async function createScheduledTask(task: {
   name: string;
-  cron: string;
+  run_at: string;
   prompt: string;
+  model_id?: string;
+  project_id?: string;
   thread_id?: string;
 }): Promise<ScheduledTask> {
   return request('/api/tasks/scheduled', {
@@ -140,7 +143,7 @@ export async function toggleScheduledTask(taskId: string): Promise<ScheduledTask
   });
 }
 
-export async function runScheduledTask(taskId: string): Promise<{ status: string }> {
+export async function runScheduledTask(taskId: string): Promise<{ status: string; task_id?: string }> {
   return request(`/api/tasks/scheduled/${taskId}/run`, {
     method: 'POST',
   });
@@ -158,6 +161,23 @@ export async function fetchBranches(projectId?: string): Promise<{ current_branc
   return request(`/api/branches${query}`);
 }
 
+export async function fetchGitFlowTopology(projectId: string): Promise<GitFlowTopology> {
+  let data: Partial<GitFlowTopology>;
+  try {
+    data = await request<Partial<GitFlowTopology>>(`/api/gitflow/topology?project_id=${encodeURIComponent(projectId)}`);
+  } catch (error) {
+    // Older backend builds report non-Git folders as HTTP 400 instead of a typed empty state.
+    if (error instanceof Error && (error.message.includes('不是可用的 Git 仓库') || error.message.toLowerCase().includes('not a git repository'))) {
+      return { repo_name: '', is_git: false, current_branch: '', branches: [], commits: [] };
+    }
+    throw error;
+  }
+  if (!Array.isArray(data.commits) || !Array.isArray(data.branches)) {
+    throw new Error('GitFlow 后端接口版本较旧，请重启后端服务后重试。');
+  }
+  return data as GitFlowTopology;
+}
+
 export async function createBranch(branch_name: string, start_point = 'HEAD', project_id?: string): Promise<{ status: string }> {
   return request('/api/branches', {
     method: 'POST',
@@ -172,6 +192,11 @@ export async function checkoutBranch(branch_name: string, project_id?: string): 
   });
 }
 
+export async function deleteBranch(branch_name: string, project_id?: string): Promise<{ status: string }> {
+  const query = project_id ? `?project_id=${encodeURIComponent(project_id)}` : '';
+  return request(`/api/branches/${encodeURIComponent(branch_name)}${query}`, { method: 'DELETE' });
+}
+
 export async function mergeBranch(source_branch: string, project_id?: string): Promise<{ status: string; returncode: number }> {
   return request('/api/branches/merge', {
     method: 'POST',
@@ -179,14 +204,14 @@ export async function mergeBranch(source_branch: string, project_id?: string): P
   });
 }
 
-export async function requestMergeReview(source_branch: string, target_branch = 'main'): Promise<{
+export async function requestMergeReview(source_branch: string, target_branch = 'main', project_id?: string): Promise<{
   has_conflict: boolean;
   conflict_files: string[];
   summary: string;
 }> {
   return request('/api/merge-review', {
     method: 'POST',
-    body: JSON.stringify({ source_branch, target_branch }),
+    body: JSON.stringify({ source_branch, target_branch, project_id }),
   });
 }
 

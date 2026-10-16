@@ -14,12 +14,12 @@ export const WelcomeBanner: React.FC = () => {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '80px 20px 40px',
+        padding: '80px var(--space-5) 40px',
         userSelect: 'none',
       }}
     >
       {/* 纯净品牌 Logo，无额外圆圈外框与阴影 */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 'var(--space-5)' }}>
         <VeraLogo size={52} />
       </div>
 

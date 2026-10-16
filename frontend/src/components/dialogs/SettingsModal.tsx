@@ -16,7 +16,8 @@ import {
   deleteModel,
   fetchMcpServers,
   fetchMcpMarket,
-  createMcpServer,
+  McpMarketItem,
+  installMcpFromMarket,
   toggleMcpServer,
   restartMcpServer,
   deleteMcpServer,
@@ -31,14 +32,18 @@ import { McpMarketList } from '../tools/McpMarketList';
  * 严格对齐 Penpot 5 大系统设置画板
  */
 export const SettingsModal: React.FC = () => {
-  const { settingsOpen, closeSettings, settingsTab, openSettings, openModelConfig, openMcpConfig } = useLayoutStore();
+  const { settingsOpen, closeSettings, settingsTab, openSettings, openModelConfig, openMcpConfig, modelCatalogVersion, mcpCatalogVersion, notifyModelCatalogChanged } = useLayoutStore();
 
-  const [permissions, setPermissions] = useState<PermissionsConfig>({ default_mode: 'confirm', whitelist_actions: ['read', 'create', 'edit', 'delete', 'terminal', 'mcp'] });
+  const [permissions, setPermissions] = useState<PermissionsConfig>({ default_mode: 'manual', approval_actions: ['create', 'edit', 'terminal', 'search', 'mcp', 'delegation'], operation_scope: 'project_write_external_readonly', max_tool_attempts: 3 });
   const [models, setModels] = useState<ModelConfig[]>([]);
   const [mcpServers, setMcpServers] = useState<McpServerConfig[]>([]);
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [mcpMarketOpen, setMcpMarketOpen] = useState(false);
-  const [mcpMarket, setMcpMarket] = useState<Array<{ id: string; name: string; description: string; category: string }>>([]);
+  const [mcpMarket, setMcpMarket] = useState<McpMarketItem[]>([]);
+  const [mcpMarketError, setMcpMarketError] = useState('');
+  const [mcpMarketCursor, setMcpMarketCursor] = useState<string | null>(null);
+  const [mcpMarketQuery, setMcpMarketQuery] = useState('');
+  const [loadingMcpMarket, setLoadingMcpMarket] = useState(false);
 
   const loadAll = async () => {
     try {
@@ -59,17 +64,43 @@ export const SettingsModal: React.FC = () => {
 
   useEffect(() => {
     if (settingsOpen) loadAll();
-  }, [settingsOpen, settingsTab]);
+  }, [settingsOpen, settingsTab, mcpCatalogVersion]);
 
-  const handleSavePermissions = async (mode: 'confirm' | 'yolo' | 'human', whitelistActions = permissions.whitelist_actions, maxToolAttempts = permissions.max_tool_attempts ?? 3, operationScope = permissions.operation_scope ?? 'project_write_external_readonly') => {
-    const updated = { ...permissions, default_mode: mode, whitelist_actions: whitelistActions, max_tool_attempts: maxToolAttempts, operation_scope: operationScope };
+  useEffect(() => {
+    if (!settingsOpen) return;
+    fetchModels().then((data) => setModels(data.models || [])).catch(() => setModels([]));
+  }, [settingsOpen, modelCatalogVersion]);
+
+  const handleSavePermissions = async (mode: PermissionsConfig['default_mode'], approvalActions = permissions.approval_actions, operationScope = permissions.operation_scope ?? 'project_write_external_readonly', maxToolAttempts = permissions.max_tool_attempts ?? 3) => {
+    const updated = { ...permissions, default_mode: mode, approval_actions: approvalActions, operation_scope: operationScope, max_tool_attempts: maxToolAttempts };
     setPermissions(updated);
     await savePermissions(updated);
   };
 
   const openMcpMarket = async () => {
     setMcpMarketOpen(true);
-    try { const result = await fetchMcpMarket(); setMcpMarket(result.market || []); } catch { setMcpMarket([]); }
+    setMcpMarketError('');
+    setMcpMarketQuery(''); setMcpMarketCursor(null);
+    setLoadingMcpMarket(true);
+    try { const result = await fetchMcpMarket(); setMcpMarket(result.market || []); setMcpMarketCursor(result.next_cursor || null); }
+    catch (error) { setMcpMarket([]); setMcpMarketError(error instanceof Error ? error.message : 'MCP Registry 暂时不可用。'); }
+    finally { setLoadingMcpMarket(false); }
+  };
+  const searchMcpMarket = async (query: string) => {
+    setMcpMarketQuery(query); setMcpMarketCursor(null);
+    setMcpMarketError('');
+    setLoadingMcpMarket(true);
+    try { const result = await fetchMcpMarket(query); setMcpMarket(result.market || []); setMcpMarketCursor(result.next_cursor || null); }
+    catch (error) { setMcpMarketError(error instanceof Error ? error.message : 'MCP Registry 暂时不可用。'); }
+    finally { setLoadingMcpMarket(false); }
+  };
+  const loadMoreMcpMarket = async () => {
+    if (!mcpMarketCursor) return;
+    setMcpMarketError('');
+    setLoadingMcpMarket(true);
+    try { const result = await fetchMcpMarket(mcpMarketQuery, mcpMarketCursor); setMcpMarket(current => [...current, ...(result.market || [])]); setMcpMarketCursor(result.next_cursor || null); }
+    catch (error) { setMcpMarketError(error instanceof Error ? error.message : 'MCP Registry 暂时不可用。'); }
+    finally { setLoadingMcpMarket(false); }
   };
 
   const tabs = [
@@ -83,60 +114,36 @@ export const SettingsModal: React.FC = () => {
   return (
     <>
     <Modal isOpen={settingsOpen} onClose={closeSettings} title="" width="96vw" hideHeader>
-      <div style={{ display: 'flex', height: 'min(820px, calc(90vh - 40px))', minHeight: 460, gap: 20 }}>
+      <div className="settings-layout">
         {/* 左侧导航栏严格对齐 Penpot 布局 */}
-        <div
-          style={{
-            width: 264,
-            flex: '0 0 264px',
-            borderRight: '1px solid var(--border-subtle)',
-            paddingRight: 14,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-          }}
-        >
+        <div className="settings-sidebar">
           <div>
             {/* 顶部品牌区 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <div className="settings-sidebar-brand">
               <VeraLogo size={22} />
               <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>
+                <div className="settings-sidebar-brand-name">
                   VeraAgent
                 </div>
-                <div style={{ fontSize: 9.5, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.6px' }}>
+                <div className="settings-sidebar-brand-caption">
                   AGENT WORKSPACE
                 </div>
               </div>
             </div>
 
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, paddingLeft: 6 }}>
+            <div className="settings-sidebar-label">
               设置
             </div>
 
             {/* 导航按钮组 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div className="settings-nav">
               {tabs.map((t) => {
                 const isActive = settingsTab === t.key;
                 return (
                   <button
                     key={t.key}
                     onClick={() => openSettings(t.key)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 10px',
-                      borderRadius: 'var(--radius-sm)',
-                      fontSize: 12.5,
-                      fontWeight: isActive ? 600 : 400,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 9,
-                      backgroundColor: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                      color: isActive ? 'var(--text-primary)' : 'var(--text-muted)',
-                      border: isActive ? '1px solid var(--border-default)' : '1px solid transparent',
-                      justifyContent: 'flex-start',
-                      cursor: 'pointer',
-                    }}
+                    className={`settings-nav-button${isActive ? ' is-active' : ''}`}
                   >
                     {t.icon}
                     <span>{t.label}</span>
@@ -147,13 +154,13 @@ export const SettingsModal: React.FC = () => {
           </div>
 
           {/* 底部工作空间说明 */}
-          <div style={{ fontSize: 11, color: 'var(--text-disabled)', paddingLeft: 6 }}>
+          <div className="settings-sidebar-footer">
             工作空间设置
           </div>
         </div>
 
         {/* 右侧 Tab 内容面板 */}
-        <div style={{ flex: 1, minWidth: 0, overflowY: 'auto', padding: '0 8px 0 14px' }}>
+        <div className="settings-content">
           {settingsTab === 'permissions' && (
             <SettingsPermissionsTab permissions={permissions} onSave={handleSavePermissions} />
           )}
@@ -172,8 +179,8 @@ export const SettingsModal: React.FC = () => {
             <SettingsModelsTab
               models={models}
               onEdit={(m) => openModelConfig(m)}
-              onDelete={async (id) => { await deleteModel(id); loadAll(); }}
-              onToggle={async (model) => { await patchModel(model.id, { enabled: model.enabled === false }); await loadAll(); }}
+              onDelete={async (id) => { await deleteModel(id); notifyModelCatalogChanged(); await loadAll(); }}
+              onToggle={async (model) => { await patchModel(model.id, { enabled: model.enabled === false }); notifyModelCatalogChanged(); await loadAll(); }}
               onAdd={() => openModelConfig(null)}
             />
           )}
@@ -189,7 +196,9 @@ export const SettingsModal: React.FC = () => {
       </div>
     </Modal>
     <Modal isOpen={mcpMarketOpen} onClose={() => setMcpMarketOpen(false)} title="MCP Marketplace" width={760}>
-      <McpMarketList dialog market={mcpMarket} onInstall={async (item) => { await createMcpServer({ id: item.id, name: item.name, type: 'stdio', status: 'stopped', enabled: true, command: 'python', args: ['server.py'], tools: [{ name: item.id, description: item.description }] }); setMcpMarketOpen(false); await loadAll(); }} />
+      <McpMarketList dialog market={mcpMarket} error={mcpMarketError} loading={loadingMcpMarket} hasMore={!!mcpMarketCursor} onLoadMore={loadMoreMcpMarket} installedIds={mcpServers.map(server => server.registry_id || '')} onSearch={searchMcpMarket} onInstall={async (item) => {
+        await installMcpFromMarket(item); setMcpMarketOpen(false); await loadAll();
+      }} />
     </Modal>
     </>
   );

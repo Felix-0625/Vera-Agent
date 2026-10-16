@@ -5,7 +5,6 @@ export interface StreamChatParams {
   thread_id?: string;
   content: string;
   model_id?: string;
-  mode?: string;
   rule_trigger?: string | null;
   attached_skills?: string[];
   attached_mcps?: string[];
@@ -16,6 +15,9 @@ export interface StreamChatParams {
   ephemeral?: boolean;
   context_messages?: Array<Pick<ChatMessage, 'role' | 'content'>>;
   context_update?: boolean;
+  workflow_input?: string;
+  workflow_upstream?: string;
+  workflow_stage?: 'supervisor_review';
   onThinking?: (step: number, content: string) => void;
   onTextChunk?: (chunk: string) => void;
   onToolCall?: (actionId: string, toolName: string, args: Record<string, unknown>) => void;
@@ -43,6 +45,10 @@ export async function createThread(title: string, group_id?: string, project_id?
 
 export async function fetchThreadMessages(threadId: string): Promise<{ messages: ChatMessage[]; cost: number; title: string }> {
   return request(`/api/threads/${threadId}/messages`);
+}
+
+export async function deliverOrchestrationResult(threadId: string, data: { project_id: string; group_id: string; run_id: string; input: string; content: string }): Promise<{ status: string; messages: ChatMessage[] }> {
+  return request(`/api/threads/${encodeURIComponent(threadId)}/messages/deliver`, { method: 'POST', body: JSON.stringify(data) });
 }
 
 export async function updateThread(threadId: string, updates: Partial<Thread>): Promise<Thread> {
@@ -107,10 +113,10 @@ export async function confirmApproval(thread_id: string, action_id: string, choi
   });
 }
 
-export async function interruptChat(thread_id: string): Promise<{ status: string; interrupted: boolean }> {
+export async function interruptChat(thread_id: string, client_message_id?: string): Promise<{ status: string; interrupted: boolean }> {
   return request('/api/chat/interrupt', {
     method: 'POST',
-    body: JSON.stringify({ thread_id }),
+    body: JSON.stringify({ thread_id, client_message_id }),
   });
 }
 
@@ -134,7 +140,6 @@ export function streamChat(params: StreamChatParams): () => void {
           thread_id: params.thread_id,
           content: params.content,
           model_id: params.model_id,
-          mode: params.mode,
           rule_trigger: params.rule_trigger,
           attached_skills: params.attached_skills,
           attached_mcps: params.attached_mcps,
@@ -145,12 +150,23 @@ export function streamChat(params: StreamChatParams): () => void {
           ephemeral: params.ephemeral,
           context_messages: params.context_messages,
           context_update: params.context_update,
+          workflow_input: params.workflow_input,
+          workflow_upstream: params.workflow_upstream,
+          workflow_stage: params.workflow_stage,
         }),
         signal: controller.signal,
       });
 
       if (!resp.ok) {
-        throw new Error(`SSE HTTP Error ${resp.status}`);
+        const responseText = await resp.text();
+        let message = responseText;
+        try {
+          const payload = JSON.parse(responseText);
+          message = payload.error || payload.detail || responseText;
+        } catch {
+          // Keep the response body as the most useful available error detail.
+        }
+        throw new Error(message || `SSE HTTP Error ${resp.status}`);
       }
 
       const reader = resp.body?.getReader();
@@ -159,6 +175,7 @@ export function streamChat(params: StreamChatParams): () => void {
       const decoder = new TextDecoder();
       let buffer = '';
       let receivedFinish = false;
+      let currentEvent = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -167,8 +184,6 @@ export function streamChat(params: StreamChatParams): () => void {
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
-
-        let currentEvent = '';
 
         for (const line of lines) {
           const trimmed = line.trim();
@@ -197,8 +212,9 @@ export function streamChat(params: StreamChatParams): () => void {
                 params.onFinish?.(data);
               }
             } catch {
-              // Ignore partial JSON
+              // Ignore malformed event data and keep reading the stream.
             }
+            currentEvent = '';
           }
         }
       }

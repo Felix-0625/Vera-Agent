@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Check, ChevronDown, ChevronRight, Copy, FileCode, LoaderCircle, MessageCircleMore, Pencil, Terminal } from 'lucide-react';
 import { ChatMessage } from '../../types/chat';
 import { MarkdownContent } from './MarkdownContent';
+import { TextArea } from '../common/Field';
 
 interface MessageItemProps {
   message: ChatMessage;
@@ -42,7 +43,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isStreaming =
 
   if (isSystem) {
     return (
-      <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', backgroundColor: 'rgba(239, 68, 68, 0.1)', color: 'var(--accent-rose)', fontSize: 12, margin: '8px 0' }}>
+      <div style={{ padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-danger-soft)', color: 'var(--accent-rose)', fontSize: 'var(--font-size-sm)', margin: 'var(--space-2) 0' }}>
         {message.content}
       </div>
     );
@@ -54,7 +55,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isStreaming =
       style={{
         display: 'flex',
         justifyContent: isUser ? 'flex-end' : 'flex-start',
-        padding: '9px 0',
+        padding: 'var(--space-2-25) 0',
         width: '100%',
       }}
     >
@@ -66,7 +67,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isStreaming =
           display: 'flex',
           flexDirection: 'column',
           alignItems: isUser ? 'flex-end' : 'flex-start',
-          gap: 7,
+          gap: 'var(--space-1-75)',
         }}
       >
         {!isUser && (isStreaming || message.extra?.duration !== undefined || Boolean(activityEntries.length)) && (
@@ -99,11 +100,11 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isStreaming =
           <div style={{ display: 'inline-flex' }}>
             <span
               style={{
-                fontSize: 11,
-                padding: '2px 8px',
+                fontSize: 'var(--font-size-compact)',
+                padding: 'var(--space-0-5) var(--space-2)',
                 borderRadius: 'var(--radius-full)',
-                backgroundColor: 'rgba(124, 58, 237, 0.2)',
-                color: '#C4B5FD',
+                backgroundColor: 'var(--bg-accent-soft)',
+                color: 'var(--accent-primary)',
               }}
             >
               /{message.extra.rule_trigger} 模式
@@ -112,15 +113,15 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isStreaming =
         )}
 
         {isUser && message.extra?.images?.length ? (
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8 }}>
-            {message.extra.images.map((image) => <img key={image.id} src={image.data_url} alt={image.name} style={{ maxWidth: 320, maxHeight: 260, objectFit: 'contain', borderRadius: 10, border: '1px solid rgba(255,255,255,.1)', background: 'rgba(0,0,0,.16)' }} />)}
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 'var(--space-2)' }}>
+            {message.extra.images.map((image) => <img key={image.id} src={image.data_url} alt={image.name} style={{ maxWidth: 320, maxHeight: 260, objectFit: 'contain', borderRadius: 'var(--radius-md-wide)', border: '1px solid var(--border-subtle)', background: 'var(--bg-card)' }} />)}
           </div>
         ) : null}
 
         {/* Text body */}
         <div
           style={{
-            fontSize: 13.5,
+            fontSize: 'var(--font-size-subheading)',
             lineHeight: 1.6,
             color: 'var(--text-primary)',
             whiteSpace: 'pre-wrap',
@@ -129,7 +130,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isStreaming =
             textAlign: 'left',
           }}
         >
-          {isUser ? (editing ? <textarea autoFocus value={editedText} onChange={(event) => setEditedText(event.target.value)} aria-label="编辑用户消息" className="user-message-edit-input" /> : message.content) : <MarkdownContent content={message.content} />}
+          {isUser ? (editing ? <TextArea autoFocus value={editedText} onChange={(event) => setEditedText(event.target.value)} aria-label="编辑用户消息" className="user-message-edit-input" /> : message.content) : <MarkdownContent content={message.content} />}
         </div>
         {isUser && editing && <div className="user-message-edit-actions">
           <button type="button" onClick={() => { setEditedText(message.content); setEditing(false); }}>取消</button>
@@ -139,20 +140,20 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message, isStreaming =
 
         {/* Tool actions list if present */}
         {message.extra?.actions && message.extra.actions.length > 0 && (
-          <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ marginTop: 'var(--space-1-5)', display: 'flex', flexDirection: 'column', gap: 'var(--space-1)' }}>
             {message.extra.actions.map((act, idx) => (
               <div
                 key={idx}
                 style={{
-                  padding: '6px 10px',
+                  padding: 'var(--space-1-5) var(--space-2-5)',
                   borderRadius: 'var(--radius-sm)',
-                  backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                  backgroundColor: 'var(--bg-input)',
                   border: '1px solid var(--border-subtle)',
-                  fontSize: 12,
+                  fontSize: 'var(--font-size-sm)',
                   fontFamily: 'monospace',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 8,
+                  gap: 'var(--space-2)',
                 }}
               >
                 {act.tool_name === 'bash' ? <Terminal size={14} color="var(--accent-amber)" /> : <FileCode size={14} color="var(--accent-cyan)" />}

@@ -6,15 +6,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "vera-agent"
 dynamic = ["version"]
-description = "VeraAgent - Minimalist Multi-Agent GitFlow Collaboration Engine"
+description = "Local-first AI agent workspace with a Windows desktop interface"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE.md"}
-keywords = ["nlp", "agents", "code"]
-authors = [
-    {name = "Kilian Lieret", email = "kilian.lieret@posteo.de" },
-    {name = "Carlos E. Jimenez", email = "carlosej@princeton.edu" },
-]
+keywords = ["ai-agent", "developer-tools", "desktop", "mcp"]
+# This source contains code derived from mini-swe-agent. Its original authorship
+# and MIT notice are preserved in LICENSE.md; do not attribute all VeraAgent
+# changes to the upstream authors.
 
 # Classifiers help users find your project by categorizing it.
 classifiers = [
@@ -47,6 +46,8 @@ dependencies = [
     "openai != 1.100.0,!=1.100.1",  # https://github.com/SWE-agent/mini-swe-agent/issues/446
     "starlette>=1.7.0",
     "uvicorn>=0.54.0",
+    "websockets>=16.1.1",
+    "mcp>=1.12,<2",
 ]
 
 [project.optional-dependencies]
@@ -82,11 +83,14 @@ dev = [
 contree = [
     "contree-sdk>=0.2.0",
 ]
+desktop = [
+    "pywebview>=6.2.1 ; sys_platform == 'win32'",
+]
 
 [project.urls]
-Documentation = "https://mini-swe-agent.com/latest/"
-Repository = "https://github.com/SWE-agent/mini-swe-agent"
-"Bug Tracker" = "https://github.com/SWE-agent/mini-swe-agent/issues"
+Documentation = "https://github.com/Felix-0625/Agents/tree/main/docs"
+Repository = "https://github.com/Felix-0625/Agents"
+"Bug Tracker" = "https://github.com/Felix-0625/Agents/issues"
 
 [project.scripts]
 vera = "vera_agent.run.mini:app"
@@ -279,6 +283,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
     "slow: marks tests as slow (deselect with '-k \"not slow\"')",
+    "network: makes real requests to public web services",
 ]
 
 [dependency-groups]

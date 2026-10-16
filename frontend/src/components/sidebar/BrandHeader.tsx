@@ -2,6 +2,7 @@ import React from 'react';
 import { PanelLeft } from 'lucide-react';
 import { VeraLogo } from '../common/VeraLogo';
 import { useLayoutStore } from '../../stores/layoutStore';
+import { IconButton } from '../common/IconButton';
 
 /**
  * 侧边栏顶部品牌头
@@ -13,42 +14,33 @@ export const BrandHeader: React.FC = () => {
   return (
     <div
       style={{
-        height: 44,
-        padding: '0 14px',
+        height: 'var(--layout-header-height)',
+        padding: '0 var(--space-3-5)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexShrink: 0,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2-5)' }}>
         <VeraLogo size={24} />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px', color: 'var(--text-primary)' }}>
+          <span style={{ fontSize: 'var(--font-size-body)', fontWeight: 700, letterSpacing: '-0.2px', color: 'var(--text-primary)' }}>
             VeraAgent
           </span>
-          <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: '0.6px', color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: 'var(--font-size-tiny)', fontWeight: 600, letterSpacing: '0.6px', color: 'var(--text-muted)' }}>
             WORKSPACE
           </span>
         </div>
       </div>
 
-      <button
+      <IconButton
         onClick={toggleLeft}
-        title="折叠侧边栏"
-        style={{
-          padding: 5,
-          borderRadius: 'var(--radius-sm)',
-          color: 'var(--text-muted)',
-          display: 'flex',
-          alignItems: 'center',
-          cursor: 'pointer',
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+        label="折叠侧边栏"
+        size="sm"
       >
         <PanelLeft size={16} />
-      </button>
+      </IconButton>
     </div>
   );
 };

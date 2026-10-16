@@ -1,18 +1,21 @@
 import React, { useRef, useState } from 'react';
-import { FileText, History, ImagePlus, MessageSquare, Paperclip, RotateCcw, Send, Square, Trash2, X } from 'lucide-react';
+import { FileText, History, ImagePlus, MessageSquare, Paperclip, Send, Square, X } from 'lucide-react';
 import { fetchThreadMessages } from '../../api/chatApi';
 import { useChatStore } from '../../stores/chatStore';
 import { useSideChatStore } from '../../stores/sideChatStore';
 import { MessageItem } from '../composer/MessageItem';
+import { IconButton } from '../common/IconButton';
+import { Button } from '../common/Button';
+import { SelectField, TextArea } from '../common/Field';
 import { ApprovalActionButtons } from '../composer/ApprovalActionButtons';
 import { ModelDropdown } from '../composer/ModelDropdown';
 import { readImageFiles } from '../composer/imageAttachments';
 import { ChatImageAttachment } from '../../types/chat';
 
 interface TextAttachment { id: string; name: string; text: string; }
-type ContextLimit = 5 | 10 | 20 | 'full';
+type ContextLimit = 0 | 5 | 10 | 20 | 'full';
 
-export const SideChatTab: React.FC = () => {
+export const SideChatTab: React.FC<{ sessionId: string }> = ({ sessionId }) => {
   const [input, setInput] = useState('');
   const [loadingContext, setLoadingContext] = useState(false);
   const [contextError, setContextError] = useState('');
@@ -21,20 +24,27 @@ export const SideChatTab: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const mainMessages = useChatStore((state) => state.messages);
-  const {
-    sourceThreadId, sourceTitle, sourceContext, contextScope, contextLimit, selectedModel, messages, isStreaming,
-    currentStatus, approvalRequest, error, sendMessage, confirmAction, interrupt,
-    setContextMessages, setSelectedModel, openFromContext, dispose,
-  } = useSideChatStore();
+  const session = useSideChatStore((state) => state.sessions[sessionId]);
+  const { sendMessage, confirmAction, interrupt, setContextMessages, setSelectedModel } = useSideChatStore();
+  const sourceThreadId = session?.sourceThreadId || null;
+  const sourceTitle = session?.sourceTitle || '';
+  const sourceContext = session?.sourceContext || [];
+  const contextLimit = session?.contextLimit ?? 5;
+  const selectedModel = session?.selectedModel || 'deepseek/deepseek-chat';
+  const messages = session?.messages || [];
+  const isStreaming = session?.isStreaming || false;
+  const currentStatus = session?.currentStatus || '';
+  const approvalRequest = session?.approvalRequest || null;
+  const error = session?.error || null;
 
   const handleSend = () => {
     if (isStreaming) {
-      void interrupt();
+      void interrupt(sessionId);
       return;
     }
     if (!input.trim() && !images.length && !files.length) return;
     const fileContext = files.map((file) => `\n\n<附件：${file.name}>\n${file.text}\n</附件>`).join('');
-    sendMessage(`${input.trim()}${fileContext}`.trim() || '请查看我附上的图片并回答。', images);
+    sendMessage(sessionId, `${input.trim()}${fileContext}`.trim() || '请查看我附上的图片并回答。', images);
     setInput('');
     setImages([]);
     setFiles([]);
@@ -44,6 +54,10 @@ export const SideChatTab: React.FC = () => {
     setLoadingContext(true);
     setContextError('');
     try {
+      if (limit === 0) {
+        setContextMessages(sessionId, sourceContext || [], 0);
+        return;
+      }
       let context = mainMessages;
       if (sourceThreadId) {
         const result = await fetchThreadMessages(sourceThreadId);
@@ -53,7 +67,7 @@ export const SideChatTab: React.FC = () => {
       } else {
         context = sourceContext;
       }
-      setContextMessages(context, limit);
+      setContextMessages(sessionId, context, limit);
     } catch (loadError) {
       setContextError(loadError instanceof Error ? loadError.message : '加载完整上下文失败');
     } finally {
@@ -79,46 +93,39 @@ export const SideChatTab: React.FC = () => {
     setContextError(rejected.length ? `未添加：${rejected.join('、')}` : '');
   };
 
-  const restartSideChat = () => {
-    const state = useSideChatStore.getState();
-    openFromContext(state.sourceThreadId, state.sourceTitle, state.sourceContext, state.contextScope, state.contextLimit);
-  };
+  if (!session) return <div style={{ padding: 'var(--space-4)', color: 'var(--text-muted)' }}>侧边对话已关闭</div>;
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-workspace)', minHeight: 0 }}>
       <div className="side-chat-header">
         <div className="side-chat-heading">
           <span className="side-chat-heading-icon"><MessageSquare size={15} /></span>
-          <span>临时追问</span>
+          <span>临时追问{sourceTitle ? ` · ${sourceTitle}` : ''}</span>
         </div>
-        <label className="side-chat-context-control" title="选择发送前携带的主对话上下文">
+        <label className="side-chat-context-control" title="选择发送前携带的主对话上下文；完整对话最多携带最近 100 条消息">
           <History size={13} />
-          <select aria-label="侧边聊天上下文范围" value={contextLimit} disabled={loadingContext} onChange={(event) => void changeContextLimit(event.target.value === 'full' ? 'full' : Number(event.target.value) as 5 | 10 | 20)}>
-            <option value={5}>最近 5 条</option><option value={10}>最近 10 条</option><option value={20}>最近 20 条</option><option value="full">完整对话</option>
-          </select>
+          <SelectField className="side-chat-context-select" aria-label="侧边聊天上下文范围" value={contextLimit} disabled={loadingContext} onChange={(event) => void changeContextLimit(event.target.value === 'full' ? 'full' : Number(event.target.value) as 0 | 5 | 10 | 20)}>
+            <option value={0}>不带上下文（0 条）</option><option value={5}>最近 5 条</option><option value={10}>最近 10 条</option><option value={20}>最近 20 条</option><option value="full">完整对话（最多 100 条）</option>
+          </SelectField>
         </label>
-        <div className="side-chat-header-actions">
-          <button type="button" onClick={restartSideChat} title="重新开始临时对话" aria-label="重新开始临时对话"><RotateCcw size={14} /></button>
-          <button type="button" onClick={dispose} title="清除临时对话" aria-label="清除临时对话"><Trash2 size={14} /></button>
-        </div>
       </div>
 
-      {contextError && <div style={{ padding: '6px 13px', color: 'var(--accent-rose)', fontSize: 11 }}>{contextError}</div>}
-      {error && <div style={{ padding: '6px 13px', color: 'var(--accent-rose)', fontSize: 11 }}>{error}</div>}
+      {contextError && <div style={{ padding: 'var(--space-1-5) var(--space-3-25)', color: 'var(--accent-rose)', fontSize: 'var(--font-size-compact)' }}>{contextError}</div>}
+      {error && <div style={{ padding: 'var(--space-1-5) var(--space-3-25)', color: 'var(--accent-rose)', fontSize: 'var(--font-size-compact)' }}>{error}</div>}
 
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '10px 14px', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--space-2-5) var(--space-3-5)', display: 'flex', flexDirection: 'column' }}>
         {messages.length === 0 ? (
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)', margin: 'auto 12px', maxWidth: 300, alignSelf: 'center' }}>
-            <MessageSquare size={28} style={{ margin: '0 auto 9px', opacity: .4 }} />
-            <div style={{ fontSize: 12.5, fontWeight: 550 }}>就这条回答继续追问</div>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)', margin: 'auto var(--space-3)', maxWidth: 300, alignSelf: 'center' }}>
+            <MessageSquare size={28} style={{ margin: '0 auto var(--space-2-25)', opacity: .4 }} />
+            <div style={{ fontSize: 'var(--font-size-control)', fontWeight: 550 }}>就这条回答继续追问</div>
           </div>
         ) : messages.map((message, index) => (
           <MessageItem key={message.id || index} message={message} isStreaming={isStreaming && index === messages.length - 1 && message.role === 'assistant'} streamLabel={currentStatus} />
         ))}
         {approvalRequest && (
-          <div style={{ margin: '8px 0', padding: 12, borderRadius: 9, border: '1px solid rgba(245,158,11,.32)', background: 'rgba(245,158,11,.08)' }}>
-            <strong style={{ fontSize: 11.5, color: '#fbbf24' }}>工具调用需要审批：{approvalRequest.tool_name || '终端命令'}</strong>
-            <pre style={{ marginTop: 7, maxHeight: 120, overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: 'var(--text-secondary)', fontSize: 10.5 }}>{JSON.stringify(approvalRequest.args, null, 2)}</pre>
-            <ApprovalActionButtons onConfirm={(choice) => { void confirmAction(choice); }} />
+          <div style={{ margin: 'var(--space-2) 0', padding: 'var(--space-3)', borderRadius: 'var(--radius-md-plus)', border: '1px solid var(--border-warning-soft)', background: 'var(--bg-warning-soft)' }}>
+            <strong style={{ fontSize: 'var(--font-size-label)', color: 'var(--accent-amber)' }}>工具调用需要审批：{approvalRequest.tool_name || '终端命令'}</strong>
+            <pre style={{ marginTop: 'var(--space-1-75)', maxHeight: 120, overflow: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: 'var(--text-secondary)', fontSize: 'var(--font-size-subtle)' }}>{JSON.stringify(approvalRequest.args, null, 2)}</pre>
+            <ApprovalActionButtons onConfirm={(choice) => { void confirmAction(sessionId, choice); }} />
           </div>
         )}
       </div>
@@ -126,7 +133,7 @@ export const SideChatTab: React.FC = () => {
       <div className="side-chat-composer glass-panel">
         <input ref={imageInputRef} type="file" accept="image/*" multiple hidden onChange={(event) => { if (event.target.files) void handleFiles(event.target.files); event.target.value = ''; }} />
         <input ref={fileInputRef} type="file" multiple hidden onChange={(event) => { if (event.target.files) void handleFiles(event.target.files); event.target.value = ''; }} />
-        <textarea
+        <TextArea
           value={input}
           onChange={(event) => setInput(event.target.value)}
           onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); handleSend(); } }}
@@ -135,18 +142,18 @@ export const SideChatTab: React.FC = () => {
           className="side-chat-composer-input"
         />
         {(images.length > 0 || files.length > 0) && <div className="side-chat-attachments">
-          {images.map((image) => <span key={image.id} className="side-chat-attachment"><ImagePlus size={11} />{image.name}<button type="button" aria-label={`移除 ${image.name}`} onClick={() => setImages((current) => current.filter((item) => item.id !== image.id))}><X size={11} /></button></span>)}
-          {files.map((file) => <span key={file.id} className="side-chat-attachment"><FileText size={11} />{file.name}<button type="button" aria-label={`移除 ${file.name}`} onClick={() => setFiles((current) => current.filter((item) => item.id !== file.id))}><X size={11} /></button></span>)}
+          {images.map((image) => <span key={image.id} className="side-chat-attachment"><ImagePlus size={11} /><span>{image.name}</span><IconButton label={`移除图片 ${image.name}`} size="sm" onClick={() => setImages((current) => current.filter((item) => item.id !== image.id))}><X size={12} /></IconButton></span>)}
+          {files.map((file) => <span key={file.id} className="side-chat-attachment"><FileText size={11} /><span>{file.name}</span><IconButton label={`移除文件 ${file.name}`} size="sm" onClick={() => setFiles((current) => current.filter((item) => item.id !== file.id))}><X size={12} /></IconButton></span>)}
         </div>}
         <div className="side-chat-composer-toolbar">
           <div className="side-chat-composer-actions">
-            <button type="button" onClick={() => imageInputRef.current?.click()} title="添加图片" aria-label="添加图片"><ImagePlus size={15} /></button>
-            <button type="button" onClick={() => fileInputRef.current?.click()} title="添加文本或代码文件" aria-label="添加文件"><Paperclip size={15} /></button>
-            <ModelDropdown value={selectedModel} onChange={setSelectedModel} />
+            <IconButton label="添加图片" size="sm" onClick={() => imageInputRef.current?.click()}><ImagePlus size={15} /></IconButton>
+            <IconButton label="添加文本或代码文件" size="sm" onClick={() => fileInputRef.current?.click()}><Paperclip size={15} /></IconButton>
+            <ModelDropdown value={selectedModel} onChange={(model) => setSelectedModel(sessionId, model)} />
           </div>
-          <button type="button" className="side-chat-send" onClick={handleSend} title={isStreaming ? '停止生成' : '发送追问'} aria-label={isStreaming ? '停止生成' : '发送追问'}>
+          <Button type="button" variant="primary" size="compact" className="side-chat-send" onClick={handleSend} title={isStreaming ? '停止生成' : '发送追问'} aria-label={isStreaming ? '停止生成' : '发送追问'}>
             {isStreaming ? <Square size={13} /> : <Send size={14} />}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

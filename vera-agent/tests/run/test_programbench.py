@@ -96,7 +96,7 @@ def test_copy_submission_rejects_non_docker_env(tmp_path):
 
 def test_default_config_disables_network():
     """The shipped ``programbench.yaml`` must contain ``--network none`` in run_args."""
-    cfg = yaml.safe_load((package_dir / "config" / "benchmarks" / "programbench.yaml").read_text())
+    cfg = yaml.safe_load((package_dir / "config" / "benchmarks" / "programbench.yaml").read_text(encoding="utf-8"))
     run_args = cfg["environment"]["run_args"]
     assert "--network" in run_args
     assert run_args[run_args.index("--network") + 1] == "none"

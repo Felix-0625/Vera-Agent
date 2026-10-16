@@ -120,6 +120,8 @@ class SkillManager:
         return (
             f"<skill name='{skill.name}'>\n"
             f"<!-- Description: {skill.description} -->\n"
+            f"Skill resource directory: {skill.path.parent.resolve()}\n"
+            "Resolve relative resource paths from this directory and use the resulting absolute path with the read tool.\n"
             f"{skill.instructions}\n"
             "</skill>"
         )

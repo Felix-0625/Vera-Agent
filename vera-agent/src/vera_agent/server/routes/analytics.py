@@ -108,8 +108,6 @@ async def get_analytics_dashboard(request: Request) -> JSONResponse:
                 task_tools.clear()
                 user_extra = message.get("extra") or {}
                 task_skills = {str(name) for name in user_extra.get("attached_skills", []) if name}
-                attached_mcps = {str(name) for name in user_extra.get("attached_mcps", []) if name}
-                task_tools.update(attached_mcps)
                 raw_timestamp = (message.get("extra") or {}).get("timestamp") or message.get("timestamp")
                 task_timestamp = float(raw_timestamp) / 1000 if raw_timestamp and raw_timestamp > 10_000_000_000 else float(raw_timestamp or 0) or None
             elif role == "assistant":

@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Folder, Plus, ChevronDown, ChevronRight, Pin, MoreVertical } from 'lucide-react';
-import { Project } from '../../types/project';
+import { Folder, FolderOpen, Plus, Pin, MoreVertical, Workflow, Layers3, Pencil, GitFork, Network } from 'lucide-react';
+import { Group, Project } from '../../types/project';
 import { Thread } from '../../types/chat';
-import { useLayoutStore } from '../../stores/layoutStore';
+import { useRightSidebarLayout } from '../../stores/rightSidebarLayout';
 import { useToolTabsStore } from '../../stores/toolTabsStore';
+import { fetchGroups } from '../../api/projectApi';
+import { useChatStore } from '../../stores/chatStore';
 import { ProjectContextMenu } from './ProjectContextMenu';
 import { InlineThreadRename } from './InlineThreadRename';
+import { IconButton } from '../common/IconButton';
 
 interface ProjectRowProps {
   project: Project;
@@ -40,11 +43,14 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
   editingThreadId = null,
   onRenameThread,
 }) => {
-  const { rightCollapsed, toggleRight, setProvisionGroupOpen } = useLayoutStore();
+  const { rightCollapsed, toggleRight } = useRightSidebarLayout();
   const { openTab } = useToolTabsStore();
 
   const [isExpanded, setIsExpanded] = useState(true);
   const [limit, setLimit] = useState(5);
+  const [projectGroups, setProjectGroups] = useState<Group[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [groupThreadLimits, setGroupThreadLimits] = useState<Record<string, number>>({});
   const [menuPosition, setMenuPosition] = useState<{ left:number; top:number } | null>(null);
   useEffect(() => {
     if (!menuPosition) return;
@@ -60,31 +66,67 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
     setMenuPosition({ left:Math.min(rect.right-174,window.innerWidth-182), top:Math.min(rect.bottom+4,window.innerHeight-116) });
   };
 
-  const visibleThreads = threads.slice(0, limit);
-  const hasMore = threads.length > limit;
+  useEffect(() => {
+    if (!isExpanded) return;
+    let active = true;
+    const loadProjectGroups = async () => {
+      try {
+        const result = await fetchGroups(project.id);
+        if (!active) return;
+        await useChatStore.getState().loadThreads();
+        if (!active) return;
+        const orchestrationGroups = (result.groups || []).filter((group) => group.group_mode === 'workflow' || group.group_mode === 'architecture');
+        setProjectGroups(orchestrationGroups);
+        setExpandedGroups((current) => {
+          const next = { ...current };
+          orchestrationGroups.forEach((group) => { if (next[group.group_id] === undefined) next[group.group_id] = true; });
+          return next;
+        });
+      } catch {
+        if (active) setProjectGroups([]);
+      }
+    };
+    void loadProjectGroups();
+    const refresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ projectId?: string }>).detail;
+      if (!detail?.projectId || detail.projectId === project.id) void loadProjectGroups();
+    };
+    window.addEventListener('orchestration:instances-updated', refresh);
+    return () => { active = false; window.removeEventListener('orchestration:instances-updated', refresh); };
+  }, [isExpanded, project.id]);
+
+  const orchestrationIds = new Set(projectGroups.map((group) => group.group_id));
+  const ordinaryThreads = threads.filter((thread) => !thread.group_id || !orchestrationIds.has(thread.group_id));
+  const editGroupInstance = (group: Group) => {
+    if (rightCollapsed) toggleRight();
+    openTab('workflow', '流程编排', undefined, project.id);
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent('orchestration:edit-instance', { detail: { projectId: project.id, groupId: group.group_id } })), 100);
+  };
+
+  const visibleThreads = ordinaryThreads.slice(0, limit);
+  const hasMore = ordinaryThreads.length > limit;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-0-5)' }}>
       {/* 项目行 */}
       <div
         style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '6px 8px',
+          padding: 'var(--space-1-5) var(--space-2)',
           borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'rgba(255, 255, 255, 0.03)',
+          backgroundColor: 'var(--bg-interactive-hover)',
           color: 'var(--text-primary)',
-          fontSize: 12.5,
+          fontSize: 'var(--font-size-control)',
           cursor: 'pointer',
         }}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, overflow: 'hidden' }}>
-          <span style={{ color: 'var(--text-muted)', display: 'inline-flex' }}>
-            {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1-75)', overflow: 'hidden' }}>
+          <span title={isExpanded ? '收起项目' : '展开项目'} style={{ color: 'var(--text-muted)', display: 'inline-flex' }}>
+            {isExpanded ? <FolderOpen size={15} color="var(--accent-primary)" /> : <Folder size={14} color="var(--accent-primary)" />}
           </span>
-          <Folder size={14} color="#4b91ff" />
           <span
             style={{
               overflow: 'hidden',
@@ -98,27 +140,16 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
         </div>
 
         {/* 右侧动作按钮区：两个方框叠放 (创建分组) + '+' (新建对话) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <button onClick={openMenu} title="项目操作" aria-label={`${project.name} 项目操作`} aria-expanded={!!menuPosition} style={{ padding:3,borderRadius:3,color:'var(--text-muted)',display:'flex',alignItems:'center' }}><MoreVertical size={13}/></button>
-          <button
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-0-5)' }}>
+          <IconButton onClick={openMenu} label={`${project.name} 项目操作`} aria-expanded={!!menuPosition} size="sm"><MoreVertical size={13}/></IconButton>
+          <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              onNewDraftInProject(project.id);
               if (rightCollapsed) toggleRight();
-              openTab('workflow', '分组管理', undefined, project.id);
-              setProvisionGroupOpen(true);
+              openTab('workflow', '流程编排', undefined, project.id);
             }}
-            title="新建业务分组"
-            style={{
-              padding: 3,
-              borderRadius: 3,
-              color: 'var(--text-muted)',
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+            label={`${project.name} 项目流程编排`}
+            size="sm"
           >
             <svg
               width="13"
@@ -133,38 +164,54 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
               <rect x="7" y="7" width="13" height="13" rx="2" ry="2" />
               <path d="M4 17V5a2 2 0 0 1 2-2h12" />
             </svg>
-          </button>
+          </IconButton>
 
-          <button
+          <IconButton
             onClick={(e) => {
               e.stopPropagation();
               onNewDraftInProject(project.id);
             }}
-            title="在此项目中创建新对话"
-            style={{
-              padding: 3,
-              borderRadius: 3,
-              color: 'var(--text-muted)',
-              display: 'flex',
-              alignItems: 'center',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+            label={`在 ${project.name} 中新建对话`}
+            size="sm"
           >
             <Plus size={13} />
-          </button>
+          </IconButton>
         </div>
       </div>
 
       {/* 展开的对话列表 (前面无图标，缩进对齐截图) */}
       {isExpanded && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {visibleThreads.length === 0 ? (
+          {projectGroups.map((group) => {
+            const groupThreads = threads.filter((thread) => thread.group_id === group.group_id);
+            const groupLimit = groupThreadLimits[group.group_id] || 5;
+            const expanded = expandedGroups[group.group_id] ?? true;
+            const GroupIcon = group.group_mode === 'architecture' ? Layers3 : Workflow;
+            const CollapsedGroupIcon = group.group_mode === 'architecture' ? Network : GitFork;
+            return <div key={group.group_id} style={{ margin: 'var(--space-0-75) 0', borderRadius: 'var(--radius-sm)', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', overflow:'hidden' }}>
+              <div style={{ display:'flex',alignItems:'center',gap: 'var(--space-1-5)',padding: 'var(--space-1-75) var(--space-2) var(--space-1-75) 25px',minWidth:0 }}>
+                <IconButton label={expanded ? `折叠${group.name}` : `展开${group.name}`} onClick={()=>setExpandedGroups((current)=>({...current,[group.group_id]:!expanded}))} size="sm" style={{color:group.group_mode === 'architecture' ? 'var(--accent-emerald)' : 'var(--accent-primary)'}}>{expanded?<GroupIcon size={14}/>:<CollapsedGroupIcon size={14}/>}</IconButton>
+                <button onClick={()=>setExpandedGroups((current)=>({...current,[group.group_id]:!expanded}))} title={group.name} style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',textAlign:'left',fontSize:'var(--font-size-label)',color:'var(--text-secondary)'}}>{group.name}</button>
+                <IconButton onClick={()=>editGroupInstance(group)} label={`编辑${group.name}`} size="sm"><Pencil size={11}/></IconButton>
+              </div>
+              {expanded && <div style={{display:'flex',flexDirection:'column',gap:1,paddingBottom: 'var(--space-0-75)'}}>
+                {groupThreads.slice(0,groupLimit).map((thread)=>{
+                  const isActive=activeThreadId===thread.thread_id;
+                  return <div key={thread.thread_id} className={`sidebar-thread-row${isActive ? ' is-active' : ''}`} onClick={()=>{if(editingThreadId!==thread.thread_id)onSelectThread(thread.thread_id)}} onContextMenu={(event)=>onContextMenu(event,thread)} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding: 'var(--space-1-25) var(--space-1-75) var(--space-1-25) 48px',borderRadius: 'var(--radius-sm)',cursor:'pointer',fontSize:'var(--font-size-label)',color:isActive?'var(--text-primary)':'var(--text-muted)'}}>
+                    {editingThreadId===thread.thread_id&&onRenameThread?<InlineThreadRename title={thread.title||'对话窗口'} onSave={(title)=>onRenameThread(thread,title)} onCancel={()=>onRenameThread(thread,null)}/>:<span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flex:1,marginRight: 'var(--space-1-25)'}}>{thread.title||'对话窗口'}</span>}
+                    <IconButton onClick={(event)=>{event.stopPropagation();onContextMenu(event,thread)}} label={`${thread.title || '对话'} 操作菜单`} size="sm"><MoreVertical size={12}/></IconButton>
+                  </div>;
+                })}
+                {groupThreads.length===0&&<div style={{padding: 'var(--space-1) var(--space-2) var(--space-1-25) 48px',fontSize:'var(--font-size-subtle)',color:'var(--text-disabled)'}}>尚无运行会话</div>}
+                {groupThreads.length>groupLimit&&<button onClick={()=>setGroupThreadLimits((current)=>({...current,[group.group_id]:groupLimit+5}))} style={{padding: 'var(--space-1) var(--space-2) var(--space-1-25) 48px',textAlign:'left',fontSize:'var(--font-size-subtle)',color:'var(--accent-primary)'}}>展开更多（{groupThreads.length-groupLimit}）</button>}
+              </div>}
+            </div>;
+          })}
+          {ordinaryThreads.length === 0 && projectGroups.length === 0 ? (
             <div
               style={{
-                padding: '4px 10px 4px 28px',
-                fontSize: 11.5,
+                padding: 'var(--space-1) var(--space-2-5) var(--space-1) 28px',
+                fontSize: 'var(--font-size-label)',
                 color: 'var(--text-disabled)',
               }}
             >
@@ -178,23 +225,16 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
                   key={t.thread_id}
                   onClick={() => { if (editingThreadId !== t.thread_id) onSelectThread(t.thread_id); }}
                   onContextMenu={(e) => onContextMenu(e, t)}
+                  className={`sidebar-thread-row${isActive ? ' is-active' : ''}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    padding: '5px 8px 5px 28px',
+                    padding: 'var(--space-1-25) var(--space-2) var(--space-1-25) 28px',
                     borderRadius: 'var(--radius-sm)',
-                    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
                     cursor: 'pointer',
-                    fontSize: 12.5,
+                    fontSize: 'var(--font-size-control)',
                     color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
-                    transition: 'background-color 0.1s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)';
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
                   }}
                 >
                   {editingThreadId === t.thread_id && onRenameThread ? <InlineThreadRename title={t.title || '对话'} onSave={title => onRenameThread(t, title)} onCancel={() => onRenameThread(t, null)} /> : <span
@@ -203,32 +243,24 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
                       textOverflow: 'ellipsis',
                       whiteSpace: 'nowrap',
                       flex: 1,
-                      marginRight: 6,
+                      marginRight: 'var(--space-1-5)',
                     }}
                   >
                     {t.title || '对话'}
                   </span>}
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', flexShrink: 0 }}>
                     {t.is_pinned && <Pin size={11} color="var(--accent-amber)" />}
-                    <button
+                    <IconButton
                       onClick={(e) => {
                         e.stopPropagation();
                         onContextMenu(e, t);
                       }}
-                      style={{
-                        padding: 2,
-                        color: 'var(--text-muted)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        cursor: 'pointer',
-                      }}
-                      title="操作菜单"
-                      onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+                      label={`${t.title || '对话'} 操作菜单`}
+                      size="sm"
                     >
                       <MoreVertical size={13} />
-                    </button>
+                    </IconButton>
                   </div>
                 </div>
               );
@@ -239,16 +271,15 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
             <button
               onClick={() => setLimit((prev) => prev + 5)}
               style={{
-                padding: '4px 10px 6px 28px',
-                fontSize: 11.5,
+                padding: 'var(--space-1) var(--space-2-5) var(--space-1-5) 28px',
+                fontSize: 'var(--font-size-label)',
                 color: 'var(--accent-primary)',
                 textAlign: 'left',
                 cursor: 'pointer',
                 background: 'transparent',
                 border: 'none',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-              onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+              className="sidebar-expand-more"
             >
               展开更多 ({threads.length - limit} 条)
             </button>

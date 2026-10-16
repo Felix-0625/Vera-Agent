@@ -5,6 +5,7 @@ import { useChatStore } from '../../stores/chatStore';
 import { LeftSidebar } from '../sidebar/LeftSidebar';
 import { CenterWorkspace } from '../composer/CenterWorkspace';
 import { RightToolsContainer } from '../tools/RightToolsContainer';
+import { useRightSidebarLayout } from '../../stores/rightSidebarLayout';
 import { ResizeHandle } from './ResizeHandle';
 
 // Modals
@@ -15,7 +16,7 @@ import { NewTaskDialog } from '../dialogs/NewTaskDialog';
 import { SettingsModal } from '../dialogs/SettingsModal';
 import { ModelConfigDialog } from '../dialogs/ModelConfigDialog';
 import { McpManualConfigDialog } from '../dialogs/McpManualConfigDialog';
-import { ProvisionGroupDialog } from '../dialogs/ProvisionGroupDialog';
+import { WorkflowTemplatesModal } from '../dialogs/WorkflowTemplatesModal';
 
 export const WorkspaceShell: React.FC = () => {
   const {
@@ -23,12 +24,8 @@ export const WorkspaceShell: React.FC = () => {
     leftWidth,
     setLeftWidth,
     toggleLeft,
-    rightCollapsed,
-    rightWidth,
-    setRightWidth,
-    toggleRight,
-    rightMaximized,
   } = useLayoutStore();
+  const { rightCollapsed, rightWidth, setRightWidth, toggleRight, rightMaximized } = useRightSidebarLayout();
 
   const { loadCurrentProject, loadProjectsHistory, loadGroups } = useProjectStore();
   const { loadThreads } = useChatStore();
@@ -75,7 +72,8 @@ export const WorkspaceShell: React.FC = () => {
         overflow: 'hidden',
         position: 'relative',
         backgroundColor: 'var(--bg-workspace)',
-      }}
+        '--left-panel-width': `${leftCollapsed ? 0 : leftWidth}px`,
+      } as React.CSSProperties}
     >
       {/* 1. Left Sidebar */}
       <LeftSidebar />
@@ -104,7 +102,7 @@ export const WorkspaceShell: React.FC = () => {
       <SettingsModal />
       <ModelConfigDialog />
       <McpManualConfigDialog />
-      <ProvisionGroupDialog />
+      <WorkflowTemplatesModal />
     </div>
   );
 };

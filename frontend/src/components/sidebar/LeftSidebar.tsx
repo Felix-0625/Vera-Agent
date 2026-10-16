@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { BrandHeader } from './BrandHeader';
-import { NavLinks, ScheduledTasksLink } from './NavLinks';
+import { NavLinks, ScheduledTasksLink, WorkflowTemplatesLink } from './NavLinks';
 import { ProjectTree } from './ProjectTree';
 import { SidebarFooter } from './SidebarFooter';
 import { PinnedItems } from './PinnedItems';
@@ -29,7 +29,8 @@ export const LeftSidebar: React.FC = () => {
       <BrandHeader />
       <NavLinks />
       <ScheduledTasksLink />
-      <div style={{ flex:1,minHeight:0,overflowY:'auto',display:'flex',flexDirection:'column',gap:14,paddingTop:4 }}>
+      <WorkflowTemplatesLink />
+      <div style={{ flex:1,minHeight:0,overflowY:'auto',display:'flex',flexDirection:'column',gap: 'var(--space-3-5)',paddingTop: 'var(--space-1)' }}>
         <PinnedItems />
         <ProjectTree />
         <RecentConversations />

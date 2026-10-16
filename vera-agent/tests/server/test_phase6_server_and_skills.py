@@ -150,9 +150,10 @@ def test_server_api_endpoints(temp_git_repo: Path):
     assert res_syntax.json()["valid"] is True
 
     # 7. Merge Review endpoint
+    project_id = client.get("/api/projects").json()["projects"][0]["id"]
     res_merge = client.post(
         "/api/merge-review",
-        json={"source_branch": "feat/auth", "target_branch": "main"},
+        json={"source_branch": "feat/auth", "target_branch": "main", "project_id": project_id},
     )
     assert res_merge.status_code == 200
     assert "can_merge" in res_merge.json()

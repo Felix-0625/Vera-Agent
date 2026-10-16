@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Thread, ChatMessage, ChatImageAttachment, ApprovalRequest, AgentMode, RuleTrigger, ChatActivityEvent, SubagentRun, QueuedPrompt } from '../types/chat';
+import { Thread, ChatMessage, ChatImageAttachment, ApprovalRequest, RuleTrigger, ChatActivityEvent, SubagentRun, QueuedPrompt } from '../types/chat';
 import {
   fetchThreads,
   createThread,
@@ -10,7 +10,9 @@ import {
   pauseChat,
   resumeChat,
   truncateThreadFromMessage,
+  deliverOrchestrationResult,
 } from '../api/chatApi';
+import { useLayoutStore } from './layoutStore';
 
 interface ChatState {
   threads: Thread[];
@@ -21,11 +23,11 @@ interface ChatState {
   messages: ChatMessage[];
   queuedPrompts: QueuedPrompt[];
   queuePaused: boolean;
+  conversationQueues: Record<string, { queuedPrompts: QueuedPrompt[]; queuePaused: boolean }>;
   isStreaming: boolean;
   currentThinking: { step: number; text: string } | null;
   currentActivity: ChatActivityEvent[];
   approvalRequest: ApprovalRequest | null;
-  mode: AgentMode;
   selectedModel: string;
   ruleTrigger: RuleTrigger;
   attachedSkills: string[];
@@ -33,9 +35,10 @@ interface ChatState {
 
   loadThreads: (search?: string) => Promise<void>;
   selectThread: (threadId: string) => Promise<void>;
-  openDraftConversation: (projectId?: string | null) => void;
+  openDraftConversation: (projectId?: string | null) => Promise<void>;
   newThread: (title?: string, groupId?: string, projectId?: string) => Promise<string>;
   sendMessage: (content: string, groupId?: string, images?: ChatImageAttachment[]) => Promise<void>;
+  appendOrchestrationResult: (threadId: string, data: { project_id: string; group_id: string; run_id: string; input: string; content: string }) => Promise<void>;
   editAndResendMessage: (messageId: string, content: string, images?: ChatImageAttachment[]) => Promise<void>;
   confirmAction: (choice: string) => Promise<void>;
   interrupt: () => Promise<void>;
@@ -45,7 +48,6 @@ interface ChatState {
   guideQueuedPrompt: (id: string) => Promise<void>;
   resumeQueue: () => void;
   processQueue: () => void;
-  setMode: (mode: AgentMode) => void;
   setSelectedModel: (model: string) => void;
   setRuleTrigger: (t: RuleTrigger) => void;
   toggleSkillAttachment: (name: string) => void;
@@ -57,7 +59,52 @@ interface ChatState {
 }
 
 let activeStreamToken = 0;
+let activeThreadLoadToken = 0;
 let cancelCurrentStream: (() => void) | null = null;
+let activeStreamHandle: { threadId: string; clientMessageId: string; token: number; finished: Promise<void> } | null = null;
+
+function getConversationKey(state: Pick<ChatState, 'activeThreadId' | 'draftConversationId'>): string {
+  return state.activeThreadId ? `thread:${state.activeThreadId}` : `draft:${state.draftConversationId}`;
+}
+
+function saveConversationQueue(
+  queues: ChatState['conversationQueues'],
+  key: string,
+  queue: { queuedPrompts: QueuedPrompt[]; queuePaused: boolean },
+): ChatState['conversationQueues'] {
+  const next = { ...queues };
+  if (queue.queuedPrompts.length || queue.queuePaused) next[key] = queue;
+  else delete next[key];
+  return next;
+}
+
+function stopActiveStream(): void {
+  activeStreamToken += 1;
+  const cancel = cancelCurrentStream;
+  cancelCurrentStream = null;
+  cancel?.();
+}
+
+async function interruptActiveStreamForNavigation(): Promise<void> {
+  const state = useChatStore.getState();
+  if (!state.isStreaming) {
+    stopActiveStream();
+    return;
+  }
+
+  activeStreamToken += 1;
+  cancelCurrentStream = null;
+  if (!state.activeThreadId) {
+    stopActiveStream();
+    return;
+  }
+
+  try {
+    await interruptChat(state.activeThreadId, activeStreamHandle?.threadId === state.activeThreadId ? activeStreamHandle.clientMessageId : undefined);
+  } catch {
+    // Keep the stream attached so the backend can finish and persist if the interrupt request fails.
+  }
+}
 
 export const useChatStore = create<ChatState>((set, get) => ({
   threads: [],
@@ -68,12 +115,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
   messages: [],
   queuedPrompts: [],
   queuePaused: false,
+  conversationQueues: {},
   isStreaming: false,
   currentThinking: null,
   currentActivity: [],
   approvalRequest: null,
-  mode: 'confirm',
-  selectedModel: 'deepseek/deepseek-chat',
+  selectedModel: '',
   ruleTrigger: null,
   attachedSkills: [],
   attachedMcps: [],
@@ -88,18 +135,37 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   selectThread: async (threadId: string) => {
-    set({
-      activeThreadId: threadId,
-      draftConversationId: '',
-      draftProjectId: get().threads.find((thread) => thread.thread_id === threadId)?.project_id || null,
-      draftImages: [],
-      isStreaming: false,
-      currentThinking: null,
-      currentActivity: [],
-      approvalRequest: null,
+    const loadToken = ++activeThreadLoadToken;
+    await interruptActiveStreamForNavigation();
+    if (loadToken !== activeThreadLoadToken) return;
+    const previous = get();
+    const previousKey = getConversationKey(previous);
+    const nextKey = `thread:${threadId}`;
+    set((state) => {
+      const conversationQueues = saveConversationQueue(state.conversationQueues, previousKey, {
+        queuedPrompts: state.queuedPrompts,
+        queuePaused: state.queuePaused,
+      });
+      const nextQueue = conversationQueues[nextKey] || { queuedPrompts: [], queuePaused: false };
+      return {
+        conversationQueues,
+        queuedPrompts: nextQueue.queuedPrompts,
+        queuePaused: nextQueue.queuePaused,
+        activeThreadId: threadId,
+        draftConversationId: '',
+        draftProjectId: state.threads.find((thread) => thread.thread_id === threadId)?.project_id || null,
+        draftImages: [],
+        // Clear the previous conversation before its history request can finish.
+        messages: [],
+        isStreaming: false,
+        currentThinking: null,
+        currentActivity: [],
+        approvalRequest: null,
+      };
     });
     try {
       const data = await fetchThreadMessages(threadId);
+      if (loadToken !== activeThreadLoadToken || get().activeThreadId !== threadId) return;
       // Persisted sessions can contain internal tool records and incomplete
       // assistant placeholders (content: null). The chat renderer only handles
       // user/assistant/system text messages, so normalize replay data at the API
@@ -112,41 +178,75 @@ export const useChatStore = create<ChatState>((set, get) => ({
       });
       set({ messages });
     } catch {
-      set({ messages: [] });
+      if (loadToken === activeThreadLoadToken && get().activeThreadId === threadId) set({ messages: [] });
     }
   },
 
-  openDraftConversation: (projectId = null) => {
-    set({
-      activeThreadId: null,
-      draftConversationId: `draft:${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      draftProjectId: projectId,
-      draftImages: [],
-      messages: [],
-      queuedPrompts: [],
-      queuePaused: false,
-      isStreaming: false,
-      currentThinking: null,
-      currentActivity: [],
-      approvalRequest: null,
+  openDraftConversation: async (projectId = null) => {
+    const navigationToken = ++activeThreadLoadToken;
+    await interruptActiveStreamForNavigation();
+    if (navigationToken !== activeThreadLoadToken) return;
+    const previous = get();
+    const previousKey = getConversationKey(previous);
+    const draftConversationId = `draft:${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const nextKey = `draft:${draftConversationId}`;
+    set((state) => {
+      const conversationQueues = saveConversationQueue(state.conversationQueues, previousKey, {
+        queuedPrompts: state.queuedPrompts,
+        queuePaused: state.queuePaused,
+      });
+      const nextQueue = conversationQueues[nextKey] || { queuedPrompts: [], queuePaused: false };
+      return {
+        conversationQueues,
+        queuedPrompts: nextQueue.queuedPrompts,
+        queuePaused: nextQueue.queuePaused,
+        activeThreadId: null,
+        draftConversationId,
+        draftProjectId: projectId,
+        draftImages: [],
+        messages: [],
+        isStreaming: false,
+        currentThinking: null,
+        currentActivity: [],
+        approvalRequest: null,
+      };
     });
   },
 
   newThread: async (title = '新建对话', groupId?: string, projectId?: string) => {
+    const createToken = ++activeThreadLoadToken;
+    await interruptActiveStreamForNavigation();
+    const previous = get();
+    const previousKey = getConversationKey(previous);
     const thread = await createThread(title, groupId, projectId);
-    set((s) => ({
-      threads: [thread, ...s.threads],
-      activeThreadId: thread.thread_id,
-      draftConversationId: '',
-      draftProjectId: projectId || null,
-      draftImages: [],
-      messages: [],
-      queuedPrompts: [],
-      queuePaused: false,
-      currentThinking: null,
-      currentActivity: [],
-      approvalRequest: null,
-    }));
+    if (createToken !== activeThreadLoadToken) {
+      void get().loadThreads();
+      return thread.thread_id;
+    }
+    set((s) => {
+      const conversationQueues = saveConversationQueue(s.conversationQueues, previousKey, {
+        queuedPrompts: s.queuedPrompts,
+        queuePaused: s.queuePaused,
+      });
+      const nextQueue = conversationQueues[`thread:${thread.thread_id}`] || { queuedPrompts: [], queuePaused: false };
+      return {
+        conversationQueues,
+        queuedPrompts: nextQueue.queuedPrompts,
+        queuePaused: nextQueue.queuePaused,
+        threads: [thread, ...s.threads],
+        activeThreadId: thread.thread_id,
+        draftConversationId: '',
+        draftProjectId: projectId || null,
+        draftImages: [],
+        messages: [],
+        currentThinking: null,
+        currentActivity: [],
+        approvalRequest: null,
+      };
+    });
+    if (!previous.activeThreadId && previous.draftConversationId) {
+      useLayoutStore.getState().adoptRightSidebarLayout(`conversation:${previous.draftConversationId}`, `conversation:${thread.thread_id}`);
+    }
     return thread.thread_id;
   },
 
@@ -163,6 +263,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     let threadId = state.activeThreadId;
     const messageText = queuedText;
     if (!messageText) return;
+    const conversationLoadToken = activeThreadLoadToken;
 
     // 若当前为草稿状态，用户首次发送消息时才正式创建该对话并绑定项目
     if (!threadId) {
@@ -170,11 +271,28 @@ export const useChatStore = create<ChatState>((set, get) => ({
         const title = summarizeConversationTitle(messageText);
         const targetProj = state.draftProjectId || undefined;
         const thread = await createThread(title, groupId, targetProj);
+        if (
+          conversationLoadToken !== activeThreadLoadToken ||
+          get().activeThreadId !== state.activeThreadId ||
+          get().draftConversationId !== state.draftConversationId
+        ) {
+          void get().loadThreads();
+          return;
+        }
         threadId = thread.thread_id;
-        set((s) => ({
-          threads: [thread, ...s.threads],
-          activeThreadId: threadId,
-        }));
+        set((s) => {
+          const draftKey = `draft:${state.draftConversationId}`;
+          const draftQueue = s.conversationQueues[draftKey] || { queuedPrompts: s.queuedPrompts, queuePaused: s.queuePaused };
+          const conversationQueues = saveConversationQueue(s.conversationQueues, draftKey, { queuedPrompts: [], queuePaused: false });
+          return {
+            conversationQueues: saveConversationQueue(conversationQueues, `thread:${threadId}`, draftQueue),
+            threads: [thread, ...s.threads],
+            activeThreadId: threadId,
+          };
+        });
+        if (state.draftConversationId) {
+          useLayoutStore.getState().adoptRightSidebarLayout(`conversation:${state.draftConversationId}`, `conversation:${threadId}`);
+        }
       } catch {
         threadId = `th_${Date.now()}`;
         set({ activeThreadId: threadId });
@@ -226,11 +344,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
     });
 
     const streamToken = ++activeStreamToken;
+    let resolveStreamFinished!: () => void;
+    const streamFinished = new Promise<void>((resolve) => { resolveStreamFinished = resolve; });
+    activeStreamHandle = { threadId, clientMessageId: userMsg.id!, token: streamToken, finished: streamFinished };
+    const markStreamFinished = () => {
+      resolveStreamFinished();
+      if (activeStreamHandle?.token === streamToken) activeStreamHandle = null;
+    };
     cancelCurrentStream = streamChat({
       thread_id: threadId,
       content: messageText,
       model_id: state.selectedModel,
-      mode: state.mode,
       rule_trigger: state.ruleTrigger,
       attached_skills: state.attachedSkills,
       attached_mcps: state.attachedMcps,
@@ -239,14 +363,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
       project_id: state.draftProjectId || undefined,
       client_message_id: userMsg.id,
       onThinking: (step, text) => {
+        if (streamToken !== activeStreamToken) return;
         set({ currentThinking: { step, text } });
         addActivity({ id: `status-${step}`, kind: 'status', label: text.replace(/[.…]+$/, ''), status: 'working' });
       },
       onTextChunk: (chunk) => {
+        if (streamToken !== activeStreamToken) return;
         currentAssistantText += chunk;
         updateLastAssistant((last) => ({ ...last, content: currentAssistantText }));
       },
       onToolCall: (actionId, toolName, args) => {
+        if (streamToken !== activeStreamToken) return;
         const labels: Record<string, string> = { read: '读取文件', write: '写入文件', edit: '修改文件', web_search: '网页搜索', fetch_web_page: '读取网页', delegate_research: '研究任务', delegate_review: '审查任务' };
         const label = labels[toolName] || (toolName ? `调用 ${toolName}` : '终端命令');
         set({ currentThinking: { step: 0, text: `Working… ${label}` } });
@@ -255,6 +382,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
         addActivity({ id: actionId, kind: 'tool', label, detail: taskDetail || pathDetail || '执行中', status: 'working' });
       },
       onToolResult: (actionId, _toolName, _output, returncode) => {
+        if (streamToken !== activeStreamToken) return;
         const resultStatus: ChatActivityEvent['status'] = returncode === 0 ? 'done' : 'error';
         set((s) => {
           const activity = s.currentActivity.map((event) => event.id === actionId ? { ...event, status: resultStatus, detail: returncode === 0 ? '已完成' : '执行失败' } : event);
@@ -267,37 +395,46 @@ export const useChatStore = create<ChatState>((set, get) => ({
           return { currentActivity: activity, messages: msgs, currentThinking: { step: 0, text: 'Thinking…' } };
         });
       },
-      onSubagent: (run: SubagentRun) => updateLastAssistant((last) => {
+      onSubagent: (run: SubagentRun) => {
+        if (streamToken !== activeStreamToken) return;
+        updateLastAssistant((last) => {
         const current = last.extra?.subagents || [];
         const index = current.findIndex((item) => item.id === run.id);
         const subagents = [...current];
         if (index < 0) subagents.push(run);
         else subagents[index] = run;
         return { ...last, extra: { ...last.extra, subagents } };
-      }),
-      onContextManagement: (event) => addActivity({
-        id: `context-${event.timestamp}`,
-        kind: 'status',
-        label: event.kind === '换血' ? '上下文换血' : '压缩上下文',
-        detail: `${event.before_tokens.toLocaleString()} → ${event.after_tokens.toLocaleString()} Token`,
-        status: 'done',
-      }),
+        });
+      },
+      onContextManagement: (event) => {
+        if (streamToken !== activeStreamToken) return;
+        addActivity({
+          id: `context-${event.timestamp}`,
+          kind: 'status',
+          label: event.kind === '换血' ? '上下文换血' : '压缩上下文',
+          detail: `${event.before_tokens.toLocaleString()} → ${event.after_tokens.toLocaleString()} Token`,
+          status: 'done',
+        });
+      },
       onApprovalRequired: (actionId, toolName, message, args) => {
+        if (streamToken !== activeStreamToken) return;
         addActivity({ id: actionId, kind: 'tool', label: `等待审批：${toolName || '终端命令'}`, detail: message, status: 'approval' });
         set({
           approvalRequest: { action_id: actionId, tool_name: toolName, message, args },
         });
       },
       onFinish: (payload) => {
+        markStreamFinished();
         if (streamToken !== activeStreamToken) return;
         cancelCurrentStream = null;
-        const completed = get().currentActivity.map((event) => event.status !== 'working' ? event : event.kind === 'status' ? { ...event, status: 'done' as const } : { ...event, status: 'error' as const, detail: payload.exit_status === 'interrupted' ? '已中断' : '未完成' });
+        const completed = get().currentActivity.map((event) => event.status !== 'working' ? event : event.kind === 'status' && payload.exit_status === 'finish' ? { ...event, status: 'done' as const } : { ...event, status: 'error' as const, detail: payload.exit_status === 'interrupted' ? '已中断' : payload.exit_status === 'error' ? '模型请求失败' : '未完成' });
         updateLastAssistant((last) => ({ ...last, extra: { ...last.extra, activity: completed, duration: payload.duration } }));
         set({ isStreaming: false, currentThinking: null, currentActivity: [] });
         get().loadThreads();
         get().processQueue();
       },
       onError: (error) => {
+        markStreamFinished();
         if (streamToken !== activeStreamToken) return;
         cancelCurrentStream = null;
         const failed = get().currentActivity.map((event) => event.status === 'working' ? { ...event, status: 'error' as const, detail: '连接中断' } : event);
@@ -310,6 +447,17 @@ export const useChatStore = create<ChatState>((set, get) => ({
         get().processQueue();
       },
     });
+  },
+
+  appendOrchestrationResult: async (threadId, data) => {
+    const { messages } = await deliverOrchestrationResult(threadId, data);
+    if (get().activeThreadId === threadId) {
+      set((state) => {
+        const known = new Set(state.messages.filter((item) => item.extra?.orchestration_run_id === data.run_id).map((item) => item.id));
+        return { messages: [...state.messages, ...messages.filter((message) => !known.has(message.id))] };
+      });
+    }
+    void get().loadThreads();
   },
 
   confirmAction: async (choice: string) => {
@@ -328,10 +476,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
     const assistantIndex = messages.findLastIndex((message) => message.role === 'assistant');
     const pendingUserIndex = messages.findLastIndex((message, messageIndex) => messageIndex < assistantIndex && message.role === 'user');
     if (index !== pendingUserIndex) return;
+    const streamHandle = activeStreamHandle?.threadId === activeThreadId ? activeStreamHandle : null;
+    await interruptChat(activeThreadId, streamHandle?.clientMessageId);
+    await streamHandle?.finished;
     activeStreamToken += 1;
     const cancelStream = cancelCurrentStream;
     cancelCurrentStream = null;
-    await interruptChat(activeThreadId);
     cancelStream?.();
     await truncateThreadFromMessage(activeThreadId, messageId);
     set({ messages: messages.slice(0, index), isStreaming: false, currentThinking: null, currentActivity: [], queuePaused: false });
@@ -340,14 +490,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   interrupt: async () => {
     const state = get();
-    if (!state.activeThreadId) return;
+    if (!state.activeThreadId || !state.isStreaming) return;
     set({ queuePaused: true });
-    activeStreamToken += 1;
-    const cancelStream = cancelCurrentStream;
-    cancelCurrentStream = null;
-    await interruptChat(state.activeThreadId);
-    cancelStream?.();
-    set({ isStreaming: false, currentThinking: null, currentActivity: [] });
+    await interruptChat(state.activeThreadId, activeStreamHandle?.threadId === state.activeThreadId ? activeStreamHandle.clientMessageId : undefined);
   },
 
   removeQueuedPrompt: (id) => set((state) => ({ queuedPrompts: state.queuedPrompts.filter((prompt) => prompt.id !== id) })),
@@ -383,12 +528,22 @@ export const useChatStore = create<ChatState>((set, get) => ({
   processQueue: () => {
     const state = get();
     if (state.isStreaming || state.queuePaused || !state.queuedPrompts.length) return;
+    const sourceKey = getConversationKey(state);
     const [next, ...remaining] = state.queuedPrompts;
     set({ queuedPrompts: remaining });
-    window.setTimeout(() => { void get().sendMessage(next.content, undefined, next.images); }, 0);
+    window.setTimeout(() => {
+      const current = get();
+      if (getConversationKey(current) !== sourceKey) {
+        set((latest) => {
+          const saved = latest.conversationQueues[sourceKey] || { queuedPrompts: [], queuePaused: false };
+          return { conversationQueues: { ...latest.conversationQueues, [sourceKey]: { queuedPrompts: [next, ...saved.queuedPrompts], queuePaused: true } } };
+        });
+        return;
+      }
+      void get().sendMessage(next.content, undefined, next.images);
+    }, 0);
   },
 
-  setMode: (mode) => set({ mode }),
   setSelectedModel: (selectedModel) => set({ selectedModel }),
   setRuleTrigger: (ruleTrigger) => set({ ruleTrigger }),
 

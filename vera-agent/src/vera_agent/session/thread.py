@@ -275,4 +275,7 @@ class ThreadSession:
         """Restore a ThreadSession entity from a disk JSON snapshot."""
         path = Path(file_path).resolve()
         data = json.loads(path.read_text(encoding="utf-8"))
-        return cls.from_dict(data)
+        session = cls.from_dict(data)
+        # Keep this migration hint on the in-memory object; dataclass serialization ignores it.
+        session._project_id_is_explicit = "project_id" in data
+        return session

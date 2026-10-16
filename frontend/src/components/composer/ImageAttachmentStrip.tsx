@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image as ImageIcon, X } from 'lucide-react';
 import { ChatImageAttachment } from '../../types/chat';
+import { IconButton } from '../common/IconButton';
 
 interface ImageAttachmentStripProps {
   images: ChatImageAttachment[];
@@ -10,14 +11,14 @@ interface ImageAttachmentStripProps {
 export const ImageAttachmentStrip: React.FC<ImageAttachmentStripProps> = ({ images, onRemove }) => {
   if (!images.length) return null;
   return (
-    <div aria-label="待发送图片" style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '10px 14px 2px' }}>
+    <div aria-label="待发送图片" style={{ display: 'flex', gap: 'var(--space-2)', overflowX: 'auto', padding: 'var(--space-2-5) var(--space-3-5) var(--space-0-5)' }}>
       {images.map((image) => (
-        <div key={image.id} style={{ width: 88, height: 68, flex: '0 0 auto', position: 'relative', borderRadius: 8, overflow: 'hidden', border: '1px solid rgba(148,163,184,.22)', background: 'rgba(255,255,255,.04)' }}>
+        <div key={image.id} style={{ width: 88, height: 68, flex: '0 0 auto', position: 'relative', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border-default)', background: 'var(--bg-card)' }}>
           <img src={image.data_url} alt={image.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          <button onClick={() => onRemove(image.id)} aria-label={`移除图片 ${image.name}`} title="移除图片" style={{ position: 'absolute', top: 4, right: 4, width: 19, height: 19, display: 'grid', placeItems: 'center', borderRadius: 999, color: '#fff', background: 'rgba(10,12,17,.8)' }}><X size={12} /></button>
+          <IconButton className="image-attachment-remove" label={`移除图片 ${image.name}`} size="sm" onClick={() => onRemove(image.id)}><X size={13} /></IconButton>
         </div>
       ))}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)', fontSize: 11 }}><ImageIcon size={13} />{images.length}/4</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1-25)', color: 'var(--text-muted)', fontSize: 'var(--font-size-compact)' }}><ImageIcon size={13} />{images.length}/4</div>
     </div>
   );
 };

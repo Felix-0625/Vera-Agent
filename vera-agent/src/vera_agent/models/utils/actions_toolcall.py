@@ -24,6 +24,7 @@ def parse_toolcall_actions(
     format_error_template: str,
     template_kwargs: dict | None = None,
     allow_empty: bool = False,
+    additional_tool_names: set[str] | None = None,
 ) -> list[dict]:
     """Parse tool calls from the response. Supports read, write, edit, and bash tools."""
     template_kwargs = template_kwargs or {}
@@ -53,10 +54,12 @@ def parse_toolcall_actions(
             error_msg = f"Error parsing tool call arguments: {e}."
 
         tool_name = tool_call.function.name
-        if tool_name not in TOOL_NAMES:
+        if tool_name not in TOOL_NAMES and tool_name not in (additional_tool_names or set()):
             error_msg += f"Unknown tool '{tool_name}'. Available tools: {', '.join(sorted(TOOL_NAMES))}."
         elif not isinstance(args, dict):
             error_msg += f"Tool arguments for '{tool_name}' must be a JSON dictionary."
+        elif tool_name in (additional_tool_names or set()):
+            actions.append({"tool_name": tool_name, "arguments": args, "command": f"MCP {tool_name}", "tool_call_id": tool_call.id})
         else:
             if tool_name == "bash":
                 if "command" not in args:

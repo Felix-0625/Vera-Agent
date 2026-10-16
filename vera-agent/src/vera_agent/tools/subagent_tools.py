@@ -240,23 +240,33 @@ def execute_subagent(
                 self.after_read = None
 
             def execute(self, action: dict, *args, **kwargs):
-                name = action.get("tool_name") or ("terminal" if "command" in action else "unknown")
-                category = {
-                    "write": "edit" if (self._root / str(action.get("path", ""))).exists() else "create",
-                    "edit": "edit",
-                    "bash": "terminal",
-                    "web_search": "mcp",
-                    "fetch_web_page": "mcp",
-                }.get(name, name)
-                mode = getattr(self.parent, "permission_mode", "confirm")
-                allowed = set(getattr(self.parent, "permission_whitelist", []))
-                if mode == "human" or (mode == "confirm" and category not in allowed):
-                    return {"output": f"Permission denied by the main agent's global {mode} policy ({category}).", "returncode": 1, "exception_info": "GlobalPermissionDenied"}
-                if name == "bash":
+                from vera_agent.server.permissions import permission_category, record_tool_result, reserve_tool_call, requires_approval
+
+                tool_name = str(action.get("tool_name") or ("bash" if "command" in action else ""))
+                parent_session = getattr(self.parent, "session", None)
+                parent_metadata = getattr(parent_session, "metadata", {})
+                group_tools = parent_metadata.get("allowed_tools") if isinstance(parent_metadata, dict) else None
+                if getattr(parent_session, "group_id", None) and isinstance(group_tools, list) and tool_name not in group_tools:
+                    return {"output": f"This subagent action is not allowed for the parent group role ({tool_name or 'unknown'}).", "returncode": 1, "exception_info": "GroupToolDenied"}
+
+                category = permission_category(action, str(self._root))
+                mode = getattr(self.parent, "permission_mode", "manual")
+                approval_actions = getattr(self.parent, "permission_approval_actions", [])
+                if requires_approval(mode, category, action, approval_actions):
+                    return {"output": f"This subagent action requires approval in the main conversation ({category}); run it from the main agent instead.", "returncode": 1, "exception_info": "GlobalPermissionDenied"}
+                budget = getattr(self.parent, "tool_call_budget", None)
+                call_key = None
+                if isinstance(budget, dict):
+                    call_key, budget_error = reserve_tool_call(budget, action)
+                    if budget_error:
+                        return {"output": budget_error, "returncode": 1, "exception_info": "ToolCallLimitExceeded" if budget_error.startswith("[Tool call limit") else "ToolAttemptLimitExceeded"}
+                if tool_name == "bash":
                     result = self._inner.execute(action, cwd=str(self._workspace), *args, **kwargs)
                 else:
                     result = self._inner.execute(action, *args, **kwargs)
-                if name == "read" and result.get("returncode", 0) == 0 and self.after_read:
+                if isinstance(budget, dict) and call_key is not None:
+                    record_tool_result(budget, call_key, result)
+                if tool_name == "read" and result.get("returncode", 0) == 0 and self.after_read:
                     self.after_read()
                 return result
 
@@ -284,6 +294,35 @@ def execute_subagent(
             env=sub_env,
             **agent_kwargs,
         )
+        sub_agent.permission_mode = getattr(parent_agent, "permission_mode", "manual")
+        sub_agent.permission_approval_actions = getattr(parent_agent, "permission_approval_actions", [])
+        execute_web_tool = sub_agent.execute_web_tool
+
+        def guarded_web_tool(action: dict) -> dict[str, Any]:
+            from vera_agent.server.permissions import permission_category, record_tool_result, reserve_tool_call, requires_approval
+
+            parent_session = getattr(parent_agent, "session", None)
+            parent_metadata = getattr(parent_session, "metadata", {})
+            group_tools = parent_metadata.get("allowed_tools") if isinstance(parent_metadata, dict) else None
+            tool_name = str(action.get("tool_name") or "")
+            if getattr(parent_session, "group_id", None) and isinstance(group_tools, list) and tool_name not in group_tools:
+                return {"output": f"This subagent action is not allowed for the parent group role ({tool_name or 'unknown'}).", "returncode": 1, "exception_info": "GroupToolDenied"}
+
+            category = permission_category(action, str(parent_workspace))
+            if requires_approval(sub_agent.permission_mode, category, action, sub_agent.permission_approval_actions):
+                return {"output": f"This subagent action requires approval in the main conversation ({category}); run it from the main agent instead.", "returncode": 1, "exception_info": "GlobalPermissionDenied"}
+            budget = getattr(parent_agent, "tool_call_budget", None)
+            call_key = None
+            if isinstance(budget, dict):
+                call_key, budget_error = reserve_tool_call(budget, action)
+                if budget_error:
+                    return {"output": budget_error, "returncode": 1, "exception_info": "ToolCallLimitExceeded" if budget_error.startswith("[Tool call limit") else "ToolAttemptLimitExceeded"}
+            result = execute_web_tool(action)
+            if isinstance(budget, dict) and call_key is not None:
+                record_tool_result(budget, call_key, result)
+            return result
+
+        sub_agent.execute_web_tool = guarded_web_tool
         if simple_readme_check and read_only_env:
             sub_agent._tools_disabled = False
             read_only_env.after_read = lambda: setattr(sub_agent, "_tools_disabled", True)

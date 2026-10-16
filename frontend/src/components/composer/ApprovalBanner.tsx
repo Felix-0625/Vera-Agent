@@ -15,30 +15,30 @@ export const ApprovalBanner: React.FC = () => {
     <div
       className="animate-fade-in"
       style={{
-        margin: '12px 0',
-        padding: '14px 18px',
+        margin: 'var(--space-3) 0',
+        padding: 'var(--space-3-5) var(--space-4-5)',
         borderRadius: 'var(--radius-md)',
-        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-        border: '1px solid rgba(245, 158, 11, 0.35)',
+        backgroundColor: 'var(--bg-warning-soft)',
+        border: '1px solid color-mix(in srgb, var(--accent-amber) 35%, var(--border-subtle))',
         display: 'flex',
         flexDirection: 'column',
-        gap: 10,
+        gap: 'var(--space-2-5)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2-5)' }}>
         <AlertTriangle size={18} color="var(--accent-amber)" />
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#FBBF24' }}>
+          <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 600, color: 'var(--accent-amber)' }}>
             高危操作安全审批门禁
           </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
-            工具调用: <code style={{ backgroundColor: 'rgba(0,0,0,0.3)', padding: '2px 5px', borderRadius: 4 }}>{approvalRequest.tool_name}</code>
+          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginTop: 'var(--space-0-5)' }}>
+            工具调用: <code style={{ backgroundColor: 'var(--bg-input)', padding: 'var(--space-0-5) var(--space-1-25)', borderRadius: 'var(--radius-xs)' }}>{approvalRequest.tool_name}</code>
             {' — '}{approvalRequest.message}
           </div>
         </div>
       </div>
 
-      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace', backgroundColor: 'rgba(0, 0, 0, 0.3)', padding: '6px 10px', borderRadius: 4, overflowX: 'auto' }}>
+      <div style={{ fontSize: 'var(--font-size-compact)', color: 'var(--text-muted)', fontFamily: 'monospace', backgroundColor: 'var(--bg-input)', padding: 'var(--space-1-5) var(--space-2-5)', borderRadius: 'var(--radius-xs)', overflowX: 'auto' }}>
         {JSON.stringify(approvalRequest.args, null, 2)}
       </div>
 

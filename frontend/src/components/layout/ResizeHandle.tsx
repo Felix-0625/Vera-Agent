@@ -30,21 +30,14 @@ export const ResizeHandle: React.FC<ResizeHandleProps> = ({ onResize, direction 
 
   return (
     <div
+      className={`workspace-resize-handle workspace-resize-handle--${direction}${isDragging ? ' is-dragging' : ''}`}
       onMouseDown={handleMouseDown}
       style={{
         width: 5,
         cursor: 'col-resize',
-        backgroundColor: isDragging ? 'var(--accent-primary)' : 'transparent',
-        transition: 'background-color 0.15s ease',
         zIndex: 20,
         position: 'relative',
         flexShrink: 0,
-      }}
-      onMouseEnter={(e) => {
-        if (!isDragging) e.currentTarget.style.backgroundColor = 'rgba(124, 58, 237, 0.4)';
-      }}
-      onMouseLeave={(e) => {
-        if (!isDragging) e.currentTarget.style.backgroundColor = 'transparent';
       }}
     />
   );

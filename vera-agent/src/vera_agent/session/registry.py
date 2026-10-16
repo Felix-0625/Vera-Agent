@@ -49,6 +49,12 @@ class GroupRegistry(BaseModel):
     goal: str = ""
     branch_name: str
     worktree_path: str
+    project_id: str | None = None
+    group_mode: str = "team"
+    template_id: str | None = None
+    workflow_nodes: list[dict[str, Any]] = Field(default_factory=list)
+    workflow_edges: list[dict[str, Any]] = Field(default_factory=list)
+    layout: dict[str, Any] = Field(default_factory=dict)
     agents: list[AgentRegistryEntry] = Field(default_factory=list)
     edges: list[RegistryEdge] = Field(default_factory=list)
     created_at: float = Field(default_factory=time.time)

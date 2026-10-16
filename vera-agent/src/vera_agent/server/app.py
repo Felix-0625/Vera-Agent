@@ -10,7 +10,7 @@ Adheres to Pi-agent minimalism and strict modular domain architecture:
 - server/routes/worktrees.py: Git diff, file staging, discarding, and checkpointing
 - server/routes/gitflow.py: Topology graph, branch operations, and 3-Way merge reviews
 - server/routes/terminal.py: Sandboxed terminal command execution
-- server/routes/tasks.py: Scheduled Cron/Interval tasks CRUD and triggering
+- server/routes/tasks.py: One-time scheduled tasks CRUD and execution
 - server/routes/settings.py: LLM configs, permissions whitelist, AGENTS.md rules
 - server/routes/mcp.py: MCP Servers protocol bus and marketplace
 - server/routes/skills.py: Skill ecosystem scanning, installation, and prompt templates
@@ -20,6 +20,7 @@ Adheres to Pi-agent minimalism and strict modular domain architecture:
 
 from __future__ import annotations
 
+from contextlib import asynccontextmanager
 import logging
 from pathlib import Path
 
@@ -38,7 +39,7 @@ from vera_agent.server.routes.files import file_routes
 from vera_agent.server.routes.worktrees import worktree_routes
 from vera_agent.server.routes.gitflow import gitflow_routes
 from vera_agent.server.routes.terminal import terminal_routes
-from vera_agent.server.routes.tasks import task_routes
+from vera_agent.server.routes.tasks import start_scheduler, stop_scheduler, task_routes
 from vera_agent.server.routes.settings import settings_routes
 from vera_agent.server.routes.mcp import mcp_routes
 from vera_agent.server.routes.skills import skill_routes
@@ -81,6 +82,14 @@ def create_app(
         )
     ]
 
-    app = Starlette(routes=routes, middleware=middleware)
+    @asynccontextmanager
+    async def lifespan(app: Starlette):
+        start_scheduler(app)
+        try:
+            yield
+        finally:
+            await stop_scheduler(app)
+
+    app = Starlette(routes=routes, middleware=middleware, lifespan=lifespan)
     app.state.server_state = server_state
     return app

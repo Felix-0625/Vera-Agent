@@ -8,6 +8,7 @@ import { ConversationContextMenu } from './ConversationContextMenu';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { ProjectRow } from './ProjectRow';
 import { InlineThreadRename } from './InlineThreadRename';
+import { IconButton } from '../common/IconButton';
 
 export const PinnedItems: React.FC = () => {
   const { projectsHistory, updateProject: saveProject, deleteProject } = useProjectStore();
@@ -28,10 +29,10 @@ export const PinnedItems: React.FC = () => {
   const handleDelete=async(thread:Thread)=>{if(window.confirm(`确定要删除对话 "${thread.title}" 吗？`)){await deleteThread(thread.thread_id);await loadThreads();}};
   const togglePin=async(project:typeof pinnedProjects[number])=>{await saveProject(project.id,{is_pinned:!project.is_pinned});};
 
-  return <section style={{padding:'0 12px',display:'flex',flexDirection:'column',gap:3}}>
-    <div style={{display:'flex',alignItems:'center',padding:'2px 12px',fontSize:11,fontWeight:650,color:'var(--text-muted)'}}>置顶</div>
+  return <section style={{padding: '0 var(--space-3)',display:'flex',flexDirection:'column',gap: 'var(--space-0-75)'}}>
+    <div style={{display:'flex',alignItems:'center',padding: 'var(--space-0-5) var(--space-3)',fontSize: 'var(--font-size-compact)',fontWeight:650,color:'var(--text-muted)'}}>置顶</div>
     {pinnedProjects.map(project=><ProjectRow key={project.id} project={project} threads={threads.filter(thread=>!thread.is_archived&&thread.project_id===project.id)} activeThreadId={activeThreadId} onSelectThread={id=>void selectThread(id)} onNewDraftInProject={id=>openDraftConversation(id)} onContextMenu={openMenu} onPinProject={togglePin} onEditProject={openProjectEdit} onDeleteProject={item=>void deleteProject(item.id)} editingThreadId={editingThreadId} onRenameThread={saveThreadName}/>)}
-    {pinnedThreads.map(thread=><div key={thread.thread_id} style={{display:'flex',alignItems:'center',gap:6,minWidth:0,padding:'6px 9px',borderRadius:8,color:'var(--text-secondary)',fontSize:12,cursor:'pointer'}} onClick={()=>{if(editingThreadId!==thread.thread_id)void selectThread(thread.thread_id);}} onContextMenu={event=>openMenu(event,thread)} onMouseEnter={event=>event.currentTarget.style.background='rgba(255,255,255,.05)'} onMouseLeave={event=>event.currentTarget.style.background='transparent'}><Pin size={12} color="#f5b942"/>{editingThreadId===thread.thread_id?<InlineThreadRename title={thread.title||'对话'} onSave={title=>saveThreadName(thread,title)} onCancel={()=>saveThreadName(thread,null)}/>:<span style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{thread.title||'对话'}</span>}<button aria-label="置顶对话操作" title="操作菜单" onClick={event=>openMenu(event,thread)} style={{padding:2,color:'var(--text-muted)',display:'flex'}}><MoreVertical size={13}/></button></div>)}
+    {pinnedThreads.map(thread=><div key={thread.thread_id} className={`sidebar-thread-row sidebar-pinned-thread${activeThreadId===thread.thread_id?' is-active':''}`} style={{display:'flex',alignItems:'center',gap: 'var(--space-1-5)',minWidth:0,padding: 'var(--space-1-5) var(--space-2-25)',borderRadius: 'var(--radius-md)',color:activeThreadId===thread.thread_id?'var(--text-primary)':'var(--text-secondary)',fontSize: 'var(--font-size-sm)',cursor:'pointer'}} onClick={()=>{if(editingThreadId!==thread.thread_id)void selectThread(thread.thread_id);}} onContextMenu={event=>openMenu(event,thread)}><Pin size={12} color="var(--accent-amber)"/>{editingThreadId===thread.thread_id?<InlineThreadRename title={thread.title||'对话'} onSave={title=>saveThreadName(thread,title)} onCancel={()=>saveThreadName(thread,null)}/>:<span style={{flex:1,minWidth:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{thread.title||'对话'}</span>}<IconButton label={`${thread.title || '置顶对话'} 操作菜单`} size="sm" onClick={event=>{event.stopPropagation();openMenu(event,thread);}}><MoreVertical size={13}/></IconButton></div>)}
     {menuTarget&&<ConversationContextMenu thread={menuTarget.thread} position={menuTarget.pos} onClose={()=>setMenuTarget(null)} onPin={handlePin} onRename={handleRename} onArchive={handleArchive} onDelete={handleDelete}/>}
   </section>;
 };

@@ -1,29 +1,49 @@
 import React, { useState } from 'react';
 import { useLayoutStore } from '../../stores/layoutStore';
+import { useChatStore } from '../../stores/chatStore';
+import { useProjectStore } from '../../stores/projectStore';
 import { Modal } from '../common/Modal';
+import { TextArea, TextInput } from '../common/Field';
+import { Button } from '../common/Button';
 import { createScheduledTask } from '../../api/toolApi';
 
 export const NewTaskDialog: React.FC = () => {
-  const { newTaskDialogOpen, setNewTaskDialogOpen } = useLayoutStore();
+  const { newTaskDialogOpen, newTaskPrompt, setNewTaskDialogOpen, setNewTaskPrompt } = useLayoutStore();
+  const notifyTasksChanged = useLayoutStore((state) => state.notifyScheduledTasksChanged);
+  const selectedModel = useChatStore((state) => state.selectedModel);
+  const { activeThreadId, threads, draftProjectId } = useChatStore();
+  const currentProject = useProjectStore((state) => state.currentProject);
   const [name, setName] = useState('');
-  const [cron, setCron] = useState('0 * * * *');
-  const [prompt, setPrompt] = useState('');
+  const [runAt, setRunAt] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !prompt.trim()) return;
+    if (!name.trim() || !newTaskPrompt.trim()) return;
+    if (!selectedModel) { setError('请先在对话区选择一个模型。'); return; }
+    const scheduledDate = new Date(runAt);
+    if (!runAt || Number.isNaN(scheduledDate.getTime()) || scheduledDate.getTime() <= Date.now()) {
+      setError('请选择一个未来的执行时间。');
+      return;
+    }
 
     setLoading(true);
+    setError('');
     try {
       await createScheduledTask({
         name: name.trim(),
-        cron: cron.trim() || '0 * * * *',
-        prompt: prompt.trim(),
+        run_at: scheduledDate.toISOString(),
+        prompt: newTaskPrompt.trim(),
+        model_id: selectedModel,
+        project_id: (activeThreadId ? threads.find((thread) => thread.thread_id === activeThreadId)?.project_id : draftProjectId) || currentProject?.id,
       });
       setName('');
-      setPrompt('');
+      setRunAt('');
+      notifyTasksChanged();
       setNewTaskDialogOpen(false);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '创建计划任务失败，请稍后重试。');
     } finally {
       setLoading(false);
     }
@@ -36,97 +56,65 @@ export const NewTaskDialog: React.FC = () => {
       title="新建计划任务 (Scheduled Task Dialog)"
       width={560}
     >
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3-5)' }}>
+        {error && <div role="alert" style={{ color: 'var(--accent-rose)', fontSize: 'var(--font-size-sm)' }}>{error}</div>}
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 'var(--space-1-5)' }}>
             任务名称
           </label>
-          <input
+          <TextInput
             type="text"
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="例如: 每日凌晨回归测试巡检..."
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--bg-surface-elevated)',
-              border: '1px solid var(--border-default)',
-              fontSize: 13,
-              color: 'var(--text-primary)',
-            }}
+            placeholder="例如: 检查本次构建结果"
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
-            Cron 周期表达式 (5段标准格式)
+          <label htmlFor="scheduled-task-run-at" style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 'var(--space-1-5)' }}>
+            执行时间（本地时间，仅执行一次）
           </label>
-          <input
-            type="text"
+          <TextInput
+            id="scheduled-task-run-at"
+            type="datetime-local"
             required
-            value={cron}
-            onChange={(e) => setCron(e.target.value)}
-            placeholder="例如: 0 2 * * * (每日凌晨2点)"
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--bg-surface-elevated)',
-              border: '1px solid var(--border-default)',
-              fontSize: 13,
-              fontFamily: 'monospace',
-              color: 'var(--text-primary)',
-            }}
+            value={runAt}
+            onChange={(e) => { setRunAt(e.target.value); setError(''); }}
+            onInput={(e) => { setRunAt(e.currentTarget.value); setError(''); }}
           />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
+          <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 'var(--space-1-5)' }}>
             执行任务提示词 (Prompt)
           </label>
-          <textarea
+          <TextArea
             required
             rows={4}
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="描述当调度触发时，智能体需要自动执行的研发任务与检查逻辑..."
-            style={{
-              width: '100%',
-              padding: '8px 12px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--bg-surface-elevated)',
-              border: '1px solid var(--border-default)',
-              fontSize: 13,
-              color: 'var(--text-primary)',
-              resize: 'vertical',
-            }}
+            value={newTaskPrompt}
+            onChange={(e) => setNewTaskPrompt(e.target.value)}
+            placeholder="描述到达指定时间后，智能体需要执行的任务..."
           />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 10 }}>
-          <button
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2-5)', marginTop: 'var(--space-2-5)' }}>
+          <Button
             type="button"
             onClick={() => setNewTaskDialogOpen(false)}
-            style={{ padding: '7px 14px', borderRadius: 'var(--radius-sm)', color: 'var(--text-muted)', fontSize: 12.5 }}
+            variant="ghost"
+            size="sm"
           >
             取消
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             disabled={loading}
-            style={{
-              padding: '7px 18px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--accent-primary)',
-              color: '#fff',
-              fontSize: 12.5,
-              fontWeight: 600,
-            }}
+            variant="primary"
+            size="sm"
           >
-            {loading ? '正在保存...' : '创建排期任务'}
-          </button>
+            {loading ? '正在保存...' : '创建定时任务'}
+          </Button>
         </div>
       </form>
     </Modal>

@@ -1,58 +1,81 @@
-import React, { useEffect, useState } from 'react';
-import { Sparkles, Trash2, Plus, RefreshCw, Check } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Sparkles, Trash2, RefreshCw } from 'lucide-react';
 import { fetchSkills, scanSkills, toggleSkill, deleteSkill, fetchSkillsMarket, installSkill } from '../../api/settingsApi';
 import { SkillItem } from '../../types/settings';
 import { Switch } from '../common/Switch';
 
-export const SkillsTab: React.FC = () => {
+export const SkillsTab: React.FC<{ active?: boolean }> = ({ active = true }) => {
   const [activeSubTab, setActiveSubTab] = useState<'installed' | 'market'>('installed');
   const [skills, setSkills] = useState<SkillItem[]>([]);
   const [market, setMarket] = useState<Array<{ name: string; description: string; category: string }>>([]);
+  const [error, setError] = useState('');
+  const [busySkill, setBusySkill] = useState<string | null>(null);
 
-  const loadData = async () => {
-    try {
-      const sData = await fetchSkills();
-      setSkills(sData.skills || []);
-      const mData = await fetchSkillsMarket();
-      setMarket(mData.market || []);
-    } catch {
-      // fallback
-    }
-  };
-
-  useEffect(() => {
-    loadData();
+  const loadData = useCallback(async (scan = false) => {
+    const errors: string[] = [];
+    const fetchInstalledSkills = scan ? scanSkills : fetchSkills;
+    await Promise.all([
+      fetchInstalledSkills()
+        .then((data) => setSkills(data.skills || []))
+        .catch((cause: unknown) => errors.push(cause instanceof Error ? cause.message : '技能列表加载失败')),
+      fetchSkillsMarket()
+        .then((data) => setMarket(data.market || []))
+        .catch((cause: unknown) => errors.push(cause instanceof Error ? cause.message : '技能市场加载失败')),
+    ]);
+    setError(errors.join('；'));
   }, []);
 
+  useEffect(() => { if (active) void loadData(); }, [active, loadData]);
+
   const handleToggle = async (s: SkillItem) => {
-    await toggleSkill(s.name);
-    loadData();
+    setBusySkill(s.name);
+    setError('');
+    try {
+      await toggleSkill(s.name);
+      await loadData();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : `更新 ${s.name} 状态失败`);
+    } finally {
+      setBusySkill(null);
+    }
   };
 
   const handleDelete = async (name: string) => {
     if (window.confirm(`确定删除技能 ${name} 吗？`)) {
-      await deleteSkill(name);
-      loadData();
+      try {
+        await deleteSkill(name);
+        await loadData();
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : `删除 ${name} 失败`);
+      }
     }
   };
 
   const handleInstall = async (m: { name: string; description: string }) => {
-    await installSkill(m);
-    loadData();
-    setActiveSubTab('installed');
+    setBusySkill(m.name);
+    setError('');
+    try {
+      await installSkill(m);
+      await loadData();
+      setActiveSubTab('installed');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : `添加 ${m.name} 失败`);
+    } finally {
+      setBusySkill(null);
+    }
   };
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-workspace)' }}>
       {/* Tab Switcher */}
-      <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ padding: 'var(--space-2) var(--space-4)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', gap: 'var(--space-3)', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <button
             onClick={() => setActiveSubTab('installed')}
             style={{
-              padding: '4px 10px',
+              padding: 'var(--space-1) var(--space-2-5)',
               borderRadius: 'var(--radius-sm)',
-              fontSize: 12,
+              fontSize: 'var(--font-size-sm)',
               fontWeight: activeSubTab === 'installed' ? 600 : 400,
               backgroundColor: activeSubTab === 'installed' ? 'var(--bg-card)' : 'transparent',
               color: activeSubTab === 'installed' ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -63,9 +86,9 @@ export const SkillsTab: React.FC = () => {
           <button
             onClick={() => setActiveSubTab('market')}
             style={{
-              padding: '4px 10px',
+              padding: 'var(--space-1) var(--space-2-5)',
               borderRadius: 'var(--radius-sm)',
-              fontSize: 12,
+              fontSize: 'var(--font-size-sm)',
               fontWeight: activeSubTab === 'market' ? 600 : 400,
               backgroundColor: activeSubTab === 'market' ? 'var(--bg-card)' : 'transparent',
               color: activeSubTab === 'market' ? 'var(--text-primary)' : 'var(--text-muted)',
@@ -76,8 +99,8 @@ export const SkillsTab: React.FC = () => {
         </div>
 
         <button
-          onClick={loadData}
-          style={{ padding: 4, color: 'var(--text-muted)' }}
+          onClick={() => void loadData(true)}
+          style={{ padding: 'var(--space-1)', color: 'var(--text-muted)' }}
           title="扫描刷新"
         >
           <RefreshCw size={13} />
@@ -85,25 +108,28 @@ export const SkillsTab: React.FC = () => {
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-4)' }}>
+        {error && <div role="alert" style={{ marginBottom: 'var(--space-3)', padding: 'var(--space-2) var(--space-2-5)', borderRadius: 'var(--radius-md)', color: 'var(--accent-rose)', background: 'var(--bg-danger-soft)', fontSize: 'var(--font-size-sm)' }}>{error}</div>}
         {activeSubTab === 'installed' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
             {skills.map((s) => (
               <div
                 key={s.name}
                 className="glass-card"
-                style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                style={{ padding: 'var(--space-3) var(--space-3-5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2-5)' }}>
                   <Sparkles size={16} color="var(--accent-primary)" />
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{s.name}</div>
-                    <div style={{ fontSize: 11.5, color: 'var(--text-secondary)' }}>{s.description}</div>
+                    <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 600 }}>{s.name}</div>
+                    <div style={{ fontSize: 'var(--font-size-label)', color: 'var(--text-secondary)' }}>{s.description}</div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <button onClick={() => handleDelete(s.name)} style={{ padding: 4, color: 'var(--accent-rose)' }} title="删除">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2-5)' }}>
+                  <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-compact)' }}>{s.enabled === false ? '已停用' : '已启用'}</span>
+                  <Switch label={`启用 Skill：${s.name}`} checked={s.enabled !== false} disabled={busySkill === s.name} onChange={() => void handleToggle(s)} />
+                  <button onClick={() => handleDelete(s.name)} style={{ padding: 'var(--space-1)', color: 'var(--accent-rose)' }} title="删除">
                     <Trash2 size={13} />
                   </button>
                 </div>
@@ -111,19 +137,20 @@ export const SkillsTab: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2-5)' }}>
             {market.map((m) => (
-              <div key={m.name} className="glass-card" style={{ padding: 14 }}>
+              <div key={m.name} className="glass-card" style={{ padding: 'var(--space-3-5)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{m.name}</div>
+                  <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 600 }}>{m.name}</div>
                   <button
-                    onClick={() => handleInstall(m)}
-                    style={{ padding: '4px 10px', borderRadius: 'var(--radius-sm)', backgroundColor: 'rgba(124,58,237,0.15)', color: '#C4B5FD', fontSize: 11.5 }}
+                    disabled={busySkill === m.name}
+                    onClick={() => void handleInstall(m)}
+                    style={{ padding: 'var(--space-1) var(--space-2-5)', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--bg-accent-soft)', color: 'var(--accent-primary)', fontSize: 'var(--font-size-label)' }}
                   >
                     一键启用
                   </button>
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>{m.description}</div>
+                <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginTop: 'var(--space-1)' }}>{m.description}</div>
               </div>
             ))}
           </div>

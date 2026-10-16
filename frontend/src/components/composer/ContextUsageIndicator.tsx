@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Activity, Clock3, RefreshCw, RotateCcw } from 'lucide-react';
 import { fetchDraftContextStatus, fetchThreadContextStatus, rebirthGroupThreadContext, ThreadContextStatus } from '../../api/chatApi';
 import { useChatStore } from '../../stores/chatStore';
+import { IconButton } from '../common/IconButton';
 
 export const ContextUsageIndicator: React.FC = () => {
   const threadId = useChatStore((state) => state.activeThreadId);
@@ -52,7 +53,7 @@ export const ContextUsageIndicator: React.FC = () => {
       <strong>{percent != null ? `${Math.round(percent)}%` : loading ? '…' : '—'}</strong>
     </button>
     {open && <div className="context-usage-popover">
-      <div className="context-usage-heading"><div><Activity size={14} /><strong>对话上下文</strong></div><button onClick={() => (threadId ? fetchThreadContextStatus(threadId, modelId) : fetchDraftContextStatus(modelId)).then(setStatus)} title="刷新"><RefreshCw size={13} /></button></div>
+      <div className="context-usage-heading"><div><Activity size={14} /><strong>对话上下文</strong></div><IconButton label="刷新上下文状态" onClick={() => (threadId ? fetchThreadContextStatus(threadId, modelId) : fetchDraftContextStatus(modelId)).then(setStatus)} size="sm"><RefreshCw size={13} /></IconButton></div>
       <div className="context-usage-stats">
         <div><span>窗口上限</span><strong>{limit != null ? `${limit.toLocaleString()} Token` : '暂不可用'}</strong></div>
         <div><span>已用</span><strong>{used != null ? `${used.toLocaleString()} Token` : '暂无用量'}</strong></div>

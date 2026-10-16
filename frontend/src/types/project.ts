@@ -15,14 +15,47 @@ export interface Project {
 export interface Group {
   group_id: string;
   name: string;
-  branch_name: string;
+  branch_name?: string;
+  project_id?: string;
+  project_path?: string;
   base_branch?: string;
   worktree_path?: string;
+  group_mode?: 'team' | 'workflow' | 'architecture';
+  template_id?: string | null;
+  template_name?: string | null;
   topology_type?: string;
   goal?: string;
+  nodes?: WorkflowNodeDefinition[];
+  edges?: WorkflowEdgeDefinition[];
+  layout?: Record<string, unknown>;
   is_pinned?: boolean;
   is_archived?: boolean;
   threads?: Thread[];
+}
+
+export type WorkflowNodeType = 'agent' | 'start' | 'input' | 'condition' | 'code' | 'tool' | 'http' | 'knowledge' | 'document' | 'variable' | 'aggregator' | 'template' | 'parallel' | 'loop' | 'iteration' | 'approval' | 'error' | 'output' | 'end';
+
+export interface WorkflowNodeDefinition {
+  id: string;
+  type: WorkflowNodeType;
+  title: string;
+  role?: string;
+  role_key?: string;
+  responsibilities?: string[];
+  allowed_tools?: string[];
+  prompt_template?: string;
+  config?: Record<string, unknown>;
+  position?: { x: number; y: number };
+  thread_id?: string;
+}
+
+export interface WorkflowEdgeDefinition {
+  id?: string;
+  source: string;
+  target: string;
+  relation?: string;
+  label?: string;
+  config?: Record<string, unknown>;
 }
 
 export interface TopologyBlueprintNode {
@@ -32,6 +65,7 @@ export interface TopologyBlueprintNode {
   responsibilities: string[];
   allowed_tools: string[];
   prompt_template: string;
+  position?: { x: number; y: number };
 }
 
 export interface TopologyBlueprintEdge {
@@ -45,6 +79,7 @@ export interface TopologyTemplate {
   name: string;
   description: string;
   topology_type: string;
-  nodes: TopologyBlueprintNode[];
-  edges: TopologyBlueprintEdge[];
+  nodes: WorkflowNodeDefinition[];
+  edges: WorkflowEdgeDefinition[];
+  is_custom?: boolean;
 }

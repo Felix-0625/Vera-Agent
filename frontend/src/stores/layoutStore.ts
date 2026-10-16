@@ -3,12 +3,11 @@ import { ModelConfig, McpServerConfig } from '../types/settings';
 import type { Project } from '../types/project';
 
 interface LayoutState {
+  theme: 'light' | 'dark';
   // Sidebar state
   leftCollapsed: boolean;
   leftWidth: number;
-  rightCollapsed: boolean;
-  rightWidth: number;
-  rightMaximized: boolean;
+  rightSidebarByConversation: Record<string, RightSidebarLayout>;
   bottomDrawerOpen: boolean;
   bottomDrawerHeight: number;
 
@@ -20,19 +19,27 @@ interface LayoutState {
   editingProject: Project | null;
   historyOpen: boolean;
   scheduledTasksOpen: boolean;
+  scheduledTasksVersion: number;
+  workflowTemplatesOpen: boolean;
   newTaskDialogOpen: boolean;
+  newTaskPrompt: string;
   provisionGroupOpen: boolean;
+  provisionGroupProjectId: string | null;
   modelConfigOpen: boolean;
   editingModel: ModelConfig | null;
+  modelCatalogVersion: number;
+  mcpCatalogVersion: number;
   mcpConfigOpen: boolean;
   editingMcp: McpServerConfig | null;
 
   // Actions
   toggleLeft: () => void;
+  toggleTheme: () => void;
   setLeftWidth: (w: number) => void;
-  toggleRight: () => void;
-  setRightWidth: (w: number) => void;
-  toggleRightMaximize: () => void;
+  toggleRight: (conversationKey: string) => void;
+  setRightWidth: (conversationKey: string, w: number) => void;
+  toggleRightMaximize: (conversationKey: string) => void;
+  adoptRightSidebarLayout: (fromKey: string, toKey: string) => void;
   toggleBottomDrawer: () => void;
   setBottomDrawerHeight: (height: number) => void;
 
@@ -43,20 +50,47 @@ interface LayoutState {
   openProjectEdit: (project: Project) => void;
   setHistoryOpen: (open: boolean) => void;
   setScheduledTasksOpen: (open: boolean) => void;
-  setNewTaskDialogOpen: (open: boolean) => void;
-  setProvisionGroupOpen: (open: boolean) => void;
+  notifyScheduledTasksChanged: () => void;
+  setWorkflowTemplatesOpen: (open: boolean) => void;
+  setNewTaskDialogOpen: (open: boolean, prompt?: string) => void;
+  setNewTaskPrompt: (prompt: string) => void;
+  setProvisionGroupOpen: (open: boolean, projectId?: string | null) => void;
   openModelConfig: (model?: ModelConfig | null) => void;
+  notifyModelCatalogChanged: () => void;
+  notifyMcpCatalogChanged: () => void;
   closeModelConfig: () => void;
   openMcpConfig: (mcp?: McpServerConfig | null) => void;
   closeMcpConfig: () => void;
 }
 
+export interface RightSidebarLayout {
+  collapsed: boolean;
+  width: number;
+  maximized: boolean;
+}
+
+export const DEFAULT_RIGHT_SIDEBAR_LAYOUT: RightSidebarLayout = {
+  collapsed: true,
+  width: 560,
+  maximized: false,
+};
+
+function readTheme(): 'light' | 'dark' {
+  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+}
+
+function applyTheme(theme: 'light' | 'dark') {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('vera-agent-theme', theme);
+  const workspaceColor = getComputedStyle(document.documentElement).getPropertyValue('--bg-workspace').trim();
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', workspaceColor);
+}
+
 export const useLayoutStore = create<LayoutState>((set) => ({
+  theme: readTheme(),
   leftCollapsed: false,
   leftWidth: 240,
-  rightCollapsed: false,
-  rightWidth: 560,
-  rightMaximized: false,
+  rightSidebarByConversation: {},
   bottomDrawerOpen: false,
   bottomDrawerHeight: 260,
 
@@ -67,18 +101,45 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   editingProject: null,
   historyOpen: false,
   scheduledTasksOpen: false,
+  scheduledTasksVersion: 0,
+  workflowTemplatesOpen: false,
   newTaskDialogOpen: false,
+  newTaskPrompt: '',
   provisionGroupOpen: false,
+  provisionGroupProjectId: null,
   modelConfigOpen: false,
   editingModel: null,
+  modelCatalogVersion: 0,
+  mcpCatalogVersion: 0,
   mcpConfigOpen: false,
   editingMcp: null,
 
   toggleLeft: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
+  toggleTheme: () => set((state) => {
+    const theme = state.theme === 'light' ? 'dark' : 'light';
+    applyTheme(theme);
+    return { theme };
+  }),
   setLeftWidth: (w) => set({ leftWidth: w }),
-  toggleRight: () => set((s) => ({ rightCollapsed: !s.rightCollapsed })),
-  setRightWidth: (w) => set({ rightWidth: w }),
-  toggleRightMaximize: () => set((s) => ({ rightMaximized: !s.rightMaximized })),
+  toggleRight: (key) => set((s) => {
+    const current = s.rightSidebarByConversation[key] || DEFAULT_RIGHT_SIDEBAR_LAYOUT;
+    return { rightSidebarByConversation: { ...s.rightSidebarByConversation, [key]: { ...current, collapsed: !current.collapsed } } };
+  }),
+  setRightWidth: (key, width) => set((s) => {
+    const current = s.rightSidebarByConversation[key] || DEFAULT_RIGHT_SIDEBAR_LAYOUT;
+    return { rightSidebarByConversation: { ...s.rightSidebarByConversation, [key]: { ...current, width } } };
+  }),
+  toggleRightMaximize: (key) => set((s) => {
+    const current = s.rightSidebarByConversation[key] || DEFAULT_RIGHT_SIDEBAR_LAYOUT;
+    return { rightSidebarByConversation: { ...s.rightSidebarByConversation, [key]: { ...current, maximized: !current.maximized } } };
+  }),
+  adoptRightSidebarLayout: (fromKey, toKey) => set((s) => {
+    const from = fromKey.startsWith('conversation:') ? fromKey : `conversation:${fromKey}`;
+    const to = toKey.startsWith('conversation:') ? toKey : `conversation:${toKey}`;
+    if (!s.rightSidebarByConversation[from] || s.rightSidebarByConversation[to]) return s;
+    const { [from]: layout, ...remaining } = s.rightSidebarByConversation;
+    return { rightSidebarByConversation: { ...remaining, [to]: layout } };
+  }),
   toggleBottomDrawer: () => set((s) => ({ bottomDrawerOpen: !s.bottomDrawerOpen })),
   setBottomDrawerHeight: (height) => set({ bottomDrawerHeight: height }),
 
@@ -89,9 +150,14 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   openProjectEdit: (project) => set({ projectSelectorOpen: true, projectSelectorView: 'edit', editingProject: project }),
   setHistoryOpen: (open) => set({ historyOpen: open }),
   setScheduledTasksOpen: (open) => set({ scheduledTasksOpen: open }),
-  setNewTaskDialogOpen: (open) => set({ newTaskDialogOpen: open }),
-  setProvisionGroupOpen: (open) => set({ provisionGroupOpen: open }),
+  notifyScheduledTasksChanged: () => set((state) => ({ scheduledTasksVersion: state.scheduledTasksVersion + 1 })),
+  setWorkflowTemplatesOpen: (open) => set({ workflowTemplatesOpen: open }),
+  setNewTaskDialogOpen: (open, prompt = '') => set({ newTaskDialogOpen: open, newTaskPrompt: open ? prompt : '' }),
+  setNewTaskPrompt: (newTaskPrompt) => set({ newTaskPrompt }),
+  setProvisionGroupOpen: (open, projectId = null) => set({ provisionGroupOpen: open, provisionGroupProjectId: open ? projectId : null }),
   openModelConfig: (model = null) => set({ modelConfigOpen: true, editingModel: model }),
+  notifyModelCatalogChanged: () => set((state) => ({ modelCatalogVersion: state.modelCatalogVersion + 1 })),
+  notifyMcpCatalogChanged: () => set((state) => ({ mcpCatalogVersion: state.mcpCatalogVersion + 1 })),
   closeModelConfig: () => set({ modelConfigOpen: false, editingModel: null }),
   openMcpConfig: (mcp = null) => set({ mcpConfigOpen: true, editingMcp: mcp }),
   closeMcpConfig: () => set({ mcpConfigOpen: false, editingMcp: null }),

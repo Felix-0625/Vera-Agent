@@ -1,8 +1,9 @@
 import React from 'react';
-import { Plus, History, Clock } from 'lucide-react';
+import { Plus, History, Clock, Workflow } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useProjectStore } from '../../stores/projectStore';
+import { Button } from '../common/Button';
 
 /**
  * 侧边栏顶部快捷导航区
@@ -25,70 +26,19 @@ export const NavLinks: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '10px 12px 6px', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+    <div style={{ padding: 'var(--space-2-5) var(--space-3) var(--space-1-5)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
       {/* "+ 新建对话" 按钮：严格对齐用户 Penpot 截图 (左对齐紫框胶囊) */}
-      <button
-        onClick={handleNewConversation}
-        style={{
-          width: '100%',
-          height: 36,
-          borderRadius: 8,
-          backgroundColor: 'rgba(20, 21, 29, 0.6)',
-          border: '1.5px solid #7C3AED',
-          color: '#FFFFFF',
-          fontSize: 13,
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          padding: '0 12px',
-          gap: 8,
-          cursor: 'pointer',
-          marginBottom: 10,
-          transition: 'all 0.15s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(124, 58, 237, 0.15)';
-          e.currentTarget.style.borderColor = '#8B5CF6';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(20, 21, 29, 0.6)';
-          e.currentTarget.style.borderColor = '#7C3AED';
-        }}
-      >
-        <Plus size={16} color="#A78BFA" />
+      <Button variant="outline" size="md" className="sidebar-new-conversation" onClick={handleNewConversation}>
+        <Plus size={16} color="var(--accent-primary)" />
         <span>新建对话</span>
-      </button>
+      </Button>
 
       {/* 对话历史与计划任务：严格左对齐与新建对话图标列对齐 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <button
-          onClick={() => setHistoryOpen(true)}
-          style={{
-            width: '100%',
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            gap: 10,
-            fontSize: 12.5,
-            cursor: 'pointer',
-            textAlign: 'left',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-            e.currentTarget.style.color = 'var(--text-primary)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = 'var(--text-secondary)';
-          }}
-        >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-0-5)' }}>
+        <Button variant="ghost" size="sm" className="sidebar-navigation-button" onClick={() => setHistoryOpen(true)}>
           <History size={15} color="var(--text-muted)" />
           <span>对话历史</span>
-        </button>
+        </Button>
 
       </div>
     </div>
@@ -97,5 +47,10 @@ export const NavLinks: React.FC = () => {
 
 export const ScheduledTasksLink: React.FC = () => {
   const { setScheduledTasksOpen } = useLayoutStore();
-  return <div style={{ padding:'0 12px' }}><button onClick={()=>setScheduledTasksOpen(true)} style={{width:'100%',padding:'6px 12px',borderRadius:'var(--radius-sm)',color:'var(--text-secondary)',display:'flex',alignItems:'center',justifyContent:'flex-start',gap:10,fontSize:12.5,textAlign:'left'}} onMouseEnter={event=>{event.currentTarget.style.backgroundColor='rgba(255,255,255,.05)';event.currentTarget.style.color='var(--text-primary)';}} onMouseLeave={event=>{event.currentTarget.style.backgroundColor='transparent';event.currentTarget.style.color='var(--text-secondary)';}}><Clock size={15} color="var(--text-muted)"/><span>计划任务</span></button></div>;
+  return <div style={{ padding: '0 var(--space-3)' }}><Button variant="ghost" size="sm" className="sidebar-navigation-button" onClick={() => setScheduledTasksOpen(true)}><Clock size={15} color="var(--text-muted)"/><span>计划任务</span></Button></div>;
+};
+
+export const WorkflowTemplatesLink: React.FC = () => {
+  const { setWorkflowTemplatesOpen } = useLayoutStore();
+  return <div style={{ padding: '0 var(--space-3)' }}><Button variant="ghost" size="sm" className="sidebar-navigation-button" onClick={() => setWorkflowTemplatesOpen(true)}><Workflow size={15} color="var(--accent-primary)"/><span>流程架构模板</span></Button></div>;
 };

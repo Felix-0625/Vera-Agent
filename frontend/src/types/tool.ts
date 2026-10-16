@@ -18,6 +18,9 @@ export interface ToolTab {
   title: string;
   closable?: boolean;
   filePath?: string;
+  sideChatId?: string;
+  /** Project scope captured when a project-level tool is opened from a project row. */
+  projectId?: string;
 }
 
 export type FilePreviewData =
@@ -62,13 +65,17 @@ export interface FileTreeNode {
 export interface ScheduledTask {
   id: string;
   name: string;
-  cron: string;
+  /** One-time execution timestamp in ISO 8601 UTC form. */
+  run_at?: string;
   prompt: string;
   thread_id?: string;
+  model_id?: string;
+  project_id?: string;
   enabled: boolean;
   created_at: number;
   last_run?: number | null;
   last_status?: string;
+  last_error?: string | null;
 }
 
 export interface AnalyticsDashboard {
@@ -89,4 +96,25 @@ export interface BranchInfo {
   name: string;
   is_current: boolean;
   is_remote: boolean;
+  head?: string;
+  parent?: string;
+  upstream?: string;
+  ahead?: number;
+  behind?: number;
+}
+
+export interface GitCommitInfo {
+  hash: string;
+  short_hash: string;
+  parents: string[];
+  timestamp: number;
+  subject: string;
+}
+
+export interface GitFlowTopology {
+  repo_name: string;
+  is_git?: boolean;
+  current_branch: string;
+  branches: BranchInfo[];
+  commits: GitCommitInfo[];
 }

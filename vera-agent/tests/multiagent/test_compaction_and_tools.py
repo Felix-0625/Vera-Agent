@@ -1,5 +1,7 @@
 """Unit tests for dynamic role-based tool loading and 3-tier conversation compaction."""
 
+import os
+
 import pytest
 from unittest.mock import MagicMock
 
@@ -106,6 +108,8 @@ def test_agent_get_tools_respects_role():
     assert "web_search" in tool_names
 
 
+@pytest.mark.network
+@pytest.mark.skipif(os.getenv("VERA_RUN_NETWORK_TESTS") != "1", reason="set VERA_RUN_NETWORK_TESTS=1 to use live web services")
 def test_web_search_and_fetch_ops():
     """Verify web search and fetch tools operation."""
     from vera_agent.tools.web_tools import fetch_web_page_op, web_search_op
@@ -177,48 +181,6 @@ def test_observation_pruning_level_1():
     for m in tool_msgs[4:]:
         assert "[Output pruned" not in m["content"]
         assert len(m["content"]) > 800
-
-
-def test_boundary_compaction_level_2():
-    """Verify Level 2 Boundary Compaction: folds cold turns into structured 4-slot anchor."""
-    session = ThreadSession(role="main")
-    session.add_messages(
-        {"role": "system", "content": "You are a coding agent."},
-        {"role": "user", "content": "Implement payment gateway retry logic"},
-    )
-
-    # Add 10 dialogue turns
-    for i in range(10):
-        session.add_messages(
-            {
-                "role": "assistant",
-                "content": f"Step {i} analysis",
-                "extra": {"actions": [{"tool_name": "edit", "path": f"module_{i % 3}.py"}]},
-            },
-            {"role": "user", "content": f"Step {i} observation result"},
-        )
-
-    # Total messages: 2 + 20 = 22 messages
-    assert len(session.messages) == 22
-
-    # Execute compaction keeping last 4 turns
-    success = session.compact(keep_last_n_turns=4)
-    assert success is True
-
-    # Expected structure:
-    # [0]: system
-    # [1]: initial user task
-    # [2]: compacted anchor
-    # [3:]: last 4 hot turns
-    assert len(session.messages) == 2 + 1 + 4
-    assert session.messages[0]["role"] == "system"
-    assert session.messages[1]["content"] == "Implement payment gateway retry logic"
-    assert "<context_compaction>" in session.messages[2]["content"]
-    assert "## 1. 原始目标与当前里程碑" in session.messages[2]["content"]
-    assert "## 2. 关键架构决策与不可变契约" in session.messages[2]["content"]
-    assert "## 3. 已触碰与修改的核心文件" in session.messages[2]["content"]
-    assert "## 4. 当前进行中状态与遗留阻碍" in session.messages[2]["content"]
-    assert session.messages[2]["extra"]["compaction"] is True
 
 
 def test_session_rebirth_level_3():

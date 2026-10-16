@@ -1,17 +1,21 @@
 import { create } from 'zustand';
 import { closeEphemeralChat, confirmApproval, interruptChat, streamChat } from '../api/chatApi';
 import { useChatStore } from './chatStore';
-import { AgentMode, ChatActivityEvent, ChatImageAttachment, ChatMessage } from '../types/chat';
+import { ChatActivityEvent, ChatImageAttachment, ChatMessage } from '../types/chat';
 
+type ContextLimit = 0 | 5 | 10 | 20 | 'full';
 type ContextMessage = Pick<ChatMessage, 'role' | 'content'>;
 
-interface SideChatState {
+export interface SideChatSession {
+  id: string;
   threadId: string | null;
   sourceThreadId: string | null;
   sourceTitle: string;
+  projectId: string | null;
+  groupId: string | null;
   sourceContext: ContextMessage[];
   contextScope: 'recent' | 'full';
-  contextLimit: 5 | 10 | 20 | 'full';
+  contextLimit: ContextLimit;
   selectedModel: string;
   contextRevision: number;
   injectedContextRevision: number;
@@ -21,173 +25,171 @@ interface SideChatState {
   isStreaming: boolean;
   approvalRequest: { action_id: string; tool_name: string; message: string; args: Record<string, unknown> } | null;
   error: string | null;
-  openFromContext: (threadId: string | null, title: string, context: ContextMessage[], scope?: 'recent' | 'full', limit?: 5 | 10 | 20 | 'full') => void;
-  setContextMessages: (context: ContextMessage[], limit: 5 | 10 | 20 | 'full') => void;
-  setSelectedModel: (model: string) => void;
-  sendMessage: (content: string, images?: ChatImageAttachment[]) => void;
-  confirmAction: (choice: string) => Promise<void>;
-  interrupt: () => Promise<void>;
-  dispose: () => void;
+}
+
+interface SideChatState {
+  sessions: Record<string, SideChatSession>;
+  openFromContext: (threadId: string | null, title: string, context: ContextMessage[], scope?: 'recent' | 'full', limit?: ContextLimit) => string;
+  setContextMessages: (id: string, context: ContextMessage[], limit: ContextLimit) => void;
+  setSelectedModel: (id: string, model: string) => void;
+  sendMessage: (id: string, content: string, images?: ChatImageAttachment[]) => void;
+  confirmAction: (id: string, choice: string) => Promise<void>;
+  interrupt: (id: string) => Promise<void>;
+  dispose: (id: string) => void;
 }
 
 function newSideThreadId(): string {
   return `side_${typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}_${Math.random().toString(16).slice(2)}`}`;
 }
 
-function resetSideSession(threadId: string | null) {
-  if (!threadId) return;
-  void interruptChat(threadId).catch(() => undefined);
-  void closeEphemeralChat(threadId).catch(() => undefined);
+function filterContext(context: ContextMessage[]): ContextMessage[] {
+  return context.filter((message) => (message.role === 'user' || message.role === 'assistant') && typeof message.content === 'string' && message.content.trim()).map(({ role, content }) => ({ role, content }));
+}
+
+function updateSession(set: (updater: (state: SideChatState) => Partial<SideChatState> | SideChatState) => void, id: string, update: (session: SideChatSession) => SideChatSession) {
+  set((state) => {
+    const current = state.sessions[id];
+    return current ? { sessions: { ...state.sessions, [id]: update(current) } } : {};
+  });
+}
+
+function stopEphemeral(session: SideChatSession | undefined) {
+  if (!session?.threadId) return;
+  void interruptChat(session.threadId).catch(() => undefined);
+  void closeEphemeralChat(session.threadId).catch(() => undefined);
 }
 
 export const useSideChatStore = create<SideChatState>((set, get) => ({
-  threadId: null,
-  sourceThreadId: null,
-  sourceTitle: '主对话',
-  sourceContext: [],
-  contextScope: 'recent',
-  contextLimit: 5,
-  selectedModel: 'deepseek/deepseek-chat',
-  contextRevision: 0,
-  injectedContextRevision: 0,
-  messages: [],
-  currentActivity: [],
-  currentStatus: 'Thinking…',
-  isStreaming: false,
-  approvalRequest: null,
-  error: null,
+  sessions: {},
 
   openFromContext: (sourceThreadId, sourceTitle, context, scope = 'recent', limit = scope === 'full' ? 'full' : 5) => {
-    resetSideSession(get().threadId);
-    const selectedModel = useChatStore.getState().selectedModel;
-    const sourceContext = context.filter((message) => (message.role === 'user' || message.role === 'assistant') && typeof message.content === 'string' && message.content.trim()).map(({ role, content }) => ({ role, content }));
-    set({
-      threadId: newSideThreadId(), sourceThreadId, sourceTitle, sourceContext, contextScope: scope,
-      contextLimit: limit, selectedModel,
-      contextRevision: 1, injectedContextRevision: 0, messages: [], currentActivity: [],
-      currentStatus: 'Thinking…', isStreaming: false, approvalRequest: null, error: null,
-    });
+    const main = useChatStore.getState();
+    const resolvedThreadId = sourceThreadId || main.activeThreadId;
+    const sourceThread = main.threads.find((thread) => thread.thread_id === resolvedThreadId);
+    const projectId = resolvedThreadId ? sourceThread?.project_id || null : main.draftProjectId;
+    const id = newSideThreadId();
+    const session: SideChatSession = {
+      id, threadId: null, sourceThreadId: resolvedThreadId, sourceTitle: sourceTitle || '主对话',
+      projectId, groupId: sourceThread?.group_id || null,
+      sourceContext: filterContext(context.length ? context : main.messages), contextScope: scope,
+      contextLimit: limit, selectedModel: main.selectedModel,
+      contextRevision: 1, injectedContextRevision: 0, messages: [], currentActivity: [], currentStatus: 'Thinking…',
+      isStreaming: false, approvalRequest: null, error: null,
+    };
+    set((state) => ({ sessions: { ...state.sessions, [id]: session } }));
+    return id;
   },
 
-  setContextMessages: (context, limit) => set((state) => ({
-    sourceContext: context.filter((message) => (message.role === 'user' || message.role === 'assistant') && typeof message.content === 'string' && message.content.trim()).slice(-100).map(({ role, content }) => ({ role, content })),
+  setContextMessages: (id, context, limit) => updateSession(set, id, (session) => ({
+    ...session,
+    sourceContext: filterContext(context).slice(-100),
     contextScope: limit === 'full' ? 'full' : 'recent',
     contextLimit: limit,
-    contextRevision: state.contextRevision + 1,
+    contextRevision: session.contextRevision + 1,
   })),
 
-  setSelectedModel: (selectedModel) => set({ selectedModel }),
+  setSelectedModel: (id, selectedModel) => updateSession(set, id, (session) => ({ ...session, selectedModel })),
 
-  sendMessage: (content, images = []) => {
+  sendMessage: (id, content, images = []) => {
     const text = content.trim();
-    const state = get();
-    if (!text || state.isStreaming) return;
+    const session = get().sessions[id];
+    if (!text || !session || session.isStreaming) return;
     const main = useChatStore.getState();
-    const thread = main.threads.find((item) => item.thread_id === state.sourceThreadId);
-    const threadId = state.threadId || newSideThreadId();
-    const isFirstSideMessage = state.messages.length === 0;
-    const contextUpdate = !isFirstSideMessage && state.contextRevision > state.injectedContextRevision;
-    const activity: ChatActivityEvent[] = [];
-    set((current) => ({
+    const threadId = session.threadId || newSideThreadId();
+    const isFirstSideMessage = session.messages.length === 0;
+    const contextUpdate = !isFirstSideMessage && session.contextRevision > session.injectedContextRevision;
+    updateSession(set, id, (current) => ({
+      ...current,
       threadId,
       messages: [...current.messages, { role: 'user', content: text, extra: { images } }, { role: 'assistant', content: '', extra: { activity: [] } }],
-      currentActivity: activity,
-      currentStatus: 'Thinking…',
-      isStreaming: true,
-      approvalRequest: null,
-      error: null,
+      currentActivity: [], currentStatus: 'Thinking…', isStreaming: true, approvalRequest: null, error: null,
     }));
 
     let answer = '';
-    const updateAssistant = (updater: (message: ChatMessage) => ChatMessage) => set((current) => {
+    const updateAssistant = (updater: (message: ChatMessage) => ChatMessage) => updateSession(set, id, (current) => {
       const messages = [...current.messages];
       const last = messages.length - 1;
       if (last >= 0 && messages[last].role === 'assistant') messages[last] = updater(messages[last]);
-      return { messages };
+      return { ...current, messages };
     });
-    const addActivity = (event: ChatActivityEvent) => set((current) => {
-      const nextActivity = [...current.currentActivity, event];
+    const addActivity = (event: ChatActivityEvent) => updateSession(set, id, (current) => {
+      const activity = [...current.currentActivity, event];
       const messages = [...current.messages];
       const last = messages.length - 1;
-      if (last >= 0 && messages[last].role === 'assistant') messages[last] = { ...messages[last], extra: { ...messages[last].extra, activity: nextActivity } };
-      return { messages, currentActivity: nextActivity };
+      if (last >= 0 && messages[last].role === 'assistant') messages[last] = { ...messages[last], extra: { ...messages[last].extra, activity } };
+      return { ...current, messages, currentActivity: activity };
     });
 
     streamChat({
-      thread_id: threadId,
-      content: text,
-      model_id: state.selectedModel,
-      mode: main.mode as AgentMode,
-      attached_skills: main.attachedSkills,
-      attached_mcps: main.attachedMcps,
-      group_id: thread?.group_id || undefined,
-      project_id: thread?.project_id || undefined,
-      ephemeral: true,
-      images,
-      context_messages: isFirstSideMessage || contextUpdate ? (state.contextLimit === 'full' ? state.sourceContext : state.sourceContext.slice(-state.contextLimit)) : undefined,
+      thread_id: threadId, content: text, model_id: session.selectedModel,
+      attached_skills: main.attachedSkills, attached_mcps: main.attachedMcps,
+      group_id: session.groupId || undefined, project_id: session.projectId || undefined,
+      ephemeral: true, images,
+      context_messages: isFirstSideMessage || contextUpdate
+        ? (session.contextLimit === 'full' ? session.sourceContext : session.contextLimit === 0 ? [] : session.sourceContext.slice(-session.contextLimit))
+        : undefined,
       context_update: contextUpdate,
       onThinking: (_step, label) => {
-        set({ currentStatus: /executing step/i.test(label) ? 'Working…' : 'Thinking…' });
+        updateSession(set, id, (current) => ({ ...current, currentStatus: /executing step/i.test(label) ? 'Working…' : 'Thinking…' }));
         addActivity({ id: `status-${Date.now()}-${Math.random()}`, kind: 'status', label, status: 'working' });
       },
-      onTextChunk: (chunk) => {
-        answer += chunk;
-        updateAssistant((message) => ({ ...message, content: answer }));
-      },
+      onTextChunk: (chunk) => { answer += chunk; updateAssistant((message) => ({ ...message, content: answer })); },
       onToolCall: (actionId, toolName) => {
-        const label = toolName || '终端命令';
-        set({ currentStatus: `Working… ${label}` });
-        addActivity({ id: actionId, kind: 'tool', label, detail: '执行中', status: 'working' });
+        updateSession(set, id, (current) => ({ ...current, currentStatus: `Working… ${toolName || '终端命令'}` }));
+        addActivity({ id: actionId, kind: 'tool', label: toolName || '终端命令', detail: '执行中', status: 'working' });
       },
-      onToolResult: (actionId, _toolName, _output, returncode) => set((current) => {
-        const resultStatus: ChatActivityEvent['status'] = returncode === 0 ? 'done' : 'error';
-        const currentActivity = current.currentActivity.map((event) => event.id === actionId ? { ...event, status: resultStatus, detail: returncode === 0 ? '已完成' : '执行失败' } : event);
+      onToolResult: (actionId, _toolName, _output, returncode) => updateSession(set, id, (current) => {
+        const currentActivity = current.currentActivity.map((event) => event.id === actionId ? { ...event, status: returncode === 0 ? 'done' as const : 'error' as const, detail: returncode === 0 ? '已完成' : '执行失败' } : event);
         const messages = [...current.messages];
         const last = messages.length - 1;
         if (last >= 0 && messages[last].role === 'assistant') messages[last] = { ...messages[last], extra: { ...messages[last].extra, activity: currentActivity } };
-        return { messages, currentActivity, currentStatus: 'Thinking…' };
+        return { ...current, messages, currentActivity, currentStatus: 'Thinking…' };
       }),
       onContextManagement: (event) => addActivity({
-        id: `context-${event.timestamp}`,
-        kind: 'status',
-        label: event.kind === '换血' ? '上下文换血' : '压缩上下文',
-        detail: `${event.before_tokens.toLocaleString()} → ${event.after_tokens.toLocaleString()} Token`,
-        status: 'done',
+        id: `context-${event.timestamp}`, kind: 'status', label: event.kind === '换血' ? '上下文换血' : '压缩上下文',
+        detail: `${event.before_tokens.toLocaleString()} → ${event.after_tokens.toLocaleString()} Token`, status: 'done',
       }),
       onApprovalRequired: (actionId, toolName, message, args) => {
         addActivity({ id: actionId, kind: 'tool', label: `等待审批：${toolName || '终端命令'}`, detail: message, status: 'approval' });
-        set({ approvalRequest: { action_id: actionId, tool_name: toolName, message, args } });
+        updateSession(set, id, (current) => ({ ...current, approvalRequest: { action_id: actionId, tool_name: toolName, message, args } }));
       },
-      onFinish: (payload) => {
-        const completed = get().currentActivity.map((event) => event.status !== 'working' ? event : event.kind === 'status' ? { ...event, status: 'done' as const } : { ...event, status: 'error' as const, detail: payload.exit_status === 'interrupted' ? '已中断' : '未完成' });
-        updateAssistant((message) => ({ ...message, extra: { ...message.extra, activity: completed, duration: payload.duration } }));
-        set((current) => ({ isStreaming: false, currentStatus: '', currentActivity: [], injectedContextRevision: current.contextRevision }));
-      },
-      onError: (error) => {
-        const failed = get().currentActivity.map((event) => event.status === 'working' ? { ...event, status: 'error' as const, detail: '连接中断' } : event);
-        updateAssistant((message) => ({ ...message, extra: { ...message.extra, activity: failed } }));
-        set({ isStreaming: false, currentActivity: [], currentStatus: '', error: error.message });
-      },
+      onFinish: (payload) => updateSession(set, id, (current) => {
+        const completed = current.currentActivity.map((event) => event.status !== 'working' ? event : event.kind === 'status' && payload.exit_status === 'finish' ? { ...event, status: 'done' as const } : { ...event, status: 'error' as const, detail: payload.exit_status === 'interrupted' ? '已中断' : payload.exit_status === 'error' ? '模型请求失败' : '未完成' });
+        const messages = [...current.messages];
+        const last = messages.length - 1;
+        if (last >= 0 && messages[last].role === 'assistant') messages[last] = { ...messages[last], extra: { ...messages[last].extra, activity: completed, duration: payload.duration } };
+        return { ...current, messages, isStreaming: false, currentStatus: '', currentActivity: [], injectedContextRevision: current.contextRevision };
+      }),
+      onError: (error) => updateSession(set, id, (current) => {
+        const failed = current.currentActivity.map((event) => event.status === 'working' ? { ...event, status: 'error' as const, detail: '连接中断' } : event);
+        const messages = [...current.messages];
+        const last = messages.length - 1;
+        if (last >= 0 && messages[last].role === 'assistant') messages[last] = { ...messages[last], extra: { ...messages[last].extra, activity: failed } };
+        return { ...current, messages, isStreaming: false, currentActivity: [], currentStatus: '', error: error.message };
+      }),
     });
   },
 
-  confirmAction: async (choice) => {
-    const { threadId, approvalRequest } = get();
-    if (!threadId || !approvalRequest) return;
-    set({ approvalRequest: null });
-    await confirmApproval(threadId, approvalRequest.action_id, choice);
+  confirmAction: async (id, choice) => {
+    const session = get().sessions[id];
+    if (!session?.threadId || !session.approvalRequest) return;
+    updateSession(set, id, (current) => ({ ...current, approvalRequest: null }));
+    await confirmApproval(session.threadId, session.approvalRequest.action_id, choice);
   },
 
-  interrupt: async () => {
-    const threadId = get().threadId;
+  interrupt: async (id) => {
+    const threadId = get().sessions[id]?.threadId;
     if (!threadId) return;
     await interruptChat(threadId);
-    set({ isStreaming: false, currentStatus: '', currentActivity: [] });
+    updateSession(set, id, (session) => ({ ...session, isStreaming: false, currentStatus: '', currentActivity: [] }));
   },
 
-  dispose: () => {
-    const threadId = get().threadId;
-    resetSideSession(threadId);
-    set({ threadId: null, messages: [], currentActivity: [], isStreaming: false, currentStatus: '', approvalRequest: null, error: null, sourceThreadId: null, sourceContext: [], contextScope: 'recent', contextLimit: 5, contextRevision: 0, injectedContextRevision: 0 });
+  dispose: (id) => {
+    const session = get().sessions[id];
+    stopEphemeral(session);
+    set((state) => {
+      const { [id]: _removed, ...sessions } = state.sessions;
+      return { sessions };
+    });
   },
 }));

@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import shlex
 from pathlib import Path
 
 import pytest
@@ -20,8 +21,12 @@ from vera_agent.models.test_models import (
 
 
 def python_command(code: str) -> str:
-    """Build a shell-safe command that works with both cmd.exe and POSIX shells."""
-    return subprocess.list2cmdline([sys.executable, "-c", code])
+    """Build a shell-safe Git Bash command for the current Python interpreter."""
+    executable = sys.executable
+    if sys.platform == "win32":
+        drive, tail = executable[0].lower(), executable[2:].replace("\\", "/")
+        executable = f"/{drive}{tail}"
+    return shlex.join([executable, "-c", code])
 
 # --- Helper functions to abstract message format differences ---
 

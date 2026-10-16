@@ -1,5 +1,3 @@
-export type AgentMode = 'confirm' | 'yolo' | 'human';
-
 export interface ChatImageAttachment {
   id: string;
   name: string;
@@ -53,6 +51,8 @@ export interface ChatMessage {
     images?: ChatImageAttachment[];
     activity?: ChatActivityEvent[];
     sender_id?: string;
+    orchestration_run_id?: string;
+    orchestration_group_id?: string;
     duration?: number;
     cost?: number;
     subagents?: SubagentRun[];
@@ -94,5 +94,5 @@ export interface StreamFinishPayload {
   steps: number;
   cost: number;
   total_cost: number;
-  exit_status: 'finish' | 'interrupted';
+  exit_status: 'finish' | 'interrupted' | 'error';
 }

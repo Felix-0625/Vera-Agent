@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Check, X, Edit2 } from 'lucide-react';
+import { TextInput } from '../common/Field';
+import { Button } from '../common/Button';
 
 interface ApprovalActionButtonsProps {
   onConfirm: (action: string) => void;
@@ -22,108 +24,48 @@ export const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({ on
 
   if (showOverrideInput) {
     return (
-      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-        <input
+      <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-1)' }}>
+        <TextInput
           type="text"
           value={overrideText}
           onChange={(e) => setOverrideText(e.target.value)}
           placeholder="输入修正指令或执行反馈 (Override)..."
-          style={{
-            flex: 1,
-            padding: '6px 12px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-default)',
-            fontSize: 12,
-            color: 'var(--text-primary)',
-          }}
+          className="approval-override-input"
         />
-        <button
-          onClick={handleOverrideSubmit}
-          style={{
-            padding: '6px 14px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: 'var(--accent-primary)',
-            color: '#FFFFFF',
-            fontSize: 12,
-            fontWeight: 500,
-          }}
-        >
-          提交修正
-        </button>
-        <button
-          onClick={() => setShowOverrideInput(false)}
-          style={{
-            padding: '6px 10px',
-            borderRadius: 'var(--radius-sm)',
-            backgroundColor: 'transparent',
-            color: 'var(--text-muted)',
-            fontSize: 12,
-          }}
-        >
-          取消
-        </button>
+        <Button onClick={handleOverrideSubmit} variant="primary" size="sm">提交修正</Button>
+        <Button onClick={() => setShowOverrideInput(false)} variant="ghost" size="sm">取消</Button>
       </div>
     );
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
-      <button
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
+      <Button
         onClick={() => onConfirm('Y')}
-        style={{
-          padding: '6px 14px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'rgba(16, 185, 129, 0.2)',
-          border: '1px solid var(--accent-emerald)',
-          color: 'var(--accent-emerald)',
-          fontSize: 12,
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5,
-        }}
+        variant="success"
+        size="sm"
+        icon={<Check size={14} />}
       >
-        <Check size={14} />
-        <span>批准执行 (Y)</span>
-      </button>
+        批准执行 (Y)
+      </Button>
 
-      <button
+      <Button
         onClick={() => onConfirm('N')}
-        style={{
-          padding: '6px 14px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'rgba(239, 68, 68, 0.15)',
-          border: '1px solid var(--accent-rose)',
-          color: 'var(--accent-rose)',
-          fontSize: 12,
-          fontWeight: 600,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5,
-        }}
+        variant="danger"
+        size="sm"
+        icon={<X size={14} />}
       >
-        <X size={14} />
-        <span>驳回操作 (N)</span>
-      </button>
+        驳回操作 (N)
+      </Button>
 
-      <button
+      <Button
         onClick={() => setShowOverrideInput(true)}
-        style={{
-          padding: '6px 12px',
-          borderRadius: 'var(--radius-sm)',
-          backgroundColor: 'var(--bg-card)',
-          border: '1px solid var(--border-default)',
-          color: 'var(--text-secondary)',
-          fontSize: 12,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 5,
-        }}
+        variant="secondary"
+        size="sm"
+        icon={<Edit2 size={13} />}
       >
-        <Edit2 size={13} />
-        <span>修改执行 (O)</span>
-      </button>
+        修改执行 (O)
+      </Button>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FolderPlus, MoreVertical } from 'lucide-react';
+import { FolderPlus } from 'lucide-react';
 import { useProjectStore } from '../../stores/projectStore';
 import { useChatStore } from '../../stores/chatStore';
 import { useLayoutStore } from '../../stores/layoutStore';
@@ -80,16 +80,16 @@ export const ProjectTree: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '2px 12px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ padding: 'var(--space-0-5) var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3-5)' }}>
       {/* 1. "项目" 栏目 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1-5)' }}>
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '2px 12px',
-            fontSize: 11,
+            padding: 'var(--space-0-5) var(--space-3)',
+            fontSize: 'var(--font-size-compact)',
             fontWeight: 600,
             color: 'var(--text-muted)',
           }}
@@ -98,7 +98,7 @@ export const ProjectTree: React.FC = () => {
           <button
             onClick={openProjectCreate}
             title="选择或绑定本地目录"
-            style={{ color: '#4b91ff', padding: 2, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+            style={{ color: 'var(--accent-primary)', padding: 'var(--space-0-5)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
           >
             <FolderPlus size={14} />
           </button>

@@ -7,6 +7,7 @@ import logging
 import time
 import traceback
 from pathlib import Path
+from typing import Any
 
 from jinja2 import StrictUndefined, Template
 from pydantic import BaseModel
@@ -18,28 +19,18 @@ from vera_agent.utils.serialize import recursive_merge
 
 
 def load_project_context(start_dir: Path | None = None) -> str:
-    """Load AGENTS.md or CLAUDE.md from the directory hierarchy, similar to pi-agent."""
-    current = Path(start_dir or Path.cwd()).resolve()
-    found_files = []
-    """ Look up engineering specification documents. UsuallyAGENTS.md or CLAUDE.md. """
-    while True:
-        for name in ("AGENTS.md", "CLAUDE.md"):
-            candidate = current / name
-            if candidate.is_file():
-                found_files.append(candidate)
-                break
-        """ if the current directory is the root directory of the files, stop searching """
-        if (current / ".git").exists() or current.parent == current:
-            break
-        current = current.parent
-
-    if not found_files:
-        return ""
-
-    sections = []
+    """Load AGENTS.md files from the project root through the working directory."""
     start = Path(start_dir or Path.cwd()).resolve()
-    """ Add the file contents to the sections list. """
-    for file_path in reversed(found_files):
+    project_root = start
+    while project_root.parent != project_root and not (project_root / ".git").exists():
+        project_root = project_root.parent
+    if not (project_root / ".git").exists():
+        project_root = start
+
+    directories = [project_root, *[project_root / part for part in start.relative_to(project_root).parts]]
+    found_files = [directory / "AGENTS.md" for directory in directories if (directory / "AGENTS.md").is_file()]
+    sections = []
+    for file_path in found_files:
         try:
             content = file_path.read_text(encoding="utf-8")
             try:
@@ -224,6 +215,7 @@ class DefaultAgent:
             from vera_agent.session.context_management import compact_session, subagent_rebirth_if_needed
 
             model_name = self.model.config.model_name
+            model_kwargs = getattr(self.model.config, "model_kwargs", {}) or {}
             try:
                 import litellm
                 context_window = int(getattr(self.model, "context_window", None) or litellm.get_model_info(model_name).get("max_input_tokens") or 0)
@@ -233,19 +225,19 @@ class DefaultAgent:
                 event = compact_session(
                     self.session,
                     model_name,
-                    self.model.config.model_kwargs,
+                    model_kwargs,
                     context_window or None,
                 )
             except Exception:
                 self.logger.exception("Subagent context compaction failed; preserving its current transcript")
                 event = None
             if event:
-                self.report_progress({"kind": "status", "label": "压缩上下文", "detail": f"{event['before_tokens']:,} → {event['after_tokens']:,} Token"})
+                self.report_progress({"kind": "status", "label": "压缩上下文", "detail": f"约 {event['before_tokens']:,} → {event['after_tokens']:,} Token（本地估算）"})
             rebirth = subagent_rebirth_if_needed(
                 self.session,
                 model_name,
                 context_window or None,
-                model_kwargs=self.model.config.model_kwargs,
+                model_kwargs=model_kwargs,
             )
             if rebirth:
                 self.report_progress({"kind": "status", "label": "子智能体换血", "detail": rebirth["detail"]})

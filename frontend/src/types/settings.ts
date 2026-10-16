@@ -1,13 +1,15 @@
+export type ModelProvider = 'openai' | 'anthropic' | 'google' | 'deepseek' | 'openrouter' | 'ollama' | 'qwen' | 'zhipu' | 'moonshot' | 'siliconflow' | 'volcengine' | 'xai' | 'mistral' | 'custom';
+export type PermissionCategory = 'read' | 'create' | 'edit' | 'terminal' | 'search' | 'mcp' | 'delegation';
+
 export interface ModelConfig {
   id: string;
   name: string;
   display_name?: string;
-  provider: string;
+  provider: ModelProvider;
   base_url?: string;
   api_key?: string;
   max_tokens?: number;
   temperature?: number;
-  model_family?: string;
   context_window?: number;
   output_tokens?: number;
   max_tool_calls?: number;
@@ -20,10 +22,10 @@ export interface ModelConfig {
 }
 
 export interface PermissionsConfig {
-  default_mode: 'confirm' | 'yolo' | 'human';
-  whitelist_actions: string[];
+  default_mode: 'allow_all' | 'auto' | 'manual';
+  approval_actions: PermissionCategory[];
   operation_scope?: 'project_only' | 'project_write_external_readonly';
-  max_tool_attempts?: number;
+  max_tool_attempts: number;
 }
 
 export interface McpTool {
@@ -41,6 +43,12 @@ export interface McpServerConfig {
   args: string[];
   env?: Record<string, string>;
   tools: McpTool[];
+  repository?: string;
+  registry_version?: string;
+  url?: string;
+  transport?: string;
+  headers?: Record<string, string>;
+  registry_id?: string;
 }
 
 export interface SkillItem {

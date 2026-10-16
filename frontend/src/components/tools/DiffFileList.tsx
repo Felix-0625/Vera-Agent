@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CheckSquare, ChevronDown, ChevronRight, File, Folder, Undo2 } from 'lucide-react';
 import { WorktreeDiffData } from '../../types/tool';
+import { IconButton } from '../common/IconButton';
 
 type TreeNode = { name: string; path: string; children: Map<string, TreeNode>; file?: { status: string; staged: boolean; untracked: boolean; additions: number; deletions: number } };
 
@@ -47,16 +48,16 @@ export const DiffFileList: React.FC<DiffFileListProps> = ({ data, selectedFile, 
       const isCollapsed = collapsed.has(node.path);
       const active = selectedFile === node.path;
       return <React.Fragment key={node.path}>
-        <div style={{ display: 'flex', alignItems: 'center', minHeight: 30, padding: '0 5px', paddingLeft: 7 + depth * 15, borderRadius: 6, background: active ? 'var(--bg-surface-elevated)' : 'transparent' }}>
-          <button onClick={() => directory ? setCollapsed((prev) => { const next = new Set(prev); if (next.has(node.path)) next.delete(node.path); else next.add(node.path); return next; }) : onSelect(node.path)} title={node.path} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 6, minWidth: 0, flex: 1, textAlign: 'left', color: node.file?.untracked ? 'var(--accent-emerald)' : node.file?.staged ? 'var(--accent-emerald)' : node.file ? 'var(--accent-amber)' : 'var(--text-secondary)', fontSize: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', minHeight: 30, padding: '0 var(--space-1-25)', paddingLeft: 7 + depth * 15, borderRadius: 'var(--radius-sm)', background: active ? 'var(--bg-surface-elevated)' : 'transparent' }}>
+          <button onClick={() => directory ? setCollapsed((prev) => { const next = new Set(prev); if (next.has(node.path)) next.delete(node.path); else next.add(node.path); return next; }) : onSelect(node.path)} title={node.path} style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 'var(--space-1-5)', minWidth: 0, flex: 1, textAlign: 'left', color: node.file?.untracked ? 'var(--accent-emerald)' : node.file?.staged ? 'var(--accent-emerald)' : node.file ? 'var(--accent-amber)' : 'var(--text-secondary)', fontSize: 'var(--font-size-sm)' }}>
             {directory ? (isCollapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />) : <span style={{ width: 13 }} />}
             {directory ? <Folder size={14} /> : <File size={14} />}
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{node.name}</span>
           </button>
-          {node.file && <div style={{ marginLeft: 5, display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0, fontFamily: 'ui-monospace, monospace', fontSize: 10.5 }}>
-            {!node.file.staged && <button onClick={() => onStage(node.path)} title="暂存" style={{ padding: 2, color: 'var(--text-muted)' }}><CheckSquare size={12} /></button>}
-            {!node.file.untracked && <button onClick={() => onDiscard(node.path)} title="撤销修改" style={{ padding: 2, color: 'var(--text-muted)' }}><Undo2 size={12} /></button>}
-            {(node.file.additions ?? 0) > 0 && <span style={{ marginLeft: 3, color: 'var(--accent-emerald)' }}>+{node.file.additions}</span>}
+          {node.file && <div style={{ marginLeft: 'var(--space-1-25)', display: 'flex', alignItems: 'center', gap: 'var(--space-1-25)', flexShrink: 0, fontFamily: 'ui-monospace, monospace', fontSize: 'var(--font-size-subtle)' }}>
+            {!node.file.staged && <IconButton label={`暂存 ${node.path}`} size="sm" onClick={() => void onStage(node.path)}><CheckSquare size={13} /></IconButton>}
+            {!node.file.untracked && <IconButton label={`撤销修改 ${node.path}`} size="sm" tone="danger" onClick={() => void onDiscard(node.path)}><Undo2 size={13} /></IconButton>}
+            {(node.file.additions ?? 0) > 0 && <span style={{ marginLeft: 'var(--space-0-75)', color: 'var(--accent-emerald)' }}>+{node.file.additions}</span>}
             {(node.file.deletions ?? 0) > 0 && <span style={{ color: 'var(--accent-rose)' }}>-{node.file.deletions}</span>}
           </div>}
         </div>
@@ -64,8 +65,8 @@ export const DiffFileList: React.FC<DiffFileListProps> = ({ data, selectedFile, 
       </React.Fragment>;
     });
 
-  return <aside style={{ width: '100%', height: '100%', minWidth: 0, overflowY: 'auto', padding: 8, fontSize: 12 }}>
-    <div style={{ fontWeight: 600, color: 'var(--text-muted)', padding: '3px 6px 8px' }}>变更文件</div>
-    {root.children.size ? renderNodes(root, 0) : <div style={{ padding: 6, color: 'var(--text-disabled)' }}>当前没有变更文件</div>}
+  return <aside style={{ width: '100%', height: '100%', minWidth: 0, overflowY: 'auto', padding: 'var(--space-2)', fontSize: 'var(--font-size-sm)' }}>
+    <div style={{ fontWeight: 600, color: 'var(--text-muted)', padding: 'var(--space-0-75) var(--space-1-5) var(--space-2)' }}>变更文件</div>
+    {root.children.size ? renderNodes(root, 0) : <div style={{ padding: 'var(--space-1-5)', color: 'var(--text-disabled)' }}>当前没有变更文件</div>}
   </aside>;
 };

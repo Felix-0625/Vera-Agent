@@ -3,6 +3,8 @@ import shlex
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+pytest.importorskip("contree_sdk")
 from contree_sdk.config import ContreeConfig
 
 from vera_agent.environments.extra.contree import (

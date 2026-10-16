@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Cpu, Settings as Gear, RotateCw, Trash2, Edit3 } from 'lucide-react';
 import { McpServerConfig } from '../../types/settings';
 import { Switch } from '../common/Switch';
+import { IconButton } from '../common/IconButton';
 
 interface McpServerListProps {
   servers: McpServerConfig[];
@@ -24,32 +25,32 @@ export const McpServerList: React.FC<McpServerListProps> = ({
   const [menuId, setMenuId] = useState<string | null>(null);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       {servers.map((s) => (
         <div
           key={s.id}
           className="glass-card"
-          style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}
+          style={{ padding: 'var(--space-3) var(--space-3-5)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2-5)' }}>
             <Cpu size={16} color="var(--accent-cyan)" />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>{s.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                {s.command} {s.args.join(' ')}
+              <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 600 }}>{s.name}</div>
+              <div style={{ fontSize: 'var(--font-size-compact)', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                {s.type === 'remote' ? `${s.transport || 'Streamable HTTP'} · ${s.url || ''}` : `${s.command} ${s.args.join(' ')}`}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2-5)' }}>
+            <IconButton
+              label="服务选项"
               onClick={() => setMenuId(menuId === s.id ? null : s.id)}
-              style={{ padding: 4, color: 'var(--text-muted)' }}
-              title="服务选项"
+              size="sm"
             >
               <Gear size={14} />
-            </button>
-            <Switch checked={s.enabled} onChange={() => onToggle(s)} />
+            </IconButton>
+            <Switch label={`启用 MCP 服务器：${s.name}`} checked={s.enabled} onChange={() => onToggle(s)} />
 
             {/* Gear Dropdown */}
             {menuId === s.id && (
@@ -61,7 +62,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({
                   top: 36,
                   minWidth: 100,
                   borderRadius: 'var(--radius-md)',
-                  padding: 4,
+                  padding: 'var(--space-1)',
                   zIndex: 20,
                 }}
               >
@@ -70,7 +71,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({
                     setMenuId(null);
                     onEdit(s);
                   }}
-                  style={{ width: '100%', padding: '5px 8px', fontSize: 11.5, display: 'flex', gap: 6, alignItems: 'center' }}
+                  style={{ width: '100%', padding: 'var(--space-1-25) var(--space-2)', fontSize: 'var(--font-size-label)', display: 'flex', gap: 'var(--space-1-5)', alignItems: 'center' }}
                 >
                   <Edit3 size={12} />
                   <span>编辑</span>
@@ -80,7 +81,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({
                     setMenuId(null);
                     onRestart(s.id);
                   }}
-                  style={{ width: '100%', padding: '5px 8px', fontSize: 11.5, display: 'flex', gap: 6, alignItems: 'center' }}
+                  style={{ width: '100%', padding: 'var(--space-1-25) var(--space-2)', fontSize: 'var(--font-size-label)', display: 'flex', gap: 'var(--space-1-5)', alignItems: 'center' }}
                 >
                   <RotateCw size={12} />
                   <span>重启</span>
@@ -90,7 +91,7 @@ export const McpServerList: React.FC<McpServerListProps> = ({
                     setMenuId(null);
                     onDelete(s.id);
                   }}
-                  style={{ width: '100%', padding: '5px 8px', fontSize: 11.5, display: 'flex', gap: 6, alignItems: 'center', color: 'var(--accent-rose)' }}
+                  style={{ width: '100%', padding: 'var(--space-1-25) var(--space-2)', fontSize: 'var(--font-size-label)', display: 'flex', gap: 'var(--space-1-5)', alignItems: 'center', color: 'var(--accent-rose)' }}
                 >
                   <Trash2 size={12} />
                   <span>删除</span>

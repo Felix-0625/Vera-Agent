@@ -29,15 +29,27 @@ async def get_all_threads(request: Request) -> JSONResponse:
     group_id_filter = params.get("group_id")
     is_archived_param = params.get("is_archived")
 
-    # Ensure disk sessions are indexed
-    sessions_dir = state.get_sessions_dir()
-    for f in sessions_dir.glob("*.json"):
-        tid = f.stem
-        if tid not in state.sessions:
+    # Index sessions from every bound project so the sidebar and history modal
+    # keep working after the user switches the active project.
+    history = state.load_json_config("projects_history.json", {"projects": []})
+    session_roots = {
+        str(Path(project["path"]).resolve()): (Path(project["path"]).resolve(), project.get("id"))
+        for project in history.get("projects", [])
+        if project.get("path") and Path(project["path"]).is_dir()
+    }
+    session_roots.setdefault(str(state.root_path.resolve()), (state.root_path.resolve(), None))
+    for project_root, project_id in session_roots.values():
+        for session_file in (project_root / ".agents" / "sessions").glob("*.json"):
+            tid = session_file.stem
+            if tid in state.sessions:
+                continue
             try:
-                state.sessions[tid] = ThreadSession.load(f)
+                session = ThreadSession.load(session_file)
+                session.project_id = state.infer_legacy_session_project_id(session_file, session, project_id)
+                session.metadata.setdefault("project_root", str(project_root))
+                state.sessions[tid] = session
             except Exception:
-                pass
+                logger.exception("Unable to load conversation %s", tid)
 
     results = []
     for s in state.sessions.values():
@@ -87,6 +99,11 @@ async def create_thread(request: Request) -> JSONResponse:
         role=role,
         title=title,
     )
+    if project_id:
+        try:
+            session.metadata["project_root"] = str(state.get_project_root(project_id))
+        except ValueError as error:
+            return JSONResponse({"error": str(error)}, status_code=404)
     state.sessions[thread_id] = session
     if group_id and state.graph:
         group = state.graph.get_group(group_id)
@@ -103,7 +120,7 @@ async def create_thread(request: Request) -> JSONResponse:
                 status="idle",
             )
 
-    session.save(state.get_sessions_dir() / f"{thread_id}.json")
+    session.save(state.get_session_file(session))
     return JSONResponse(session.to_dict())
 
 
@@ -121,6 +138,50 @@ async def get_thread_messages(request: Request) -> JSONResponse:
         "n_calls": session.n_calls,
         "messages": session.messages,
     })
+
+
+async def deliver_orchestration_result(request: Request) -> JSONResponse:
+    """Persist a completed orchestration as an assistant reply in its caller thread."""
+    state = _get_state(request)
+    thread_id = request.path_params["thread_id"]
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+    content = str(body.get("content", "")).strip()
+    task_input = str(body.get("input", "")).strip()
+    run_id = str(body.get("run_id", "")).strip()
+    group_id = str(body.get("group_id", "")).strip()
+    if not content or not run_id or not group_id:
+        return JSONResponse({"error": "content, run_id, and group_id are required"}, status_code=400)
+    session = state.sessions.get(thread_id)
+    if session is None:
+        session_file = state.get_session_file(session)
+        if session_file.exists():
+            session = ThreadSession.load(session_file)
+            state.sessions[thread_id] = session
+    if session is None:
+        return JSONResponse({"error": "Caller conversation not found"}, status_code=404)
+    if body.get("project_id") and session.project_id and session.project_id != str(body["project_id"]):
+        return JSONResponse({"error": "Caller conversation belongs to a different project"}, status_code=409)
+    existing = next((message for message in session.messages if message.get("role") == "assistant" and (message.get("extra") or {}).get("orchestration_run_id") == run_id), None)
+    if existing:
+        return JSONResponse({"status": "already_delivered", "messages": [existing]})
+    delivered = []
+    if task_input and not any(message.get("role") == "user" and (message.get("extra") or {}).get("orchestration_run_id") == run_id for message in session.messages):
+        delivered.extend(session.add_messages({
+            "role": "user", "content": task_input,
+            "extra": {"orchestration_run_id": run_id, "orchestration_group_id": group_id, "sender_id": "user"},
+            "timestamp": time.time(),
+        }))
+    delivered.extend(session.add_messages({
+        "role": "assistant",
+        "content": content,
+        "extra": {"orchestration_run_id": run_id, "orchestration_group_id": group_id, "sender_id": "supervisor"},
+        "timestamp": time.time(),
+    }))
+    session.save(state.get_session_file(session))
+    return JSONResponse({"status": "delivered", "messages": delivered})
 
 
 async def truncate_from_user_message(request: Request) -> JSONResponse:
@@ -143,7 +204,7 @@ async def truncate_from_user_message(request: Request) -> JSONResponse:
     # context from the surviving raw transcript after an edit-and-resend.
     session.metadata.pop("context_checkpoints", None)
     session.updated_at = __import__("time").time()
-    session.save(state.get_sessions_dir() / f"{thread_id}.json")
+    session.save(state.get_session_file(session))
     return JSONResponse({"status": "ok", "removed_from": index})
 
 
@@ -173,7 +234,7 @@ async def update_thread(request: Request) -> JSONResponse:
     if "role" in body:
         session.role = str(body["role"])
 
-    session.save(state.get_sessions_dir() / f"{thread_id}.json")
+    session.save(state.get_session_file(session))
     return JSONResponse(session.to_dict())
 
 
@@ -187,7 +248,8 @@ async def delete_thread(request: Request) -> JSONResponse:
     if state.graph:
         state.graph.remove_session(thread_id)
 
-    s_file = state.get_sessions_dir() / f"{thread_id}.json"
+    session = session or state.get_or_create_session(thread_id)
+    s_file = state.get_session_file(session)
     if s_file.exists():
         s_file.unlink()
 
@@ -236,7 +298,10 @@ async def get_thread_context_status(request: Request) -> JSONResponse:
         except Exception:
             return JSONResponse({"error": "Thread could not be loaded"}, status_code=500)
 
-    profile = resolve_model_profile(state, request.query_params.get("model_id"))
+    try:
+        profile = resolve_model_profile(state, request.query_params.get("model_id"))
+    except ValueError as error:
+        return JSONResponse({"error": str(error)}, status_code=400)
     samples = []
     rebirth_logs = []
     for message in session.messages if session else []:
@@ -324,7 +389,10 @@ async def rebirth_group_thread_context(request: Request) -> JSONResponse:
         body = await request.json()
     except Exception:
         body = {}
-    profile = resolve_model_profile(state, body.get("model_id"))
+    try:
+        profile = resolve_model_profile(state, body.get("model_id"))
+    except ValueError as error:
+        return JSONResponse({"error": str(error)}, status_code=400)
     from vera_agent.session.context_management import compact_session
 
     archive = state.get_sessions_dir() / f"{thread_id}.epoch-{int(time.time())}.json"
@@ -350,7 +418,7 @@ async def rebirth_group_thread_context(request: Request) -> JSONResponse:
         "after_tokens": event["after_tokens"],
     }
     session.metadata.setdefault("context_events", []).append(rebirth_event)
-    session.save(state.get_sessions_dir() / f"{thread_id}.json")
+    session.save(state.get_session_file(session))
     return JSONResponse({"status": "reborn", "event": rebirth_event})
 
 
@@ -358,6 +426,7 @@ thread_routes = [
     Route("/api/threads", get_all_threads, methods=["GET"]),
     Route("/api/threads", create_thread, methods=["POST"]),
     Route("/api/threads/{thread_id}/messages", get_thread_messages, methods=["GET"]),
+    Route("/api/threads/{thread_id}/messages/deliver", deliver_orchestration_result, methods=["POST"]),
     Route("/api/threads/{thread_id}/messages/truncate", truncate_from_user_message, methods=["POST"]),
     Route("/api/threads/{thread_id}", update_thread, methods=["PATCH"]),
     Route("/api/threads/{thread_id}", delete_thread, methods=["DELETE"]),

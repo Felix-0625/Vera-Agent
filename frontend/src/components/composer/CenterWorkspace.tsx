@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { Suspense, useRef, useState } from 'react';
 import { useChatStore } from '../../stores/chatStore';
 import { WorkspaceHeader } from './WorkspaceHeader';
 import { WelcomeBanner } from './WelcomeBanner';
@@ -8,7 +8,8 @@ import { ProjectCapsule } from './ProjectCapsule';
 import { SignatureInputCard } from './SignatureInputCard';
 import { readImageFiles } from './imageAttachments';
 import { useLayoutStore } from '../../stores/layoutStore';
-import { TerminalTab } from '../tools/TerminalTab';
+
+const TerminalTab = React.lazy(() => import('../tools/TerminalTab').then((module) => ({ default: module.TerminalTab })));
 
 /**
  * 中间区域核心工作区 (对应 Penpot 中心白板对话与操作输入流)
@@ -45,7 +46,11 @@ export const CenterWorkspace: React.FC = () => {
   const terminalDrawer = (
     <div className="center-terminal-drawer" style={{ height: effectiveDrawerHeight, flexBasis: effectiveDrawerHeight, maxHeight: '40%' }}>
       <div className="center-terminal-resize" onPointerDown={startResize} title="拖动调整终端高度" aria-label="调整终端高度" />
-      <div style={{ height: 'calc(100% - 6px)', minHeight: 0 }}><TerminalTab onClose={toggleBottomDrawer} /></div>
+      <div style={{ height: 'calc(100% - 6px)', minHeight: 0 }}>
+        <Suspense fallback={<div role="status" aria-live="polite" style={{ padding: 'var(--space-3)', color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>正在加载终端…</div>}>
+          <TerminalTab onClose={toggleBottomDrawer} />
+        </Suspense>
+      </div>
     </div>
   );
 
@@ -80,7 +85,7 @@ export const CenterWorkspace: React.FC = () => {
       onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingImage(false); }}
       onDrop={handleDrop}
     >
-      {isDraggingImage && <div style={{ position: 'absolute', inset: 10, zIndex: 80, borderRadius: 16, border: '1px dashed var(--accent-cyan)', background: 'rgba(6,182,212,.08)', display: 'grid', placeItems: 'center', color: 'var(--text-primary)', fontSize: 13, pointerEvents: 'none' }}>松开鼠标添加图片</div>}
+      {isDraggingImage && <div style={{ position: 'absolute', inset: 10, zIndex: 80, borderRadius: 'var(--radius-xl)', border: '1px dashed var(--accent-cyan)', background: 'var(--bg-info-soft)', display: 'grid', placeItems: 'center', color: 'var(--text-primary)', fontSize: 'var(--font-size-md)', pointerEvents: 'none' }}>松开鼠标添加图片</div>}
       {/* 顶部工具条 */}
       <WorkspaceHeader />
 
@@ -93,7 +98,7 @@ export const CenterWorkspace: React.FC = () => {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: '0 24px 60px',
+            padding: '0 var(--space-6) 60px',
             overflowY: 'auto',
           }}
         >
@@ -130,13 +135,9 @@ export const CenterWorkspace: React.FC = () => {
             </div>
           </div>
 
-          {bottomDrawerOpen && (
-            terminalDrawer
-          )}
-
           <div
             style={{
-              padding: '0 20px 20px',
+              padding: '0 var(--space-5) var(--space-5)',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -149,6 +150,8 @@ export const CenterWorkspace: React.FC = () => {
               <SignatureInputCard />
             </div>
           </div>
+
+          {bottomDrawerOpen && terminalDrawer}
         </>
       )}
 

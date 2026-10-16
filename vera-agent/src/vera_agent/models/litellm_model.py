@@ -52,6 +52,7 @@ class LitellmModelConfig(BaseModel):
     multimodal_regex: str = ""
     """Regex to extract multimodal content. Empty string disables multimodal processing."""
     allow_empty_tool_calls: bool = False
+    dynamic_tool_names: list[str] = []
     """Allow empty tool calls (natural language response without actions)."""
 
 
@@ -62,6 +63,7 @@ class LitellmModel:
         litellm.exceptions.PermissionDeniedError,
         litellm.exceptions.ContextWindowExceededError,
         litellm.exceptions.AuthenticationError,
+        litellm.exceptions.BadRequestError,
         KeyboardInterrupt,
     ]
 
@@ -101,7 +103,8 @@ class LitellmModel:
 
     def query(self, messages: list[dict[str, str]], tools: list[dict] | None = None, **kwargs) -> dict:
         passed_tools = tools if tools is not None else kwargs.pop("tools", None)
-        for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions):
+        retry_attempts = kwargs.pop("retry_attempts", None)
+        for attempt in retry(logger=logger, abort_exceptions=self.abort_exceptions, max_attempts=retry_attempts):
             with attempt:
                 response = self._query(self._prepare_messages_for_api(messages), tools=passed_tools, **kwargs)
         cost_output = self._calculate_cost(response)
@@ -260,6 +263,7 @@ class LitellmModel:
             format_error_template=self.config.format_error_template,
             template_kwargs={"finish_reason": response.choices[0].finish_reason},
             allow_empty=getattr(self.config, "allow_empty_tool_calls", False),
+            additional_tool_names=set(self.config.dynamic_tool_names),
         )
 
     def format_message(self, **kwargs) -> dict:

@@ -33,7 +33,7 @@ export const ProjectContextMenu: React.FC<ProjectContextMenuProps> = ({ project,
 
   return createPortal(<>
     <div aria-hidden="true" onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-    <div ref={menuRef} role="menu" onPointerDown={event => event.stopPropagation()} style={{ position: 'fixed', left: safePosition.left, top: safePosition.top, width: 174, padding: 5, borderRadius: 9, background: '#171b24', border: '1px solid var(--border-default)', boxShadow: '0 12px 28px rgba(0,0,0,.42)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <div ref={menuRef} role="menu" onPointerDown={event => event.stopPropagation()} style={{ position: 'fixed', left: safePosition.left, top: safePosition.top, width: 174, padding: 'var(--space-1-25)', borderRadius: 'var(--radius-md-plus)', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 'var(--space-0-5)' }}>
       {items.map(item => <button key={item.label} role="menuitem" className="composer-menu-row" style={item.danger ? { color: 'var(--accent-rose)' } : undefined} onClick={() => { item.run(project); onClose(); }}>
         {item.icon}<span>{item.label}</span>
       </button>)}

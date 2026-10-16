@@ -6,15 +6,15 @@ older turns with the latest checkpoint and keeps the recent raw turns.
 
 from __future__ import annotations
 
-import logging
 import json
+import logging
 import time
 import uuid
 from typing import Any
 
 import litellm
-from vera_agent.models import GLOBAL_MODEL_STATS
 
+from vera_agent.models import GLOBAL_MODEL_STATS
 from vera_agent.session.thread import ThreadSession
 
 logger = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ def _summarization_prompt(previous_summary: str, messages: list[dict[str, Any]])
         blocks.append("\n".join(details))
     transcript = "\n\n".join(blocks)
     return f"""Create a concise, factual context checkpoint so another model can continue this task.
-Preserve the user's original goal, explicit constraints and decisions, verified facts, exact file paths and identifiers, completed work, unresolved work, and the next action. Distinguish facts from assumptions. Do not invent missing details. Keep the summary compact and useful for continuing the task.
+Preserve the user's original goal, explicit constraints and decisions, verified facts, exact file paths and identifiers, completed work, unresolved work, and the next action. Retain names, numbers, dates, quoted facts, and list items exactly when they may answer a later question; keep answer-bearing source sentences close to verbatim. Distinguish facts from assumptions. Do not invent missing details. Keep the summary compact and useful for continuing the task.
 
 <previous_checkpoint>
 {previous_summary or '(none)'}
@@ -113,7 +113,8 @@ def compact_session(
 
     projection = context_projection(session)
     before_tokens = _token_count(projection, model_name)
-    if not force and before_tokens <= max(1, context_window - min(reserve_tokens, context_window // 5)):
+    threshold = max(1, context_window - min(reserve_tokens, context_window // 5))
+    if not force and before_tokens <= threshold:
         return None
     if len(projection) < 3:
         return None
@@ -142,6 +143,12 @@ def compact_session(
         user_boundaries = [i for i, message in enumerate(source) if message.get("role") == "user" and i >= cut]
         if user_boundaries:
             cut = user_boundaries[0]
+            # A single oversized older turn can cross the entire retention
+            # budget while scanning backward. In that case the first eligible
+            # boundary is index zero and would fold nothing; advance to the next
+            # user turn so the oversized turn can be summarized as one unit.
+            if cut == 0 and len(user_boundaries) > 1:
+                cut = user_boundaries[1]
         else:
             user_indices = [i for i, message in enumerate(source) if message.get("role") == "user"]
             cut = user_indices[-1] if user_indices else len(source)
@@ -159,29 +166,48 @@ def compact_session(
 
     prompt = _summarization_prompt(previous_summary, folded)
     call_kwargs = dict(model_kwargs)
-    call_kwargs["max_tokens"] = min(int(call_kwargs.get("max_tokens") or 4096), 4096)
-    response = litellm.completion(
-        model=model_name,
-        messages=[
-            {"role": "system", "content": "You compact agent conversation history into accurate, actionable checkpoints."},
-            {"role": "user", "content": prompt},
-        ],
-        **call_kwargs,
-    )
-    summary = str(response.choices[0].message.content or "").strip()
+    try:
+        model_output_limit = int(litellm.get_model_info(model_name).get("max_output_tokens") or 4096)
+    except Exception:
+        model_output_limit = 4096
+    configured_output_limit = int(call_kwargs.get("max_tokens") or 4096)
+    call_kwargs["max_tokens"] = min(max(2048, configured_output_limit), 4096, model_output_limit)
+
+    summary = ""
+    summary_prompt_tokens = 0
+    summary_completion_tokens = 0
+    summary_cost = 0.0
+    summary_attempts = 0
+    for attempt in range(2):
+        response = litellm.completion(
+            model=model_name,
+            messages=[
+                {"role": "system", "content": "You compact agent conversation history into accurate, actionable checkpoints."},
+                {"role": "user", "content": prompt},
+            ],
+            **call_kwargs,
+        )
+        summary_attempts += 1
+        usage = response.usage.model_dump() if hasattr(response.usage, "model_dump") else dict(response.usage or {})
+        summary_prompt_tokens += int(usage.get("prompt_tokens") or usage.get("input_tokens") or 0)
+        summary_completion_tokens += int(usage.get("completion_tokens") or usage.get("output_tokens") or 0)
+        try:
+            call_cost = float(litellm.cost_calculator.completion_cost(response, model=model_name))
+        except Exception:
+            logger.warning("Could not calculate context-summary cost for %s", model_name)
+            call_cost = 0.0
+        summary_cost += call_cost
+        if call_cost > 0:
+            GLOBAL_MODEL_STATS.add(call_cost)
+            session.add_cost(call_cost)
+        session.n_calls += 1
+        summary = str(response.choices[0].message.content or "").strip()
+        if summary:
+            break
+        if attempt == 0:
+            logger.warning("Context summary was empty for %s; retrying once", model_name)
     if not summary:
         return None
-
-    usage = response.usage.model_dump() if hasattr(response.usage, "model_dump") else dict(response.usage or {})
-    try:
-        summary_cost = float(litellm.cost_calculator.completion_cost(response, model=model_name))
-    except Exception:
-        logger.warning("Could not calculate context-summary cost for %s", model_name)
-        summary_cost = 0.0
-    if summary_cost > 0:
-        GLOBAL_MODEL_STATS.add(summary_cost)
-        session.add_cost(summary_cost)
-    session.n_calls += 1
 
     retained = source[cut:]
     first_kept_id = retained[0].get("id") if retained else None
@@ -203,9 +229,11 @@ def compact_session(
         "kept_message_count": len(retained),
         "reason": reason,
         "model": model_name,
-        "summary_prompt_tokens": int(usage.get("prompt_tokens") or usage.get("input_tokens") or 0),
-        "summary_completion_tokens": int(usage.get("completion_tokens") or usage.get("output_tokens") or 0),
+        "summary_prompt_tokens": summary_prompt_tokens,
+        "summary_completion_tokens": summary_completion_tokens,
         "summary_cost_usd": summary_cost,
+        "summary_attempts": summary_attempts,
+        "token_count_basis": "local tokenizer estimate; not provider usage",
     }
     checkpoint_record = {
         **event,

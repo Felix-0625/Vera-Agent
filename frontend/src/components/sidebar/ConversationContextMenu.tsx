@@ -86,45 +86,26 @@ export const ConversationContextMenu: React.FC<ConversationContextMenuProps> = (
           top: safePosition.y,
           zIndex: 9999,
           width: 184,
-          backgroundColor: '#161720',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: 8,
-          padding: 5,
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.65)',
+          backgroundColor: 'color-mix(in srgb, var(--accent-primary) 8%, var(--bg-surface))',
+          border: '1px solid var(--border-default)',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--space-1-25)',
+          boxShadow: 'var(--shadow-lg)',
           display: 'flex',
           flexDirection: 'column',
-          gap: 2,
+          gap: 'var(--space-0-5)',
         }}
       >
         {menuItems.map((item, idx) => (
           <button
             key={idx}
+            className={`conversation-context-menu-item${item.danger ? ' is-danger' : ''}`}
             onClick={() => {
               item.action();
               onClose();
             }}
             style={{
-              width: '100%',
-          padding: '8px 10px',
-              borderRadius: 5,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              fontSize: 12,
               color: item.danger ? 'var(--accent-rose)' : 'var(--text-primary)',
-              backgroundColor: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              textAlign: 'left',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = item.danger
-                ? 'rgba(239, 68, 68, 0.18)'
-                : 'rgba(255, 255, 255, 0.08)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
             }}
           >
             <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>

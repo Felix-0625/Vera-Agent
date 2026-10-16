@@ -1,0 +1,20 @@
+{
+  "name": "vera-agent-bootstrap-github",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows source bootstrapper for the VeraAgent pywebview desktop app",
+  "bin": {
+    "vera-agent": "installer/cli.cjs"
+  },
+  "files": [
+    "installer/cli.cjs",
+    "installer/install.ps1"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Felix-0625/Agents.git"
+  }
+}

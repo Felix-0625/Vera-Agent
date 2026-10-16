@@ -1,11 +1,12 @@
 import os
 import platform
+import shutil
 import signal
 import subprocess
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from vera_agent.exceptions import Submitted
 from vera_agent.tools import edit_file_op, read_file_op, write_file_op
@@ -18,6 +19,7 @@ class LocalEnvironmentConfig(BaseModel):
     timeout: int = 30
     allowed_write_prefix: str | None = None
     allow_external_read: bool = False
+    allowed_read_paths: list[str] = Field(default_factory=list)
     max_output_lines: int = 800
     max_output_bytes: int = 40000
 
@@ -39,6 +41,7 @@ class LocalEnvironment:
                 limit=action.get("limit", 2000),
                 base_dir=cwd_path,
                 allow_external_read=self.config.allow_external_read,
+                allowed_read_paths=self.config.allowed_read_paths,
             )
         elif tool_name == "write":
             target_path_str = str(action.get("path", "")).replace("\\", "/")
@@ -144,28 +147,37 @@ class LocalEnvironment:
 
 def _run(command: str, cwd: str, env: dict[str, str], timeout: int) -> subprocess.CompletedProcess[str]:
     """Like subprocess.run, but kills the whole process group on timeout so no children are orphaned."""
-    if os.name == "nt" and "\n" in command:
-        command = " & ".join(line.strip() for line in command.splitlines() if line.strip())
-    process = subprocess.Popen(
-        command,
-        shell=True,
-        text=True,
-        cwd=cwd,
-        env=env,
-        encoding="utf-8",
-        errors="replace",
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        start_new_session=os.name == "posix",
-    )
+    if os.name == "nt":
+        process_args = [_find_windows_bash(), "--noprofile", "--norc", "-c", command]
+        process = subprocess.Popen(
+            process_args,
+            text=True,
+            cwd=cwd,
+            env=env,
+            encoding="utf-8",
+            errors="replace",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+    else:
+        process = subprocess.Popen(
+            command,
+            shell=True,
+            text=True,
+            cwd=cwd,
+            env=env,
+            encoding="utf-8",
+            errors="replace",
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        )
     try:
         stdout, _ = process.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
         if os.name == "posix":
             os.killpg(process.pid, signal.SIGKILL)
         else:
-            # With shell=True, killing cmd.exe alone can leave its child process
-            # alive with stdout open, which makes communicate() wait past timeout.
             try:
                 subprocess.run(
                     ["taskkill", "/PID", str(process.pid), "/T", "/F"],
@@ -179,3 +191,24 @@ def _run(command: str, cwd: str, env: dict[str, str], timeout: int) -> subproces
         stdout, _ = process.communicate()
         raise subprocess.TimeoutExpired(command, timeout, output=stdout)
     return subprocess.CompletedProcess(command, process.returncode, stdout=stdout)
+
+
+def _find_windows_bash() -> str:
+    """Find Git Bash so Windows executes the same shell language as other platforms."""
+    configured = os.getenv("VERA_AGENT_BASH_PATH")
+    if configured and Path(configured).is_file():
+        return configured
+
+    git_executable = shutil.which("git.exe") or shutil.which("git")
+    if git_executable:
+        git_path = Path(git_executable).resolve()
+        install_roots = [git_path.parent.parent, git_path.parent.parent.parent]
+        for install_root in install_roots:
+            for relative_path in (Path("bin/bash.exe"), Path("usr/bin/bash.exe")):
+                bash = install_root / relative_path
+                if bash.is_file():
+                    return str(bash)
+
+    raise FileNotFoundError(
+        "Git Bash was not found. Install Git for Windows or set VERA_AGENT_BASH_PATH to bash.exe."
+    )

@@ -2,6 +2,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+pytest.importorskip("modal")
+pytest.importorskip("swerex")
+
 from vera_agent.environments.extra.swerex_modal import (
     SwerexModalEnvironment,
     SwerexModalEnvironmentConfig,

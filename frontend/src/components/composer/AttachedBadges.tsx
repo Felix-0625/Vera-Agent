@@ -20,17 +20,17 @@ export const AttachedBadges: React.FC<AttachedBadgesProps> = ({
   }
 
   return (
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '10px 14px 0' }}>
+    <div style={{ display: 'flex', gap: 'var(--space-1-5)', flexWrap: 'wrap', padding: 'var(--space-2-5) var(--space-3-5) 0' }}>
       {ruleTrigger && (
         <span
           style={{
-            fontSize: 11,
+            fontSize: 'var(--font-size-compact)',
             fontWeight: 600,
-            padding: '2px 8px',
+            padding: 'var(--space-0-5) var(--space-2)',
             borderRadius: 'var(--radius-full)',
-            backgroundColor: 'rgba(124, 58, 237, 0.2)',
-            color: '#C4B5FD',
-            border: '1px solid rgba(124, 58, 237, 0.4)',
+            backgroundColor: 'var(--bg-accent-soft)',
+            color: 'var(--accent-primary)',
+            border: '1px solid color-mix(in srgb, var(--accent-primary) 35%, var(--border-subtle))',
           }}
         >
           /{ruleTrigger} 模式
@@ -40,12 +40,12 @@ export const AttachedBadges: React.FC<AttachedBadgesProps> = ({
         <span
           key={s}
           style={{
-            fontSize: 11,
-            padding: '2px 8px',
+            fontSize: 'var(--font-size-compact)',
+            padding: 'var(--space-0-5) var(--space-2)',
             borderRadius: 'var(--radius-full)',
-            backgroundColor: 'rgba(6, 182, 212, 0.15)',
+            backgroundColor: 'var(--bg-info-soft)',
             color: 'var(--accent-cyan)',
-            border: '1px solid rgba(6, 182, 212, 0.3)',
+            border: '1px solid color-mix(in srgb, var(--accent-cyan) 35%, var(--border-subtle))',
           }}
         >
           +{s}
@@ -55,12 +55,12 @@ export const AttachedBadges: React.FC<AttachedBadgesProps> = ({
         <span
           key={m}
           style={{
-            fontSize: 11,
-            padding: '2px 8px',
+            fontSize: 'var(--font-size-compact)',
+            padding: 'var(--space-0-5) var(--space-2)',
             borderRadius: 'var(--radius-full)',
-            backgroundColor: 'rgba(16, 185, 129, 0.15)',
+            backgroundColor: 'var(--bg-success-soft)',
             color: 'var(--accent-emerald)',
-            border: '1px solid rgba(16, 185, 129, 0.3)',
+            border: '1px solid color-mix(in srgb, var(--accent-emerald) 35%, var(--border-subtle))',
           }}
         >
           mcp:{m}

@@ -1,10 +1,18 @@
-import { StrictMode } from 'react'
+import { StrictMode, useLayoutEffect } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
+function StartupApp() {
+  useLayoutEffect(() => {
+    document.getElementById('startup-screen')?.remove()
+  }, [])
+
+  return <App />
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <StartupApp />
   </StrictMode>,
 )

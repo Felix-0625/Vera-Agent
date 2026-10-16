@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import ctypes
 import logging
 import os
 from pathlib import Path
@@ -45,47 +46,23 @@ async def get_current_project(request: Request) -> JSONResponse:
 
 def _choose_directory() -> str | None:
     if os.name == "nt":
-        powershell = shutil.which("powershell.exe") or shutil.which("pwsh.exe") or "powershell.exe"
-        script = (
-            "Add-Type -AssemblyName System.Windows.Forms;\n"
-            "Add-Type -AssemblyName System.Drawing;\n"
-            "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false);\n"
-            "$dialog = [System.Windows.Forms.FolderBrowserDialog]::new();\n"
-            "$dialog.Description = '选择项目文件夹';\n"
-            "$dialog.ShowNewFolderButton = $false;\n"
-            "$owner = [System.Windows.Forms.Form]::new();\n"
-            "$owner.TopMost = $true;\n"
-            "$owner.ShowInTaskbar = $false;\n"
-            "$owner.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None;\n"
-            "$owner.StartPosition = [System.Windows.Forms.FormStartPosition]::Manual;\n"
-            "$owner.Size = [System.Drawing.Size]::new(1, 1);\n"
-            "$owner.Opacity = 0;\n"
-            "$screen = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea;\n"
-            "$owner.Location = [System.Drawing.Point]::new($screen.X + [int]($screen.Width / 2), $screen.Y + [int]($screen.Height / 2));\n"
-            "try {\n"
-            "    $owner.Show();\n"
-            "    $owner.Activate();\n"
-            "    if ($dialog.ShowDialog($owner) -eq [System.Windows.Forms.DialogResult]::OK) {\n"
-            "        [Console]::Out.Write($dialog.SelectedPath);\n"
-            "    }\n"
-            "} finally { $owner.Dispose(); }\n"
-        )
         try:
-            completed = subprocess.run(
-                [powershell, "-NoProfile", "-STA", "-Command", script],
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="ignore",
-                timeout=120,
-            )
-            if completed.returncode:
-                logger.warning("PowerShell folder picker failed: %s", completed.stderr.strip())
-                raise RuntimeError(completed.stderr.strip() or "系统文件夹选择器启动失败")
-            return completed.stdout.strip() or None
-        except Exception as exc:
-            logger.warning(f"PowerShell folder picker error: {exc}")
-            return None
+            from webview.platforms.winforms import OpenFolderDialog
+        except ImportError:
+            return _choose_directory_with_powershell()
+
+        ole32 = ctypes.OleDLL("ole32")
+        ole32.CoInitializeEx.argtypes = [ctypes.c_void_p, ctypes.c_uint]
+        ole32.CoInitializeEx.restype = ctypes.c_long
+        ole32.CoUninitialize.argtypes = []
+        result = ole32.CoInitializeEx(None, 0x2)  # COINIT_APARTMENTTHREADED
+        if result < 0:
+            raise OSError(result, "无法为文件夹选择器初始化 Windows STA 线程")
+        try:
+            selected = OpenFolderDialog.show(title="选择项目文件夹")
+            return selected[0] if selected else None
+        finally:
+            ole32.CoUninitialize()
 
     import tkinter as tk
     from tkinter import filedialog
@@ -98,6 +75,32 @@ def _choose_directory() -> str | None:
         return selected or None
     finally:
         root.destroy()
+
+
+def _choose_directory_with_powershell() -> str | None:
+    """Keep browser-only installs working when the optional desktop extra is absent."""
+    powershell = shutil.which("powershell.exe") or shutil.which("pwsh.exe") or "powershell.exe"
+    script = (
+        "Add-Type -AssemblyName System.Windows.Forms;\n"
+        "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false);\n"
+        "$dialog = [System.Windows.Forms.FolderBrowserDialog]::new();\n"
+        "$dialog.AutoUpgradeEnabled = $true;\n"
+        "$dialog.Description = '选择项目文件夹';\n"
+        "if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { [Console]::Out.Write($dialog.SelectedPath) }\n"
+    )
+    completed = subprocess.run(
+        [powershell, "-NoProfile", "-STA", "-Command", script],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+        timeout=120,
+    )
+    if completed.returncode:
+        detail = completed.stderr.strip() or "系统文件夹选择器启动失败"
+        logger.warning("PowerShell folder picker failed: %s", detail)
+        raise RuntimeError(detail)
+    return completed.stdout.strip() or None
 
 
 async def select_project_folder(request: Request) -> JSONResponse:

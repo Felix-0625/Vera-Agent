@@ -1,51 +1,59 @@
-# ==========================================
-# 学习与参考项目 (无需追踪)
-# ==========================================
+# Local agent state, credentials, sessions, caches, and generated worktrees
+**/.agents/
+**/.mini-coding-agent/
+**/.pi-agent/
+
+# Local reference checkouts kept outside the distributable repository
 mini-coding-agent/
-.mini-coding-agent/
 pi-agent/
 piagent/
 pi_agent/
-.pi-agent/
-DESIGN_NOTES.md
-*.notes.md
-REFACTOR_PROPOSALS.md
+# Legacy nested checkout; the reproducible example lives in examples/mcp-server/
+mcp-sever/
 
-# ==========================================
-# Python 虚拟环境与构建缓存
-# ==========================================
+# Secrets and local environment files
+.env
+.env.*
+*.env
+!*.env.example
+!.env.example
+
+# Python environments, caches, and distributions
 .venv/
-**/venv/
-**/env/
+.bootstrap-venv/
+venv/
+env/
 **/__pycache__/
 *.py[cod]
-*$py.class
 *.so
-.pytest_cache/
-.ruff_cache/
+*.egg-info/
 build/
 dist/
-*.egg-info/
+site/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
 
-# ==========================================
-# 环境变量与密钥配置 (防止 API Key 意外泄露)
-# ==========================================
-.env
-*.env
-.env.*
-!*.env.example
+# Node dependencies and build output
+node_modules/
+**/node_modules/
+**/dist/
+**/build/
+**/coverage/
 
-# ==========================================
-# 运行时轨迹与日志文件
-# ==========================================
+# Native desktop build output
+**/src-tauri/target/
+
+# Agent trajectories, benchmark output, logs, and local databases
 *.traj.json
 last_mini_run.traj.json
 interactive_history.txt
 *.log
 
-# ==========================================
-# 系统与 IDE 文件
-# ==========================================
+# Operating system and editor files
 .DS_Store
 Thumbs.db
 .idea/

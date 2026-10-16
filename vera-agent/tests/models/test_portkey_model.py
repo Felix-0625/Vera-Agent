@@ -6,7 +6,7 @@ import pytest
 
 from vera_agent.models import GLOBAL_MODEL_STATS
 from vera_agent.models.portkey_model import PortkeyModel, PortkeyModelConfig
-from vera_agent.models.utils.actions_toolcall import BASH_TOOL
+from vera_agent.tools import ALL_TOOLS
 
 
 def test_portkey_model_missing_api_key():
@@ -83,7 +83,7 @@ def test_portkey_model_query():
 
                 # Verify the API was called correctly with tools
                 mock_client.chat.completions.create.assert_called_once_with(
-                    model="gpt-4o", messages=messages, tools=[BASH_TOOL]
+                    model="gpt-4o", messages=messages, tools=ALL_TOOLS
                 )
                 # Verify cost calculation was called
                 mock_cost.assert_called_once_with(mock_response.model_copy(), model=None)

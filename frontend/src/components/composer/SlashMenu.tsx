@@ -44,7 +44,7 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({ isOpen, onSelect, onClose 
       key: 'grill-me',
       label: '/grill-me',
       desc: '设计对齐：通过结构化提问帮助理清需求与方案细节',
-      icon: <HelpCircle size={16} color="#A78BFA" />,
+      icon: <HelpCircle size={16} color="var(--accent-primary)" />,
     },
   ];
 
@@ -55,43 +55,42 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({ isOpen, onSelect, onClose 
         position: 'absolute',
         bottom: '100%',
         left: 0,
-        marginBottom: 8,
+        marginBottom: 'var(--space-2)',
         width: 380,
         borderRadius: 'var(--radius-md)',
-        padding: 6,
+        padding: 'var(--space-1-5)',
         boxShadow: 'var(--shadow-lg)',
         zIndex: 50,
       }}
     >
-      <div style={{ padding: '4px 8px 6px', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>
+      <div style={{ padding: 'var(--space-1) var(--space-2) var(--space-1-5)', fontSize: 'var(--font-size-compact)', fontWeight: 600, color: 'var(--text-muted)' }}>
         快捷指令触发器
       </div>
       {items.map((item) => (
         <button
           key={item.key}
+          className="slash-menu-item"
           onClick={() => {
             onSelect(item.key);
             onClose();
           }}
           style={{
             width: '100%',
-            padding: '7px 10px',
+            padding: 'var(--space-1-75) var(--space-2-5)',
             borderRadius: 'var(--radius-sm)',
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: 'var(--space-2-5)',
             justifyContent: 'flex-start',
             textAlign: 'left',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
         >
           {item.icon}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)' }}>
+            <span style={{ fontSize: 'var(--font-size-control)', fontWeight: 600, color: 'var(--text-primary)' }}>
               {item.label}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.3 }}>
+            <span style={{ fontSize: 'var(--font-size-compact)', color: 'var(--text-muted)', lineHeight: 1.3 }}>
               {item.desc}
             </span>
           </div>

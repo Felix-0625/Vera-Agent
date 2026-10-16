@@ -1,4 +1,5 @@
 import re
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -7,6 +8,11 @@ from unittest.mock import Mock, patch
 import pytest
 
 from vera_agent.run.mini import DEFAULT_CONFIG_FILE, app, main
+
+
+def _console_script(name: str) -> str:
+    """Resolve Windows console entry points to their generated .exe launchers."""
+    return str(Path(sys.executable).parent / f"{name}.exe") if os.name == "nt" else name
 
 
 def strip_ansi_codes(text: str) -> str:
@@ -304,6 +310,8 @@ def test_mini_help():
         [sys.executable, "-m", "vera_agent", "--help"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
     )
 
@@ -344,6 +352,8 @@ def test_python_m_vera_agent_help():
         [sys.executable, "-m", "vera_agent", "--help"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
     )
 
@@ -354,9 +364,11 @@ def test_python_m_vera_agent_help():
 def test_mini_script_help():
     """Test that the mini script entry point help works."""
     result = subprocess.run(
-        ["mini", "--help"],
+        [_console_script("mini"), "--help"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
     )
 
@@ -367,9 +379,11 @@ def test_mini_script_help():
 def test_mini_swe_agent_help():
     """Test that mini-swe-agent / vera-agent --help works correctly."""
     result = subprocess.run(
-        ["vera-agent", "--help"],
+        [_console_script("vera-agent"), "--help"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
     )
 
@@ -381,9 +395,11 @@ def test_mini_swe_agent_help():
 def test_mini_extra_help():
     """Test that mini-extra --help works correctly."""
     result = subprocess.run(
-        ["mini-extra", "--help"],
+        [_console_script("mini-extra"), "--help"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
     )
 
@@ -398,9 +414,11 @@ def test_mini_extra_help():
 def test_mini_e_help():
     """Test that mini-e --help works correctly."""
     result = subprocess.run(
-        ["mini-e", "--help"],
+        [_console_script("mini-e"), "--help"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
     )
 
@@ -422,9 +440,11 @@ def test_mini_extra_subcommand_help(subcommand: str, aliases: list[str]):
     """Test that mini-extra subcommands --help work correctly."""
     for alias in aliases:
         result = subprocess.run(
-            ["mini-extra", alias, "--help"],
+            [_console_script("mini-extra"), alias, "--help"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=10,
         )
 
@@ -436,9 +456,11 @@ def test_mini_extra_subcommand_help(subcommand: str, aliases: list[str]):
 def test_mini_extra_config_help():
     """Test that mini-extra config --help works correctly."""
     result = subprocess.run(
-        ["mini-extra", "config", "--help"],
+        [_console_script("mini-extra"), "config", "--help"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=10,
     )
 

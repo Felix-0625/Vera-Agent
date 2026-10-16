@@ -1,4 +1,5 @@
 import React from 'react';
+import logoUrl from '../../assets/logo.png';
 
 interface VeraLogoProps {
   size?: number;
@@ -11,7 +12,7 @@ interface VeraLogoProps {
 export const VeraLogo: React.FC<VeraLogoProps> = ({ size = 24, className = '' }) => {
   return (
     <img
-      src="/logo.png"
+      src={logoUrl}
       alt="VeraAgent Logo"
       width={size}
       height={size}
@@ -21,7 +22,7 @@ export const VeraLogo: React.FC<VeraLogoProps> = ({ size = 24, className = '' })
         verticalAlign: 'middle',
         flexShrink: 0,
         objectFit: 'contain',
-        borderRadius: 4,
+        borderRadius: 'var(--radius-xs)',
       }}
     />
   );

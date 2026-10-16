@@ -1,92 +1,96 @@
-import React, { useEffect, useRef } from 'react';
-import { useLayoutStore } from '../../stores/layoutStore';
-import { DEFAULT_TOOL_TABS, getProjectToolScope, useToolTabsStore } from '../../stores/toolTabsStore';
+import React, { Suspense, useEffect, useRef } from 'react';
+import { useRightSidebarLayout } from '../../stores/rightSidebarLayout';
+import { DEFAULT_TOOL_TABS, getMountedPanelScope, useToolTabsStore } from '../../stores/toolTabsStore';
+import { getActivePanelInstanceKey } from './toolPanelScope';
 import { ToolTabStrip } from './ToolTabStrip';
 import { ToolLauncherGrid } from './ToolLauncherGrid';
-import { DiffViewerTab } from './DiffViewerTab';
-import { FileExplorerTab } from './FileExplorerTab';
-import { FileDocumentTab } from './FileDocumentTab';
-import { TerminalTab } from './TerminalTab';
-import { SideChatTab } from './SideChatTab';
-import { SubagentsTab } from './SubagentsTab';
-import { MetricsTab } from './MetricsTab';
-import { McpTab } from './McpTab';
-import { SkillsTab } from './SkillsTab';
-import { GitFlowTab } from './GitFlowTab';
-import { WorkflowTab } from './WorkflowTab';
 import { useChatStore } from '../../stores/chatStore';
 
-const EMPTY_TOOL_TABS: never[] = [];
+const DiffViewerTab = React.lazy(() => import('./DiffViewerTab').then((module) => ({ default: module.DiffViewerTab })));
+const FileExplorerTab = React.lazy(() => import('./FileExplorerTab').then((module) => ({ default: module.FileExplorerTab })));
+const FileDocumentTab = React.lazy(() => import('./FileDocumentTab').then((module) => ({ default: module.FileDocumentTab })));
+const TerminalTab = React.lazy(() => import('./TerminalTab').then((module) => ({ default: module.TerminalTab })));
+const SideChatTab = React.lazy(() => import('./SideChatTab').then((module) => ({ default: module.SideChatTab })));
+const SubagentsTab = React.lazy(() => import('./SubagentsTab').then((module) => ({ default: module.SubagentsTab })));
+const MetricsTab = React.lazy(() => import('./MetricsTab').then((module) => ({ default: module.MetricsTab })));
+const GitFlowTab = React.lazy(() => import('./GitFlowTab').then((module) => ({ default: module.GitFlowTab })));
+const WorkflowTab = React.lazy(() => import('./WorkflowTab').then((module) => ({ default: module.WorkflowTab })));
+
+const PanelLoading: React.FC = () => (
+  <div role="status" aria-live="polite" style={{ padding: 'var(--space-4)', color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>
+    正在加载工具面板…
+  </div>
+);
 
 export const RightToolsContainer: React.FC = () => {
-  const { rightCollapsed, rightWidth, rightMaximized } = useLayoutStore();
   const activeThreadId = useChatStore((state) => state.activeThreadId);
   const draftConversationId = useChatStore((state) => state.draftConversationId);
   const threads = useChatStore((state) => state.threads);
   const draftProjectId = useChatStore((state) => state.draftProjectId);
-  const activeProjectId = activeThreadId ? threads.find((thread) => thread.thread_id === activeThreadId)?.project_id || null : draftProjectId;
+  const conversationProjectId = activeThreadId ? threads.find((thread) => thread.thread_id === activeThreadId)?.project_id || null : draftProjectId;
   const scope = `conversation:${activeThreadId || draftConversationId || 'draft:initial'}`;
+  const { rightCollapsed, rightWidth, rightMaximized } = useRightSidebarLayout(scope);
+  const tabs = useToolTabsStore((state) => state.tabsByConversation[scope] || DEFAULT_TOOL_TABS);
+  const activeTabId = useToolTabsStore((state) => state.activeTabByConversation[scope] ?? 'tab_initial');
+  const activeTab = tabs.find((t) => t.id === activeTabId);
+  const activeProjectId = activeTab?.projectId || conversationProjectId;
   const projectKey = activeProjectId || 'workspace';
-  const projectScope = getProjectToolScope(activeProjectId);
-  const projectTabs = useToolTabsStore((state) => state.tabsByConversation[projectScope] || DEFAULT_TOOL_TABS);
-  const conversationTabs = useToolTabsStore((state) => state.tabsByConversation[scope] || EMPTY_TOOL_TABS);
-  const requestedActiveScope = useToolTabsStore((state) => state.activeScopeByConversation[scope]);
-  const activeScope = requestedActiveScope === scope && conversationTabs.length ? scope : projectScope;
-  const tabs = [...projectTabs, ...conversationTabs];
-  const activeTabId = useToolTabsStore((state) => state.activeTabByConversation[activeScope] ?? (activeScope === projectScope ? 'tab_initial' : ''));
-  const mountedPanelsByProject = useToolTabsStore((state) => state.mountedPanelsByProject);
+  const mountedPanelsByScope = useToolTabsStore((state) => state.mountedPanelsByScope);
   const markPanelMounted = useToolTabsStore((state) => state.markPanelMounted);
   const adoptConversationTabs = useToolTabsStore((state) => state.adoptConversationTabs);
   const previousScope = useRef(scope);
 
-  const activeTab = tabs.find((t) => t.id === activeTabId);
   useEffect(() => {
-    if (activeTab && !['sidechat', 'subagents', 'fileDocument'].includes(activeTab.toolType)) markPanelMounted(projectKey, activeTab.toolType);
-  }, [activeTab?.toolType, markPanelMounted, projectKey]);
+    if (activeTab && !['sidechat', 'subagents', 'fileDocument', 'terminal'].includes(activeTab.toolType)) {
+      markPanelMounted(scope, projectKey, activeTab.toolType);
+    }
+  }, [activeTab, markPanelMounted, projectKey, scope]);
   useEffect(() => {
     const previous = previousScope.current;
     if (previous !== scope && previous.startsWith('conversation:draft:') && !scope.startsWith('conversation:draft:')) adoptConversationTabs(previous, scope);
     previousScope.current = scope;
   }, [adoptConversationTabs, scope]);
 
-  const renderTool = (toolType: string) => {
+  const renderTool = (toolType: string, panelProjectId: string | null = activeProjectId, isActive = true, conversationKey = scope) => {
     switch (toolType) {
       case 'launcher':
         return <ToolLauncherGrid />;
       case 'diff':
-        return <DiffViewerTab />;
+        return <Suspense fallback={<PanelLoading />}><DiffViewerTab projectId={panelProjectId} /></Suspense>;
       case 'files':
-        return <FileExplorerTab />;
+        return <Suspense fallback={<PanelLoading />}><FileExplorerTab projectId={panelProjectId} /></Suspense>;
       case 'fileDocument':
-        return <FileDocumentTab path={activeTab?.filePath} />;
+        return <Suspense fallback={<PanelLoading />}><FileDocumentTab path={activeTab?.filePath} projectId={activeTab?.projectId ?? panelProjectId} /></Suspense>;
       case 'terminal':
-        return <TerminalTab />;
+        return <Suspense fallback={<PanelLoading />}><TerminalTab projectId={panelProjectId} /></Suspense>;
       case 'sidechat':
-        return <SideChatTab />;
+        return <Suspense fallback={<PanelLoading />}><SideChatTab sessionId={activeTab?.sideChatId || activeTab?.id || ''} /></Suspense>;
       case 'subagents':
-        return <SubagentsTab />;
+        return <Suspense fallback={<PanelLoading />}><SubagentsTab /></Suspense>;
       case 'metrics':
-        return <MetricsTab />;
-      case 'mcp':
-        return <McpTab />;
-      case 'skills':
-        return <SkillsTab />;
+        return <Suspense fallback={<PanelLoading />}><MetricsTab projectId={panelProjectId} /></Suspense>;
       case 'gitflow':
-        return <GitFlowTab />;
+        return <Suspense fallback={<PanelLoading />}><GitFlowTab projectId={panelProjectId} /></Suspense>;
       case 'workflow':
-        return <WorkflowTab />;
+        return <Suspense fallback={<PanelLoading />}><WorkflowTab projectId={panelProjectId} conversationKey={conversationKey} /></Suspense>;
       default:
         return <ToolLauncherGrid />;
     }
   };
 
   const activeToolType = activeTab?.toolType || null;
+  // The shell output/working directory follows the project, but terminal input
+  // and command history are UI state and must reset when the conversation changes.
+  const activePanelKey = getActivePanelInstanceKey(scope, activeTab?.id, activeToolType);
 
   return (
     <aside
-      className="glass-panel"
+      className={`glass-panel right-tools-panel${rightMaximized ? ' is-maximized' : ''}`}
       style={{
         width: rightCollapsed ? 0 : rightMaximized ? 'auto' : rightWidth,
+        maxWidth: rightMaximized ? 'none' : '38vw',
+        minWidth: 0,
+        boxSizing: 'border-box',
         height: '100%',
         flexDirection: 'column',
         backgroundColor: 'var(--bg-surface)',
@@ -97,15 +101,19 @@ export const RightToolsContainer: React.FC = () => {
         zIndex: rightMaximized ? 40 : 10,
       }}
     >
-      <ToolTabStrip conversationKey={scope} projectScope={projectScope} projectTabs={projectTabs} conversationTabs={conversationTabs} activeScope={activeScope} activeTabId={activeTabId} projectId={activeProjectId} />
+      <ToolTabStrip conversationKey={scope} tabs={tabs} activeTabId={activeTabId} projectId={activeProjectId} />
       <div style={{ flex: 1, overflow: 'hidden' }}>
-        {Object.entries(mountedPanelsByProject).flatMap(([cachedProjectKey, toolTypes]) => toolTypes.filter((toolType) => !['sidechat', 'subagents', 'fileDocument'].includes(toolType)).map((toolType) => (
-          <div key={`${cachedProjectKey}:${toolType}`} style={{ display: cachedProjectKey === projectKey && activeToolType === toolType ? 'block' : 'none', height: '100%' }}>
-            {renderTool(toolType)}
+        {Object.entries(mountedPanelsByScope).flatMap(([cachedScopeKey, panelGroup]) => panelGroup.toolTypes.filter((toolType) => !['sidechat', 'subagents', 'fileDocument', 'terminal'].includes(toolType)).map((toolType) => {
+          const activeScopeKey = getMountedPanelScope(scope, projectKey);
+          const isActive = cachedScopeKey === activeScopeKey && activeToolType === toolType;
+          const panelProjectId = panelGroup.projectKey === 'workspace' ? null : panelGroup.projectKey;
+          return (
+          <div key={`${cachedScopeKey}:${toolType}`} style={{ display: isActive ? 'block' : 'none', height: '100%' }}>
+            {renderTool(toolType, panelProjectId, isActive, panelGroup.conversationKey)}
           </div>
-        )))}
-        {(['sidechat', 'subagents', 'fileDocument'].includes(activeToolType || '')) && <div style={{ height: '100%' }}>{renderTool(activeToolType || '')}</div>}
-        {!activeToolType && <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 13 }}>已关闭所有标签页，点击顶部 [+] 开辟新工具</div>}
+        );}))}
+        {(['sidechat', 'subagents', 'fileDocument', 'terminal'].includes(activeToolType || '')) && <div key={activePanelKey} style={{ height: '100%' }}>{renderTool(activeToolType || '')}</div>}
+        {!activeToolType && <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 'var(--font-size-md)' }}>已关闭所有标签页，点击顶部 [+] 开辟新工具</div>}
       </div>
     </aside>
   );

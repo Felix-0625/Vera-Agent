@@ -71,9 +71,9 @@ def test_local_environment_custom_cwd():
     with tempfile.TemporaryDirectory() as temp_dir:
         env = LocalEnvironment(cwd=temp_dir)
 
-        result = env.execute({"command": "pwd"})
+        result = env.execute({"command": "pwd -W" if os.name == "nt" else "pwd"})
         assert result["returncode"] == 0
-        assert temp_dir in result["output"]
+        assert temp_dir.replace("\\", "/") in result["output"].replace("\\", "/")
 
 
 def test_local_environment_cwd_parameter_override():
@@ -82,9 +82,9 @@ def test_local_environment_cwd_parameter_override():
         env = LocalEnvironment(cwd=temp_dir1)
 
         # Execute with different cwd parameter
-        result = env.execute({"command": "pwd"}, cwd=temp_dir2)
+        result = env.execute({"command": "pwd -W" if os.name == "nt" else "pwd"}, cwd=temp_dir2)
         assert result["returncode"] == 0
-        assert temp_dir2 in result["output"]
+        assert temp_dir2.replace("\\", "/") in result["output"].replace("\\", "/")
 
 
 def test_local_environment_default_cwd():
@@ -92,9 +92,9 @@ def test_local_environment_default_cwd():
     env = LocalEnvironment()
     current_dir = os.getcwd()
 
-    result = env.execute({"command": "pwd"})
+    result = env.execute({"command": "pwd -W" if os.name == "nt" else "pwd"})
     assert result["returncode"] == 0
-    assert current_dir in result["output"]
+    assert current_dir.replace("\\", "/") in result["output"].replace("\\", "/")
 
 
 def test_local_environment_command_failure():
