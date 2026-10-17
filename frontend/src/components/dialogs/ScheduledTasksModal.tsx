@@ -8,10 +8,7 @@ import { ScheduledTaskItem } from './ScheduledTaskItem';
 import { Button } from '../common/Button';
 import { TextInput } from '../common/Field';
 
-/**
- * 模态弹窗 3 - 定时任务
- * 严格按照 Penpot 原型 "Scheduled Tasks · 定时任务"
- */
+
 export const ScheduledTasksModal: React.FC = () => {
   const { scheduledTasksOpen, scheduledTasksVersion, setScheduledTasksOpen, setNewTaskDialogOpen } = useLayoutStore();
   const [tasks, setTasks] = useState<ScheduledTask[]>([]);
@@ -29,6 +26,7 @@ export const ScheduledTasksModal: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Opening the dialog and task changes trigger an API refresh with loading/error feedback.
     if (scheduledTasksOpen) loadTasks();
   }, [scheduledTasksOpen, scheduledTasksVersion, loadTasks]);
 
@@ -67,7 +65,7 @@ export const ScheduledTasksModal: React.FC = () => {
       width={720}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-        {/* 顶部标题与新建按钮对齐 Penpot */}
+        {}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
@@ -88,7 +86,7 @@ export const ScheduledTasksModal: React.FC = () => {
           </Button>
         </div>
 
-        {/* 搜索框 */}
+        {}
         <div style={{ position: 'relative' }}>
           <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: 12, top: 11 }} />
           <TextInput
@@ -101,7 +99,7 @@ export const ScheduledTasksModal: React.FC = () => {
         </div>
 
         {error && <div role="alert" style={{ color: 'var(--accent-rose)', fontSize: 'var(--font-size-sm)' }}>{error}</div>}
-        {/* 任务列表或空态 */}
+        {}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', maxHeight: 420, overflowY: 'auto' }}>
           {error && tasks.length === 0 ? null : filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px var(--space-5)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

@@ -1,9 +1,15 @@
-# VeraAgent introduction page
+# VeraAgent website
 
-This is a dependency-free static site. The old landing page and its dedicated styles and scripts have been removed. There is currently no `index.html` at the site root. The documentation (`docs/index.html`) and interactive mock playground (`playground/index.html`) remain available as separate routes. The playground is local JavaScript only. It does not call the desktop application or a model provider, and it never reads the visitor's files.
+The dependency-free static site keeps three experiences on separate routes:
 
-## Deploy to GitHub Pages
+- `index.html`: product/design landing page. It shows a scripted workstation illustration and a lightweight CSS animation; it does not claim to be a recording of live Agent execution.
+- `docs/index.html`: documentation with a left-side section index.
+- `playground/index.html`: interactive mock built from local JavaScript fixtures. It does not call the desktop app, a model provider, or the visitor's files.
 
-The repository workflow `.github/workflows/website-pages.yml` is manual (`workflow_dispatch`). The site root has no homepage until the landing page is recreated, so do not trigger public deployment yet.
+All pages share `assets/site.css`, `assets/site.js`, and `assets/favicon.svg`. Run `python website/check_site.py` to verify the three page entry points, local links, fragment anchors, scripts, styles, and images. The root page remains free of build dependencies.
 
-For another static host, upload this directory as the site root. No environment variables or build step are required.
+## GitHub Pages
+
+`.github/workflows/website-pages.yml` deploys the `website/` directory when manually triggered. It first validates local routes and assets. GitHub Pages must already be enabled for the repository and configured to use GitHub Actions. The workflow has not been triggered from this workspace; a successful local validation does not prove a public deployment.
+
+For another static host, publish the contents of this directory as the site root. No server-side secrets or environment variables are required.

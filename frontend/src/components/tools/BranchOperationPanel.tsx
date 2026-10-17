@@ -11,9 +11,7 @@ interface BranchOperationPanelProps {
   onMergeReview: (name: string) => Promise<void>;
 }
 
-/**
- * 右侧工具 9 - 分支操作与三方审查结果面板
- */
+
 export const BranchOperationPanel: React.FC<BranchOperationPanelProps> = ({
   selectedBranch,
   currentBranch,

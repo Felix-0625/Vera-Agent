@@ -1,19 +1,92 @@
 <!doctype html>
-<html lang="zh-CN"><head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b0d12">
-  <meta name="description" content="在浏览器中体验 VeraAgent 对话和工具流程的本地模拟演示。"><title>交互演示 — VeraAgent</title>
-  <link rel="stylesheet" href="../assets/site.css"><script src="../assets/site.js" defer></script><script src="./playground.js" defer></script>
-</head><body>
-  <header class="topbar"><div class="nav-shell"><a class="brand" href="./"><span class="brand-mark">V</span><span>VeraAgent</span></a><nav class="main-nav" aria-label="主导航"><a class="nav-link" href="../docs/">文档</a><a class="nav-link is-active" href="./" aria-current="page">交互演示</a><a class="nav-github" href="https://github.com/Felix-0625/Agents" target="_blank" rel="noreferrer">GitHub</a></nav><div class="header-actions"><div class="language-switch" role="group" aria-label="语言"><button class="is-active" type="button" aria-pressed="true">中文</button><button type="button" disabled title="英文版暂未提供">EN</button></div><button class="menu-toggle" type="button" aria-label="打开导航" aria-expanded="false"><span></span><span></span></button></div></div></header>
-  <main class="playground-page"><div class="playground-wrap">
-    <div class="playground-heading"><div><p class="eyebrow">INTERACTIVE PREVIEW</p><h1>试着给 Agent 一个项目任务。</h1></div><span class="mock-label"><i></i>模拟演示 · 本地数据</span></div>
-    <div class="playground-note">这是前端交互原型。对话、工具和项目均为预设模拟数据；不会连接真实模型、访问你的文件或调用后端服务。</div>
-    <section class="playground-app" aria-label="模拟的 VeraAgent 项目工作区">
-      <aside class="demo-sidebar"><div class="demo-sidebar-title">选择演示任务</div><button class="scenario-button is-selected" type="button" data-scenario="login">检查登录失败处理<span>代码理解 · 测试</span></button><button class="scenario-button" type="button" data-scenario="diff">总结当前变更<span>Git · 文件差异</span></button><button class="scenario-button" type="button" data-scenario="context">解释项目上下文<span>规则 · 会话</span></button></aside>
-      <section class="demo-chat" aria-label="模拟对话"><div class="demo-chat-head"><span id="demo-project">vera-demo / 登录流程</span><span>Mock Agent · 无真实模型</span></div><div class="demo-messages" id="demo-messages" aria-live="polite"></div><form class="demo-composer" id="demo-form"><textarea id="demo-input" rows="2" placeholder="试试输入一个任务……" aria-label="输入模拟任务"></textarea><div class="composer-actions"><span class="composer-hint">回车发送 · Shift + 回车换行</span><button class="send-button" type="submit" aria-label="发送">↗</button></div></form></section>
-      <aside class="demo-inspector"><div class="inspector-tabs" role="tablist" aria-label="演示检查器"><button class="is-active" type="button" role="tab" aria-selected="true" data-panel="trace">执行过程</button><button type="button" role="tab" aria-selected="false" data-panel="files">文件改动</button><button type="button" role="tab" aria-selected="false" data-panel="context">上下文</button></div><div class="inspector-panel" id="inspector-panel"></div></aside>
-    </section>
-    <p class="playground-footnote">演示中的进度和工具返回均由浏览器脚本生成，不能用于判断真实模型效果、后端逻辑或安全性。<a class="card-link" href="../docs/">查看项目文档 ↗</a></p>
-  </div></main>
-  <footer class="site-footer"><div class="footer-shell"><a class="brand" href="./"><span class="brand-mark">V</span><span>VeraAgent</span></a><p>演示以模拟数据为基础，不会修改真实项目。</p><nav><a href="../docs/">文档</a><a href="https://github.com/Felix-0625/Agents">GitHub</a></nav><small>© VeraAgent contributors · 持续开发中</small></div></footer>
-</body></html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b0d12">
+    <meta name="description" content="在本地模拟演示中，了解 VeraAgent 如何把任务板、Agent 协作和工作流连在一起。">
+    <title>交互演示 — VeraAgent</title>
+    <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="../assets/site.css">
+    <script src="../assets/site.js" defer></script>
+    <script src="./playground.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="nav-shell">
+        <a class="brand" href="../"><span class="brand-mark">V</span><span>VeraAgent</span></a>
+        <nav class="main-nav" aria-label="主导航">
+          <a class="nav-link" href="../">设计</a>
+          <a class="nav-link" href="../docs/">文档</a>
+          <a class="nav-link is-active" href="./" aria-current="page">交互演示</a>
+          <a class="nav-github" href="https://github.com/Felix-0625/Agents" target="_blank" rel="noreferrer">GitHub</a>
+        </nav>
+        <div class="header-actions">
+          <div class="language-switch" role="group" aria-label="语言">
+            <button class="is-active" type="button" aria-pressed="true">中文</button>
+            <button type="button" disabled title="英文版暂未提供">EN</button>
+          </div>
+          <button class="menu-toggle" type="button" aria-label="打开导航" aria-expanded="false"><span></span><span></span></button>
+        </div>
+      </div>
+    </header>
+
+    <main class="playground-page">
+      <div class="playground-wrap">
+        <div class="playground-heading">
+          <div>
+            <h1>从一条任务，看见协作如何推进</h1>
+            <p>选取任务，启动模拟运行，再查看 Agent 分工、工作流节点和最终结果。</p>
+          </div>
+          <span class="mock-label"><i aria-hidden="true"></i>本地模拟 · 不连接模型</span>
+        </div>
+        <p class="playground-note">所有内容均由当前页面脚本生成。不会读取文件、访问后端、调用模型或改变项目数据；输入只用于展示任务如何进入一次运行。</p>
+
+        <section class="playground-app" aria-label="VeraAgent 多 Agent 工作站模拟演示">
+          <aside class="demo-sidebar" aria-label="示例项目任务板">
+            <div class="demo-project"><span class="project-glyph" aria-hidden="true">V</span><span><b>VeraAgent 示例项目</b><small>项目任务板</small></span></div>
+            <div class="demo-list-head"><span>待处理任务</span><span id="task-count">3</span></div>
+            <div id="scenario-list" class="scenario-list"></div>
+            <p class="sidebar-foot">点击任务切换示例</p>
+          </aside>
+
+          <section class="demo-chat" aria-label="主 Agent 对话演示">
+            <div class="demo-chat-head">
+              <div><b id="demo-project">示例项目</b><span id="demo-task-id">VA-101</span></div>
+              <span class="chat-status"><i aria-hidden="true"></i><span id="run-status">待开始</span></span>
+            </div>
+            <div class="demo-messages" id="demo-messages" aria-live="polite" aria-relevant="additions text"></div>
+            <form class="demo-composer" id="demo-form">
+              <label class="sr-only" for="demo-input">本次任务说明</label>
+              <textarea id="demo-input" rows="2" maxlength="1200" placeholder="补充本次任务目标……"></textarea>
+              <div class="composer-actions">
+                <span class="composer-hint">任务内容仅在本地演示；阶段结果为预设示例。</span>
+                <button class="send-button" type="submit">开始演示</button>
+              </div>
+            </form>
+          </section>
+
+          <aside class="demo-inspector" aria-label="运行详情">
+            <div class="inspector-tabs" role="tablist" aria-label="运行详情面板">
+              <button class="is-active" id="tab-trace" type="button" role="tab" aria-selected="true" aria-controls="inspector-panel" data-panel="trace">执行</button>
+              <button id="tab-workflow" type="button" role="tab" aria-selected="false" aria-controls="inspector-panel" data-panel="workflow">工作流</button>
+              <button id="tab-team" type="button" role="tab" aria-selected="false" aria-controls="inspector-panel" data-panel="team">协作</button>
+              <button id="tab-result" type="button" role="tab" aria-selected="false" aria-controls="inspector-panel" data-panel="result">结果</button>
+            </div>
+            <div class="inspector-panel" id="inspector-panel" role="tabpanel" aria-labelledby="tab-trace"></div>
+          </aside>
+        </section>
+        <p class="playground-footnote">这段模拟用于理解界面关系，不代表真实 Agent 的推理或工具执行效果。<a class="card-link" href="../docs/">查看实现边界与使用说明</a></p>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-shell">
+        <a class="brand" href="../"><span class="brand-mark">V</span><span>VeraAgent</span></a>
+        <p>本地项目中的 Agent 工作站。</p>
+        <nav><a href="../">设计</a><a href="../docs/">文档</a><a href="https://github.com/Felix-0625/Agents">GitHub</a></nav>
+        <small>© VeraAgent contributors · 持续开发中</small>
+      </div>
+    </footer>
+  </body>
+</html>

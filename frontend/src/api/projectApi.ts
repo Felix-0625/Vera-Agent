@@ -96,16 +96,17 @@ export async function composeGroup(data: {
 
 export async function createGroupInstance(data: {
   project_id: string; template_id?: string; template_name?: string; group_mode: 'workflow' | 'architecture';
-  name: string; description?: string; nodes: import('../types/project').WorkflowNodeDefinition[];
+  name: string; goal?: string; background?: string; description?: string; nodes: import('../types/project').WorkflowNodeDefinition[];
   edges: import('../types/project').WorkflowEdgeDefinition[]; layout?: Record<string, unknown>;
 }): Promise<{ group: Group }> {
   return request('/api/groups/instances', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export interface OrchestrationRun {
-  run_id: string; status: string; input: string;
+  run_id: string; status: string; input: string; final_output?: string; error?: string;
   sessions: Array<{ node_id: string; thread_id: string; title: string; prompt_template: string }>;
-  nodes: Array<{ node_id: string; status: string; output?: string }>;
+  nodes: Array<{ node_id: string; status: string; output?: string; error?: string; inputs?: Array<{ node_id: string; title: string; relation?: string; label?: string; output: string }> }>;
+  events?: Array<{ type: string; at: number; node_id?: string; status?: string; from?: string; to?: string }>;
 }
 
 export async function createGroupRun(groupId: string, data: { project_id: string; confirmation: 'Y'; input: string; node_ids?: string[] }): Promise<{ run: OrchestrationRun }> {

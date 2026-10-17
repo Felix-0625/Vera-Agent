@@ -51,7 +51,10 @@ export const SettingsRulesTab: React.FC = () => {
     }
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Load persisted settings when this tab mounts.
+    void load();
+  }, []);
 
   const toggleSetting = async (key: 'include_agents_md' | 'memory_enabled', checked: boolean) => {
     setBusy(true); setError('');

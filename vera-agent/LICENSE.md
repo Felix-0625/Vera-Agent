@@ -1,5 +1,6 @@
 MIT License
 
+Copyright (c) 2026 VeraAgent contributors
 Copyright (c) 2025 Kilian A. Lieret and Carlos E. Jimenez
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

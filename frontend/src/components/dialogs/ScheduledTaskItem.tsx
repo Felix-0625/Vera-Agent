@@ -12,9 +12,7 @@ interface ScheduledTaskItemProps {
   onDelete: (t: ScheduledTask) => void;
 }
 
-/**
- * 单个计划任务卡片项
- */
+
 export const ScheduledTaskItem: React.FC<ScheduledTaskItemProps> = ({
   task,
   onRun,

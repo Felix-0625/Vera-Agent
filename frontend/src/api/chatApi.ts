@@ -17,7 +17,9 @@ export interface StreamChatParams {
   context_update?: boolean;
   workflow_input?: string;
   workflow_upstream?: string;
-  workflow_stage?: 'supervisor_review';
+  workflow_context?: { task: string; upstream: Array<{ node_id: string; title: string; relation?: string; label?: string; output: string }> };
+  workflow_control?: { type: 'condition' | 'loop'; condition: string; max_iterations?: number };
+  workflow_stage?: 'supervisor_review' | 'control_decision';
   onThinking?: (step: number, content: string) => void;
   onTextChunk?: (chunk: string) => void;
   onToolCall?: (actionId: string, toolName: string, args: Record<string, unknown>) => void;
@@ -152,6 +154,8 @@ export function streamChat(params: StreamChatParams): () => void {
           context_update: params.context_update,
           workflow_input: params.workflow_input,
           workflow_upstream: params.workflow_upstream,
+          workflow_context: params.workflow_context,
+          workflow_control: params.workflow_control,
           workflow_stage: params.workflow_stage,
         }),
         signal: controller.signal,

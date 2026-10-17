@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
-function StartupApp() {
+export function StartupApp() {
   useLayoutEffect(() => {
     document.getElementById('startup-screen')?.remove()
   }, [])

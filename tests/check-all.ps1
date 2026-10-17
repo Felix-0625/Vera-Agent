@@ -15,6 +15,20 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Backend tests failed with exit code $LASTEXITCODE." }
 } finally { Pop-Location }
 
+Write-Host '== MCP example stdio smoke check ==' -ForegroundColor Cyan
+Push-Location $root
+try {
+    & $python examples\mcp-server\test_client.py
+    if ($LASTEXITCODE -ne 0) { throw "MCP example check failed with exit code $LASTEXITCODE." }
+} finally { Pop-Location }
+
+Write-Host '== Static website links and assets ==' -ForegroundColor Cyan
+Push-Location $root
+try {
+    & $python website\check_site.py
+    if ($LASTEXITCODE -ne 0) { throw "Static website validation failed with exit code $LASTEXITCODE." }
+} finally { Pop-Location }
+
 Write-Host '== Frontend lint ==' -ForegroundColor Cyan
 Push-Location (Join-Path $root 'frontend')
 try {

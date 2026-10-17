@@ -8,7 +8,7 @@ $python = Join-Path $root 'vera-agent\.venv\Scripts\python.exe'
 try {
     if (-not (Test-Path $python)) { throw "找不到后端 Python 环境：$python" }
     & $python -c 'import webview'
-    if ($LASTEXITCODE -ne 0) { throw '未安装桌面窗口依赖，请在 vera-agent 目录运行：uv sync --extra desktop' }
+    if ($LASTEXITCODE -ne 0) { throw '未安装桌面窗口依赖，请在 vera-agent 目录运行：uv sync --locked --no-dev --extra desktop' }
 
     Push-Location $frontend
     try {

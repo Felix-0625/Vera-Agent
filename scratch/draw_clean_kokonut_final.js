@@ -1,5 +1,4 @@
 // ==============================================================================
-// Interface 1: 智能体协作主工作台 (KokonutUI 极简高级夜色玻璃拟态)
 // Design Reference: KokonutUI Dashboard & StyleKit Nocturne Glass
 // ==============================================================================
 
@@ -84,7 +83,6 @@ versionText.fontWeight = "600";
 versionText.fills = [{ fillColor: "#8E929E" }];
 addChild(versionText, 152, 27);
 
-// '+ 新建对话' Button (KokonutUI Primary Action Button)
 const newChatBtn = penpot.createRectangle();
 newChatBtn.name = "New_Chat_Btn";
 newChatBtn.resize(220, 38);
@@ -107,7 +105,6 @@ newChatShortcut.fontSize = 10;
 newChatShortcut.fills = [{ fillColor: "#5C6170" }];
 addChild(newChatShortcut, 188, 81);
 
-// Section 1 Header: 概览 OVERVIEW
 const navHeader = penpot.createText("概览 OVERVIEW");
 navHeader.fontSize = 10;
 navHeader.fontWeight = "700";
@@ -155,7 +152,6 @@ createNavRow("Nav_Tasks", "计划任务", taskSvg, 228, false);
 const projectSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`;
 createNavRow("Nav_Projects", "项目空间", projectSvg, 268, false);
 
-// Section 2 Header: 最近会话 SESSIONS
 const sessionHeader = penpot.createText("最近会话 SESSIONS");
 sessionHeader.fontSize = 10;
 sessionHeader.fontWeight = "700";
@@ -245,7 +241,6 @@ tabDivider.resize(340, 1);
 tabDivider.fills = [{ fillColor: "#1E2028" }];
 addChild(tabDivider, 1260, 56);
 
-// Section Header: 快捷工具 (TOOLS)
 const toolsHeaderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`;
 createSvg(toolsHeaderSvg, 1276, 74);
 
@@ -306,35 +301,30 @@ function createKokonutToolCard(x, y, title, subtitle, shortcut, squircleBg, icon
   addChild(badgeText, x + 14, y + 48);
 }
 
-// Row 1: 变更 & 终端
 const diffSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>`;
 createKokonutToolCard(1276, 104, "变更", "Git 暂存审查", "Ctrl+Shift+G", "#1E1B4B", "#818CF8", diffSvg);
 
 const termSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>`;
 createKokonutToolCard(1438, 104, "终端", "沙箱 Bash", "Ctrl+`", "#064E3B", "#34D399", termSvg);
 
-// Row 2: 文件 & 侧边聊天
 const fileSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>`;
 createKokonutToolCard(1276, 188, "文件", "工作区文件树", "Ctrl+P", "#1E3A8A", "#60A5FA", fileSvg);
 
 const sideChatSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
 createKokonutToolCard(1438, 188, "侧边聊天", "独立对话沙盒", "Ctrl+Alt+S", "#581C87", "#C084FC", sideChatSvg);
 
-// Row 3: 子智能体 & 指标监控
 const subagentSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`;
 createKokonutToolCard(1276, 272, "子智能体", "调研与质检员", "只读协作", "#831843", "#F472B6", subagentSvg);
 
 const metricsSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`;
 createKokonutToolCard(1438, 272, "指标监控", "Token 与成本", "实时跟踪", "#78350F", "#FBBF24", metricsSvg);
 
-// Row 4: MCP 市场 & Skill 市场
 const mcpSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="m4.93 4.93 4.24 4.24"/><path d="M2 12h6"/><path d="m4.93 19.07 4.24-4.24"/><path d="M12 22v-6"/><path d="m19.07 19.07-4.24-4.24"/><path d="M22 12h-6"/><path d="m19.07 4.93-4.24 4.24"/></svg>`;
 createKokonutToolCard(1276, 356, "MCP 市场", "协议工具扩展", "已就绪", "#164E63", "#22D3EE", mcpSvg);
 
 const skillSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
 createKokonutToolCard(1438, 356, "Skill 市场", "工作流生态", "已同步", "#4C1D95", "#A78BFA", skillSvg);
 
-// Section 2: 系统状态面板 (KokonutUI Recent Activity Style)
 const statusCard = penpot.createRectangle();
 statusCard.resize(308, 140);
 statusCard.borderRadius = 10;

@@ -24,12 +24,7 @@ interface ProjectRowProps {
   onRenameThread?: (thread: Thread, title: string | null) => Promise<void>;
 }
 
-/**
- * 侧边栏单个项目行与内嵌对话
- * 严格按照用户 Penpot 截图：
- * [📁] 项目名称         [+]
- *     对话        [📌] [...]
- */
+
 export const ProjectRow: React.FC<ProjectRowProps> = ({
   project,
   threads,
@@ -108,7 +103,7 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-0-5)' }}>
-      {/* 项目行 */}
+      {}
       <div
         style={{
           display: 'flex',
@@ -139,7 +134,7 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
           </span>
         </div>
 
-        {/* 右侧动作按钮区：两个方框叠放 (创建分组) + '+' (新建对话) */}
+        {}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-0-5)' }}>
           <IconButton onClick={openMenu} label={`${project.name} 项目操作`} aria-expanded={!!menuPosition} size="sm"><MoreVertical size={13}/></IconButton>
           <IconButton
@@ -179,7 +174,7 @@ export const ProjectRow: React.FC<ProjectRowProps> = ({
         </div>
       </div>
 
-      {/* 展开的对话列表 (前面无图标，缩进对齐截图) */}
+      {}
       {isExpanded && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           {projectGroups.map((group) => {

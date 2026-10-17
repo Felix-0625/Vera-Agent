@@ -8,11 +8,7 @@ import { ProjectRow } from './ProjectRow';
 import { ConversationContextMenu } from './ConversationContextMenu';
 import { updateThread, deleteThread } from '../../api/chatApi';
 
-/**
- * 左侧边栏 - 项目树与最近会话管理组件
- * 严格按照 Penpot 用户截图布局：
- * 项目栏目与项目内对话列表
- */
+
 export const ProjectTree: React.FC = () => {
   const { currentProject, projectsHistory, updateProject, deleteProject } = useProjectStore();
   const {
@@ -81,7 +77,7 @@ export const ProjectTree: React.FC = () => {
 
   return (
     <div style={{ padding: 'var(--space-0-5) var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3-5)' }}>
-      {/* 1. "项目" 栏目 */}
+      {}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1-5)' }}>
         <div
           style={{

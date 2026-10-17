@@ -9,9 +9,7 @@ import { ResizableTreeLayout } from './ResizableTreeLayout';
 import { SelectField } from '../common/Field';
 import { IconButton } from '../common/IconButton';
 
-/**
- * 右侧工具 1 - 差异对比与工作树检查点面板
- */
+
 export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ projectId: projectIdOverride }) => {
   const { activeThreadId, threads, draftProjectId } = useChatStore();
   const [data, setData] = useState<WorktreeDiffData | null>(null);
@@ -85,16 +83,19 @@ export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ project
   }, [projectId]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- The selected project determines which branch and commit refs are displayed.
     void loadRefs();
   }, [loadRefs]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Project/ref changes must request the matching worktree diff and loading state.
     if (!projectId) void loadDiff('');
     else if (refsLoadedFor === projectId) void loadDiff(selectedCommit);
   }, [loadDiff, projectId, selectedCommit, refsLoadedFor]);
 
   useEffect(() => {
     let cancelled = false;
+    // oxlint-disable-next-line react/set-state-in-effect -- Clear the prior file preview immediately when its selection changes.
     setSourcePreview(null);
     setPreviewMessage(null);
     if (!selectedFile || selectedPatch) return () => { cancelled = true; };
@@ -135,7 +136,7 @@ export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ project
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-workspace)' }}>
-      {/* 顶部操作栏 */}
+      {}
       <div
         style={{
           padding: 'var(--space-2-5) var(--space-4)',
@@ -177,7 +178,7 @@ export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ project
 
       {error && <div role="alert" style={{ padding: 'var(--space-1-75) var(--space-3-5)', color: 'var(--accent-rose)', background: 'color-mix(in srgb, var(--accent-rose) 8%, var(--bg-surface))', fontSize: 'var(--font-size-compact)' }}>{error}</div>}
 
-      {/* 左右分栏: 左侧文件列表，右侧代码统一对比 */}
+      {}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
         {!projectId ? <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 'var(--font-size-md)' }}>当前对话未绑定项目，没有可显示的变更</div> : <ResizableTreeLayout collapsed={treeCollapsed} onToggle={() => setTreeCollapsed((value) => !value)} primary={<DiffCodeView fileName={selectedFile} sourceText={sourcePreview} message={previewMessage} diffText={selectedPatch} />} secondary={<DiffFileList data={data} selectedFile={selectedFile} onSelect={setSelectedFile} onStage={handleStage} onDiscard={handleDiscard} />} />}
       </div>

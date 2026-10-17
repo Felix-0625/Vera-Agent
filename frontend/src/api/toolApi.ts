@@ -8,6 +8,7 @@ import {
   GitFlowTopology,
   FilePreviewData,
   WorktreeCommitRef,
+  WorkItem,
 } from '../types/tool';
 
 // 1. Worktree
@@ -121,6 +122,31 @@ export async function execTerminalCommand(command: string, groupId?: string, tim
 // 4. Scheduled Tasks
 export async function fetchScheduledTasks(): Promise<{ tasks: ScheduledTask[] }> {
   return request('/api/tasks/scheduled');
+}
+
+// Project work items are separate from timed Agent prompts in `/api/tasks/scheduled`.
+export async function fetchWorkItems(projectId: string): Promise<{ items: WorkItem[] }> {
+  const query = new URLSearchParams({ project_id: projectId });
+  return request(`/api/taskboard/tasks?${query.toString()}`);
+}
+
+export async function createWorkItem(data: {
+  project_id: string;
+  title: string;
+  description?: string;
+  status?: WorkItem['status'];
+  priority?: WorkItem['priority'];
+  labels?: string[];
+}): Promise<{ item: WorkItem }> {
+  return request('/api/taskboard/tasks', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export async function updateWorkItem(id: string, data: Partial<WorkItem> & { version: number }): Promise<{ item: WorkItem }> {
+  return request(`/api/taskboard/tasks/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export async function archiveWorkItem(id: string): Promise<{ status: string; id: string }> {
+  return request(`/api/taskboard/tasks/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 export async function createScheduledTask(task: {

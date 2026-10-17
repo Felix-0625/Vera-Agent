@@ -15,9 +15,7 @@ interface McpMarketListProps {
   dialog?: boolean;
 }
 
-/**
- * 右侧工具 7 - MCP 市场插件列表组件
- */
+
 export const McpMarketList: React.FC<McpMarketListProps> = ({ market, onInstall, onSearch, onLoadMore, hasMore = false, loading = false, error, installedIds = [], dialog = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);

@@ -84,7 +84,7 @@ try {
         & $bootstrapPython -m pip install 'uv==0.11.15'
         if ($LASTEXITCODE -ne 0) { Stop-Install '安装 Python 依赖管理器 uv 失败。' }
     }
-    & $uvExecutable sync --locked --extra desktop
+    & $uvExecutable sync --locked --no-dev --extra desktop
     if ($LASTEXITCODE -ne 0) { Stop-Install '按 uv.lock 安装 Python 桌面依赖失败。' }
 } finally { Pop-Location }
 

@@ -25,6 +25,7 @@ export interface Group {
   template_name?: string | null;
   topology_type?: string;
   goal?: string;
+  background?: string;
   nodes?: WorkflowNodeDefinition[];
   edges?: WorkflowEdgeDefinition[];
   layout?: Record<string, unknown>;
@@ -41,7 +42,10 @@ export interface WorkflowNodeDefinition {
   title: string;
   role?: string;
   role_key?: string;
+  background?: string;
   responsibilities?: string[];
+  constraints?: string[];
+  output_spec?: string;
   allowed_tools?: string[];
   prompt_template?: string;
   config?: Record<string, unknown>;

@@ -10,7 +10,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from vera_agent.models.litellm_model import LitellmModel
-from vera_agent.server.model_profile import resolve_litellm_model_name
+from vera_agent.server.model_profile import DEFAULT_MODEL_CONFIG, resolve_litellm_model_name
 from vera_agent.server.permissions import normalize_permissions_config, validate_permissions_config
 from vera_agent.server.state import ServerState
 from vera_agent.server.user_context import (
@@ -98,19 +98,7 @@ def _public_model(model: dict) -> dict:
 
 
 def _get_default_models() -> dict:
-    return {
-        "models": [
-            {
-                "id": "model_deepseek",
-                "name": "deepseek/deepseek-chat",
-                "provider": "deepseek",
-                "base_url": "https://api.deepseek.com",
-                "max_tokens": 8192,
-                "temperature": 0.2,
-                "is_default": True,
-            }
-        ]
-    }
+    return {"models": [dict(DEFAULT_MODEL_CONFIG)]}
 
 
 async def get_models(request: Request) -> JSONResponse:

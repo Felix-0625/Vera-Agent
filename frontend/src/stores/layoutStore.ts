@@ -21,6 +21,7 @@ interface LayoutState {
   scheduledTasksOpen: boolean;
   scheduledTasksVersion: number;
   workflowTemplatesOpen: boolean;
+  taskboardOpen: boolean;
   newTaskDialogOpen: boolean;
   newTaskPrompt: string;
   provisionGroupOpen: boolean;
@@ -52,6 +53,7 @@ interface LayoutState {
   setScheduledTasksOpen: (open: boolean) => void;
   notifyScheduledTasksChanged: () => void;
   setWorkflowTemplatesOpen: (open: boolean) => void;
+  setTaskboardOpen: (open: boolean) => void;
   setNewTaskDialogOpen: (open: boolean, prompt?: string) => void;
   setNewTaskPrompt: (prompt: string) => void;
   setProvisionGroupOpen: (open: boolean, projectId?: string | null) => void;
@@ -103,6 +105,7 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   scheduledTasksOpen: false,
   scheduledTasksVersion: 0,
   workflowTemplatesOpen: false,
+  taskboardOpen: false,
   newTaskDialogOpen: false,
   newTaskPrompt: '',
   provisionGroupOpen: false,
@@ -152,6 +155,7 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   setScheduledTasksOpen: (open) => set({ scheduledTasksOpen: open }),
   notifyScheduledTasksChanged: () => set((state) => ({ scheduledTasksVersion: state.scheduledTasksVersion + 1 })),
   setWorkflowTemplatesOpen: (open) => set({ workflowTemplatesOpen: open }),
+  setTaskboardOpen: (open) => set({ taskboardOpen: open }),
   setNewTaskDialogOpen: (open, prompt = '') => set({ newTaskDialogOpen: open, newTaskPrompt: open ? prompt : '' }),
   setNewTaskPrompt: (newTaskPrompt) => set({ newTaskPrompt }),
   setProvisionGroupOpen: (open, projectId = null) => set({ provisionGroupOpen: open, provisionGroupProjectId: open ? projectId : null }),

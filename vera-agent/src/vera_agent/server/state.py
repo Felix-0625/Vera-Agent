@@ -79,7 +79,13 @@ class ServerState:
             self.pipeline = HandoffPipeline(graph=graph)
 
     def load_json_config(self, file_name: str, default_data: Any) -> Any:
-        application_configs = {"projects_history.json", "mcp_servers.json", "skills_config.json"}
+        application_configs = {
+            "projects_history.json",
+            "models_config.json",
+            "permissions_config.json",
+            "mcp_servers.json",
+            "skills_config.json",
+        }
         config_root = self.projects_config_root if file_name in application_configs else self.root_path
         cfg_file = config_root / ".agents" / file_name
         if cfg_file.exists():
@@ -93,7 +99,13 @@ class ServerState:
         return copy.deepcopy(default_data)
 
     def save_json_config(self, file_name: str, data: Any) -> None:
-        application_configs = {"projects_history.json", "mcp_servers.json", "skills_config.json"}
+        application_configs = {
+            "projects_history.json",
+            "models_config.json",
+            "permissions_config.json",
+            "mcp_servers.json",
+            "skills_config.json",
+        }
         config_root = self.projects_config_root if file_name in application_configs else self.root_path
         cfg_file = config_root / ".agents" / file_name
         cfg_file.parent.mkdir(parents=True, exist_ok=True)

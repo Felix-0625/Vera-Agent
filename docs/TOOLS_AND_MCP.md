@@ -14,7 +14,7 @@ For sensitive changes, review the end-to-end path: persisted setting → API par
 
 ## MCP
 
-The app-level MCP registry is configured in settings. A configured server launches an external process or connects through the configured transport; tool availability depends on that server’s own dependencies and health. Never infer trust from being listed in a marketplace. A sample stdio server with three small diagnostic tools is available under [`../examples/mcp-server`](../examples/mcp-server/README.md); it is a learning example, not an endorsed marketplace package.
+The app-level MCP registry is configured in settings. A configured server launches an external process or connects through the configured transport; tool availability depends on that server’s own dependencies and health. Never infer trust from being listed in a marketplace. A small stdio example exposing two fixed, read-only task-fixture tools is available under [`../examples/mcp-server`](../examples/mcp-server/README.md). It uses the official MCP Python SDK and does not represent a vetted third-party server or a production integration.
 
 ## Skills
 

@@ -5,13 +5,11 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { createModel, patchModel, testModelConnection } from '../../api/settingsApi';
 import { ModelConfig, ModelProvider } from '../../types/settings';
-import { getProviderBaseUrl, ModelBasicFields } from './ModelBasicFields';
+import { ModelBasicFields } from './ModelBasicFields';
+import { getProviderBaseUrl } from './modelProviders';
 import { ModelAdvancedParams } from './ModelAdvancedParams';
 
-/**
- * 模态弹窗 4 - 模型配置弹窗
- * 按照 Penpot 原型规范与模块化架构设计
- */
+
 export const ModelConfigDialog: React.FC = () => {
   const { modelConfigOpen, closeModelConfig, editingModel, notifyModelCatalogChanged } = useLayoutStore();
 
@@ -35,12 +33,14 @@ export const ModelConfigDialog: React.FC = () => {
   const [formError, setFormError] = useState('');
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Hydrate the draft form when opening or switching the model being edited.
     if (editingModel) {
+      // oxlint-disable-next-line react/set-state-in-effect -- These setters initialize the editable form from its selected model.
       setProvider(editingModel.provider || 'deepseek');
       setName(editingModel.name || '');
       setDisplayName(editingModel.display_name || '');
       setBaseUrl(editingModel.base_url || '');
-      setApiKey(''); // 留空表示不修改已有密钥
+      setApiKey(''); // Leave blank to keep the existing key unchanged.
       setMaxTokens(editingModel.max_tokens || 8192);
       setTemperature(editingModel.temperature ?? 0.2);
       setContextWindow(editingModel.context_window ?? '');
@@ -61,7 +61,7 @@ export const ModelConfigDialog: React.FC = () => {
       setContextWindow(''); setOutputTokens(''); setMaxToolCalls(500);
       setSupportsImages(true); setThinkingMode('auto'); setTopP(''); setTopK('');
     }
-    setAdvancedOpen(false); // Penpot 原型规定默认折叠
+    setAdvancedOpen(false);
     setTestResult(null);
     setFormError('');
   }, [editingModel, modelConfigOpen]);

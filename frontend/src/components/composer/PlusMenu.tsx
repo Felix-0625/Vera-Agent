@@ -19,10 +19,7 @@ interface PlusMenuProps {
   onSelectRuleTrigger?: (trigger: RuleTrigger) => void;
 }
 
-/**
- * 输入框 '+' 能力拓展挂载浮窗
- * 支持动态挂载启用 MCP 工具与 Skill 技能包
- */
+
 export const PlusMenu: React.FC<PlusMenuProps> = ({ isOpen, onClose, requestText = '', onConsumeRequest, onSelectRuleTrigger }) => {
   const { attachedSkills, attachedMcps, ruleTrigger, setRuleTrigger, toggleSkillAttachment, toggleMcpAttachment } = useChatStore();
   const [mcps, setMcps] = useState<McpServerConfig[]>([]);

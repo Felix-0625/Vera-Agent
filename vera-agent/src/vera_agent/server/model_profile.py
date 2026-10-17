@@ -5,6 +5,15 @@ from __future__ import annotations
 from typing import Any
 
 DEFAULT_MODEL_NAME = "deepseek/deepseek-chat"
+DEFAULT_MODEL_CONFIG = {
+    "id": "model_deepseek",
+    "name": DEFAULT_MODEL_NAME,
+    "provider": "deepseek",
+    "base_url": "https://api.deepseek.com",
+    "max_tokens": 8192,
+    "temperature": 0.2,
+    "is_default": True,
+}
 
 
 def resolve_litellm_model_name(name: str, provider: str | None = None) -> str:
@@ -45,7 +54,7 @@ def resolve_model_profile(state: Any, requested_model: str | None = None) -> dic
     use the configured default or the only enabled model; ambiguous or stale
     selections are rejected instead of silently using environment credentials.
     """
-    config = state.load_json_config("models_config.json", {})
+    config = state.load_json_config("models_config.json", {"models": [DEFAULT_MODEL_CONFIG]})
     models = [item for item in config.get("models", []) if isinstance(item, dict)] if isinstance(config, dict) else []
     selected = next((item for item in models if requested_model and item.get("id") == requested_model), None)
     if selected is None:

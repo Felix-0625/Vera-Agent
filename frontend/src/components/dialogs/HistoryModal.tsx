@@ -7,10 +7,7 @@ import { updateThread } from '../../api/chatApi';
 import { Modal } from '../common/Modal';
 import { SearchField } from '../common/Field';
 
-/**
- * 模态弹窗 2 - 对话历史
- * 严格按照 Penpot 原型 "History · 对话历史"
- */
+
 export const HistoryModal: React.FC = () => {
   const { historyOpen, setHistoryOpen } = useLayoutStore();
   const { threads, selectThread, loadThreads } = useChatStore();
@@ -49,7 +46,7 @@ export const HistoryModal: React.FC = () => {
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3-5)' }}>
         {actionError && <div role="alert" style={{ color: 'var(--accent-rose)', fontSize: 'var(--font-size-sm)' }}>{actionError}</div>}
-        {/* 顶部标题与副标题严格对齐 Penpot */}
+        {}
         <div>
           <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
             对话历史
@@ -59,10 +56,10 @@ export const HistoryModal: React.FC = () => {
           </p>
         </div>
 
-        {/* 搜索框 */}
+        {}
         <SearchField aria-label="搜索对话" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索对话…" />
 
-        {/* 历史对话列表 */}
+        {}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1-5)', maxHeight: 420, overflowY: 'auto' }}>
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px var(--space-5)' }}>

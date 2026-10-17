@@ -130,7 +130,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const data = await fetchThreads(search);
       set({ threads: data.threads || [] });
     } catch {
-      // 保持静默
     }
   },
 
@@ -265,7 +264,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     if (!messageText) return;
     const conversationLoadToken = activeThreadLoadToken;
 
-    // 若当前为草稿状态，用户首次发送消息时才正式创建该对话并绑定项目
     if (!threadId) {
       try {
         const title = summarizeConversationTitle(messageText);

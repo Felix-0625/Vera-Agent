@@ -27,10 +27,7 @@ import {
 import { ModelConfig, McpServerConfig, SkillItem, PermissionsConfig } from '../../types/settings';
 import { McpMarketList } from '../tools/McpMarketList';
 
-/**
- * 全局系统设置中心弹窗
- * 严格对齐 Penpot 5 大系统设置画板
- */
+
 export const SettingsModal: React.FC = () => {
   const { settingsOpen, closeSettings, settingsTab, openSettings, openModelConfig, openMcpConfig, modelCatalogVersion, mcpCatalogVersion, notifyModelCatalogChanged } = useLayoutStore();
 
@@ -58,11 +55,11 @@ export const SettingsModal: React.FC = () => {
       setMcpServers(mcp.servers || []);
       setSkills(sk.skills || []);
     } catch {
-      // 保持静默
     }
   };
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Settings data must refresh when the dialog, tab, or MCP catalog changes.
     if (settingsOpen) loadAll();
   }, [settingsOpen, settingsTab, mcpCatalogVersion]);
 
@@ -115,10 +112,10 @@ export const SettingsModal: React.FC = () => {
     <>
     <Modal isOpen={settingsOpen} onClose={closeSettings} title="" width="96vw" hideHeader>
       <div className="settings-layout">
-        {/* 左侧导航栏严格对齐 Penpot 布局 */}
+        {}
         <div className="settings-sidebar">
           <div>
-            {/* 顶部品牌区 */}
+            {}
             <div className="settings-sidebar-brand">
               <VeraLogo size={22} />
               <div>
@@ -135,7 +132,7 @@ export const SettingsModal: React.FC = () => {
               设置
             </div>
 
-            {/* 导航按钮组 */}
+            {}
             <div className="settings-nav">
               {tabs.map((t) => {
                 const isActive = settingsTab === t.key;
@@ -153,13 +150,13 @@ export const SettingsModal: React.FC = () => {
             </div>
           </div>
 
-          {/* 底部工作空间说明 */}
+          {}
           <div className="settings-sidebar-footer">
             工作空间设置
           </div>
         </div>
 
-        {/* 右侧 Tab 内容面板 */}
+        {}
         <div className="settings-content">
           {settingsTab === 'permissions' && (
             <SettingsPermissionsTab permissions={permissions} onSave={handleSavePermissions} />

@@ -169,7 +169,6 @@ addSvg(main, `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke
 addSvg(main, `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>`, 192, 21, "Nav_Back_Icon");
 addSvg(main, `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>`, 222, 21, "Nav_Forward_Icon");
 
-// Primary Button: + 新建对话
 createRect(main, {
     name: "Btn_New_Conversation_Glass",
     x: 16, y: 58, w: 228, h: 42,
@@ -182,18 +181,15 @@ addSvg(main, `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke
 createText(main, { text: "新建对话", x: 86, y: 70, size: "14", weight: "600", color: "#38BDF8" });
 
 // Navigation List (Normal sleek list items)
-// 历史对话
 addSvg(main, `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`, 20, 118, "History_Icon");
 createText(main, { text: "历史对话", x: 44, y: 118, size: "13", weight: "500", color: "#CBD5E1" });
 
-// 计划任务
 addSvg(main, `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`, 20, 148, "Tasks_Icon");
 createText(main, { text: "计划任务", x: 44, y: 148, size: "13", weight: "500", color: "#CBD5E1" });
 
 // Divider
 createRect(main, { x: 16, y: 180, w: 228, h: 1, fill: { fillColor: "#FFFFFF", fillOpacity: 0.06 } });
 
-// Section 1: 项目
 createText(main, { text: "项目", x: 18, y: 196, size: "12", weight: "600", color: "#64748B" });
 addSvg(main, `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`, 196, 196, "Filter_Icon");
 addSvg(main, `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`, 222, 196, "Plus_Project");
@@ -215,7 +211,6 @@ addSvg(main, `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke
 // Divider
 createRect(main, { x: 16, y: 298, w: 228, h: 1, fill: { fillColor: "#FFFFFF", fillOpacity: 0.06 } });
 
-// Section 2: 会话
 createText(main, { text: "会话", x: 18, y: 314, size: "12", weight: "600", color: "#64748B" });
 addSvg(main, `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`, 222, 314, "Plus_Icon");
 
@@ -227,7 +222,6 @@ addSvg(main, `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke
 addSvg(main, `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.89A2 2 0 0 1 15 10.77V5h1V3H8v2h1v5.77a2 2 0 0 1-1.11 1.79l-1.78.89A2 2 0 0 0 5 15.24Z"/></svg>`, 198, 348, "Pin_Icon");
 addSvg(main, `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`, 222, 348, "Plus_Icon");
 
-// Bottom Bar: 设置
 addSvg(main, `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`, 20, 914, "Settings_Icon");
 createText(main, { text: "设置", x: 44, y: 914, size: "13", weight: "500", color: "#94A3B8" });
 
@@ -286,7 +280,6 @@ createText(main, {
 });
 
 // Card Bottom Controls
-// [+] 唤醒能力
 createRect(main, {
     x: 344, y: 550, w: 30, h: 30,
     fill: { fillColor: "#FFFFFF", fillOpacity: 0.06 },
@@ -306,7 +299,6 @@ addSvg(main, `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke
 createText(main, { text: "DeepSeek-V3", x: 418, y: 557, size: "12", weight: "500", color: "#E2E8F0" });
 addSvg(main, `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>`, 506, 559, "Chevron_Model");
 
-// [语音] (Mic)
 createRect(main, {
     x: 1056, y: 549, w: 34, h: 32,
     fill: { fillColor: "#FFFFFF", fillOpacity: 0.05 },
@@ -315,7 +307,6 @@ createRect(main, {
 });
 addSvg(main, `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>`, 1066, 558, "Mic_Icon");
 
-// [发送] (Cyan Glowing Send Button)
 createRect(main, {
     name: "Btn_Send_Glass",
     x: 1104, y: 548, w: 34, h: 34,
@@ -343,7 +334,6 @@ createRect(main, {
     stroke: { strokeColor: "#FFFFFF", strokeWidth: 1, strokeAlignment: "inner", strokeOpacity: 0.05 }
 });
 
-// Active Tab: 新标签页 x
 createRect(main, {
     x: 1220, y: 0, w: 124, h: 44,
     fill: { fillColor: "#FFFFFF", fillOpacity: 0.06 }

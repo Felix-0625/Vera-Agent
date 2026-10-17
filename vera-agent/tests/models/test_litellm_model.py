@@ -1,10 +1,11 @@
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from vera_agent.exceptions import FormatError
 from vera_agent.models.litellm_model import LitellmModel, LitellmModelConfig
-from vera_agent.models.utils.actions_toolcall import ALL_TOOLS, BASH_TOOL
+from vera_agent.models.utils.actions_toolcall import ALL_TOOLS
 
 
 class TestLitellmModelConfig:
@@ -22,6 +23,71 @@ def _mock_litellm_response(tool_calls):
 
 
 class TestLitellmModel:
+    def test_deepseek_request_preparation_preserves_and_fills_reasoning_content(self):
+        model = LitellmModel(model_name="deepseek/deepseek-flash")
+        messages = [
+            {"role": "assistant", "content": None, "tool_calls": [{"id": "call_1"}]},
+            {"role": "assistant", "content": "done", "reasoning_content": "preserve me"},
+            {"role": "tool", "content": "result"},
+        ]
+
+        prepared = model._prepare_messages_for_api(messages)
+
+        assert prepared[0]["reasoning_content"] == ""
+        assert prepared[1]["reasoning_content"] == "preserve me"
+        assert "reasoning_content" not in prepared[2]
+
+    @patch("vera_agent.models.litellm_model.LitellmModel._calculate_cost", new=MagicMock(return_value={"cost": 0.0}))
+    @patch("vera_agent.models.litellm_model.LitellmModel._query")
+    def test_query_stream_preserves_reasoning_content(self, mock_query):
+        delta = SimpleNamespace(content=None, reasoning_content="tool reasoning")
+        choice = SimpleNamespace(index=0, delta=delta, finish_reason="stop")
+        chunk = SimpleNamespace(
+            id="stream-1",
+            created=1,
+            model="deepseek/deepseek-flash",
+            choices=[choice],
+            usage=None,
+        )
+        mock_query.return_value = [chunk]
+
+        model = LitellmModel(model_name="deepseek/deepseek-flash", allow_empty_tool_calls=True)
+        result = model.query_stream([{"role": "user", "content": "test"}], on_text=lambda _text: None)
+
+        assert result["reasoning_content"] == "tool reasoning"
+
+    @patch("vera_agent.models.litellm_model.LitellmModel._calculate_cost", new=MagicMock(return_value={"cost": 0.0}))
+    @patch("vera_agent.models.litellm_model.LitellmModel._query")
+    def test_query_stream_preserves_final_message_reasoning_content(self, mock_query):
+        choice = SimpleNamespace(
+            index=0,
+            delta=None,
+            message=SimpleNamespace(reasoning_content="final reasoning"),
+            finish_reason="stop",
+        )
+        mock_query.return_value = [SimpleNamespace(
+            id="stream-2", created=1, model="deepseek/deepseek-flash", choices=[choice], usage=None,
+        )]
+
+        model = LitellmModel(model_name="deepseek/deepseek-flash", allow_empty_tool_calls=True)
+        result = model.query_stream([{"role": "user", "content": "test"}], on_text=lambda _text: None)
+
+        assert result["reasoning_content"] == "final reasoning"
+
+    @patch("vera_agent.models.litellm_model.LitellmModel._calculate_cost", new=MagicMock(return_value={"cost": 0.0}))
+    @patch("vera_agent.models.litellm_model.LitellmModel._query")
+    def test_query_stream_keeps_empty_deepseek_reasoning_field(self, mock_query):
+        choice = SimpleNamespace(index=0, delta=SimpleNamespace(content=None), message=None, finish_reason="stop")
+        mock_query.return_value = [SimpleNamespace(
+            id="stream-3", created=1, model="deepseek/deepseek-flash", choices=[choice], usage=None,
+        )]
+
+        model = LitellmModel(model_name="deepseek/deepseek-flash", allow_empty_tool_calls=True)
+        result = model.query_stream([{"role": "user", "content": "test"}], on_text=lambda _text: None)
+
+        assert "reasoning_content" in result
+        assert result["reasoning_content"] == ""
+
     @patch("vera_agent.models.litellm_model.litellm.completion")
     @patch("vera_agent.models.litellm_model.litellm.cost_calculator.completion_cost")
     def test_query_includes_all_tools(self, mock_cost, mock_completion):

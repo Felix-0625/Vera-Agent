@@ -36,6 +36,7 @@ export const ContextUsageIndicator: React.FC = () => {
 
   useEffect(() => {
     let alive = true;
+    // oxlint-disable-next-line react/set-state-in-effect -- Context usage is external state and must refresh for thread/model/stream changes.
     setLoading(true);
     const request = threadId ? fetchThreadContextStatus(threadId, modelId) : fetchDraftContextStatus(modelId);
     request.then((value) => { if (alive) setStatus(value); }).catch(() => { if (alive) setStatus(null); }).finally(() => { if (alive) setLoading(false); });

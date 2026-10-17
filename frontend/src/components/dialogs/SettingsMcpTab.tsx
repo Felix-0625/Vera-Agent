@@ -16,10 +16,7 @@ interface SettingsMcpTabProps {
   onOpenMarket?: () => void;
 }
 
-/**
- * 设置中心 - MCP Tab
- * 严格对齐 Penpot 画板 "系统设置 · MCP"
- */
+
 export const SettingsMcpTab: React.FC<SettingsMcpTabProps> = ({
   servers,
   onToggle,
@@ -33,10 +30,10 @@ export const SettingsMcpTab: React.FC<SettingsMcpTabProps> = ({
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4-5)' }}>
-      {/* 标题与描述 */}
+      {}
       <PageHeading title="MCP" description="管理本地与云端 MCP 服务器及其可用工具。" divider actions={<Button onClick={onOpenMarket} variant="secondary" size="md" style={{ fontWeight: 600, whiteSpace: 'nowrap' }}><Grid size={14} />浏览 MCP 市场</Button>} />
 
-      {/* 主卡片 */}
+      {}
       <div
         className="glass-card"
         style={{

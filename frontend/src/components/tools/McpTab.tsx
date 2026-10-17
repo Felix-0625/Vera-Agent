@@ -14,9 +14,7 @@ import { useLayoutStore } from '../../stores/layoutStore';
 import { McpServerList } from './McpServerList';
 import { McpMarketList } from './McpMarketList';
 
-/**
- * 右侧工具 7 - MCP 服务与市场管理面板
- */
+
 export const McpTab: React.FC<{ active?: boolean }> = ({ active = true }) => {
   const { openMcpConfig } = useLayoutStore();
   const [activeSubTab, setActiveSubTab] = useState<'servers' | 'market'>('servers');
@@ -38,6 +36,7 @@ export const McpTab: React.FC<{ active?: boolean }> = ({ active = true }) => {
   }, []);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- The active panel loads its authoritative server-side MCP catalog.
     if (active) void loadData();
   }, [active, loadData]);
 
@@ -82,7 +81,7 @@ export const McpTab: React.FC<{ active?: boolean }> = ({ active = true }) => {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-workspace)' }}>
-      {/* 顶部标签切换 & 新增操作 */}
+      {}
       <div style={{ padding: 'var(--space-2) var(--space-4)', borderBottom: '1px solid var(--border-subtle)', display: 'flex', gap: 'var(--space-3)', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <button
@@ -131,7 +130,7 @@ export const McpTab: React.FC<{ active?: boolean }> = ({ active = true }) => {
         </button>
       </div>
 
-      {/* 主体列表 */}
+      {}
       <div style={{ flex: 1, overflowY: 'auto', padding: 'var(--space-4)' }}>
         {error && <div role="alert" style={{ marginBottom: 'var(--space-3)', padding: 'var(--space-2) var(--space-2-5)', borderRadius: 'var(--radius-md)', color: 'var(--accent-rose)', background: 'var(--bg-danger-soft)', fontSize: 'var(--font-size-sm)' }}>{error}</div>}
         {activeSubTab === 'servers' ? (

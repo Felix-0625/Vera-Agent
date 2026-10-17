@@ -6,7 +6,7 @@ The supported current shape is a local Windows desktop process: pywebview hosts 
 
 ## Product introduction page
 
-`website/` contains dependency-free documentation and a mock playground, but its landing-page `index.html` has been removed pending a remake. A GitHub Pages workflow is configured as a manual action under `.github/workflows/website-pages.yml`. Before deploying, recreate and review the site root. The workflow does not publish on every push.
+`website/` contains three separate static pages: the design landing page, documentation, and a mock playground. The playground does not call the local backend or a model provider. A GitHub Pages workflow is configured as a manual action under `.github/workflows/website-pages.yml`; it validates the local site before deployment and does not publish on every push. Public deployment still requires an explicit maintainer action in GitHub.
 
 For another static host, publish the contents of `website/` as the document root. The page uses relative assets and has no API or secret requirement.
 

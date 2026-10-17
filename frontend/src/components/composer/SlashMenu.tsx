@@ -8,10 +8,7 @@ interface SlashMenuProps {
   onClose: () => void;
 }
 
-/**
- * 输入框快速斜杠指令浮窗
- * 严格对齐 Penpot 快捷指令列表
- */
+
 export const SlashMenu: React.FC<SlashMenuProps> = ({ isOpen, onSelect, onClose }) => {
   if (!isOpen) return null;
 

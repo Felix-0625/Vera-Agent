@@ -7,9 +7,7 @@ interface AttachedBadgesProps {
   attachedMcps: string[];
 }
 
-/**
- * 签名输入卡顶部附加标签徽章条 (快捷指令模式、技能、MCP)
- */
+
 export const AttachedBadges: React.FC<AttachedBadgesProps> = ({
   ruleTrigger,
   attachedSkills,

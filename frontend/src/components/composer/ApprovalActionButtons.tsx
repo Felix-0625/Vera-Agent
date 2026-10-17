@@ -7,9 +7,7 @@ interface ApprovalActionButtonsProps {
   onConfirm: (action: string) => void;
 }
 
-/**
- * 审批门禁底部的操作按钮与修正指令输入行
- */
+
 export const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({ onConfirm }) => {
   const [overrideText, setOverrideText] = useState('');
   const [showOverrideInput, setShowOverrideInput] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { ArrowLeft, FileText, Pencil, Save, X } from 'lucide-react';
 import { saveExcelFile, saveTextFile } from '../../api/toolApi';
 import { useFilePreviewStore, FilePreviewRecord } from '../../stores/filePreviewStore';
@@ -16,8 +16,8 @@ export const FilePreviewPane: React.FC<{
   embedded?: boolean;
 }> = ({ file, projectKey, projectId, groupId, onClose, embedded = false }) => {
   const [editing, setEditing] = useState(false);
-  const [textDraft, setTextDraft] = useState('');
-  const [sheetDraft, setSheetDraft] = useState<Array<{ name: string; rows: string[][] }>>([]);
+  const [textDraft, setTextDraft] = useState(() => file.preview.kind === 'text' ? file.preview.content : '');
+  const [sheetDraft, setSheetDraft] = useState<Array<{ name: string; rows: string[][] }>>(() => file.preview.kind === 'excel' ? file.preview.sheets.map((sheet) => ({ name: sheet.name, rows: sheet.rows.map((row) => [...row]) })) : []);
   const [activeSheet, setActiveSheet] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -25,14 +25,6 @@ export const FilePreviewPane: React.FC<{
   const canEditExcel = /\.(xlsx|xlsm)$/i.test(file.path);
   const canEditText = /\.(md|markdown|txt|py|pyw|yaml|yml|toml|js|jsx|mjs|cjs|ts|tsx|json|jsonc|sh|bash|zsh|ps1|bat|cmd|html|htm|xml|css|scss|sass|less|sql|ini|cfg|conf|log|go|rs|java|c|h|cpp|hpp|cs|php|rb|vue|svelte|graphql|gql|r)$/i.test(file.path) || /(^|[\\/])\.gitignore$/i.test(file.path);
   const canEdit = canEditText || canEditExcel;
-
-  useEffect(() => {
-    setEditing(false);
-    setError('');
-    setActiveSheet(0);
-    if (file.preview.kind === 'text') setTextDraft(file.preview.content);
-    if (file.preview.kind === 'excel') setSheetDraft(file.preview.sheets.map((sheet) => ({ name: sheet.name, rows: sheet.rows.map((row) => [...row]) })));
-  }, [file.path, file.preview]);
 
   const columns = useMemo(() => {
     if (file.preview.kind !== 'excel') return 0;

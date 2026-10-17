@@ -11,10 +11,7 @@ import { useLayoutStore } from '../../stores/layoutStore';
 
 const TerminalTab = React.lazy(() => import('../tools/TerminalTab').then((module) => ({ default: module.TerminalTab })));
 
-/**
- * 中间区域核心工作区 (对应 Penpot 中心白板对话与操作输入流)
- * 严格按照模块化拆分规范，不包含冗长代码
- */
+
 export const CenterWorkspace: React.FC = () => {
   const messages = useChatStore((state) => state.messages);
   const addDraftImages = useChatStore((state) => state.addDraftImages);
@@ -22,12 +19,11 @@ export const CenterWorkspace: React.FC = () => {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
   const resizeStart = useRef<{ y: number; height: number } | null>(null);
-  const maxDrawerHeight = Math.floor((mainRef.current?.clientHeight || window.innerHeight) * 0.4);
-  const effectiveDrawerHeight = Math.min(bottomDrawerHeight, maxDrawerHeight);
-
   const startResize = (event: React.PointerEvent<HTMLDivElement>) => {
     event.preventDefault();
-    resizeStart.current = { y: event.clientY, height: effectiveDrawerHeight };
+    const mainHeight = mainRef.current?.clientHeight || window.innerHeight;
+    const maxHeight = Math.floor(mainHeight * 0.4);
+    resizeStart.current = { y: event.clientY, height: Math.min(bottomDrawerHeight, maxHeight) };
     const move = (moveEvent: PointerEvent) => {
       if (!resizeStart.current || !mainRef.current) return;
       const max = Math.floor(mainRef.current.clientHeight * 0.4);
@@ -44,7 +40,7 @@ export const CenterWorkspace: React.FC = () => {
   };
 
   const terminalDrawer = (
-    <div className="center-terminal-drawer" style={{ height: effectiveDrawerHeight, flexBasis: effectiveDrawerHeight, maxHeight: '40%' }}>
+    <div className="center-terminal-drawer" style={{ height: bottomDrawerHeight, flexBasis: bottomDrawerHeight, maxHeight: '40%' }}>
       <div className="center-terminal-resize" onPointerDown={startResize} title="拖动调整终端高度" aria-label="调整终端高度" />
       <div style={{ height: 'calc(100% - 6px)', minHeight: 0 }}>
         <Suspense fallback={<div role="status" aria-live="polite" style={{ padding: 'var(--space-3)', color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>正在加载终端…</div>}>
@@ -86,11 +82,11 @@ export const CenterWorkspace: React.FC = () => {
       onDrop={handleDrop}
     >
       {isDraggingImage && <div style={{ position: 'absolute', inset: 10, zIndex: 80, borderRadius: 'var(--radius-xl)', border: '1px dashed var(--accent-cyan)', background: 'var(--bg-info-soft)', display: 'grid', placeItems: 'center', color: 'var(--text-primary)', fontSize: 'var(--font-size-md)', pointerEvents: 'none' }}>松开鼠标添加图片</div>}
-      {/* 顶部工具条 */}
+      {}
       <WorkspaceHeader />
 
       {messages.length === 0 ? (
-        /* 空态下：Logo + 标语 + 项目选择 + 输入卡片居中组合，严格对齐 Penpot 截图 */
+
         <div
           style={{
             flex: 1,
@@ -110,7 +106,7 @@ export const CenterWorkspace: React.FC = () => {
           <ApprovalBanner />
         </div>
       ) : (
-        /* 有消息态：消息流可滚动，输入框固定在底部 */
+
         <>
           <div
             style={{

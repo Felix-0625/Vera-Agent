@@ -55,7 +55,10 @@ export const FileExplorerTab: React.FC<{ projectId?: string | null }> = ({ proje
       if (requestVersion === treeRequestVersion.current) setLoadError(error instanceof Error ? error.message : '目录读取失败');
     }
   }, [projectId]);
-  useEffect(() => { void loadTree(); }, [loadTree]);
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Project changes must refresh the directory; the helper manages request state.
+    void loadTree();
+  }, [loadTree]);
 
   const selectFile = async (node: FileTreeNode) => {
     const requestVersion = ++previewRequestVersion.current;
@@ -120,7 +123,7 @@ export const FileExplorerTab: React.FC<{ projectId?: string | null }> = ({ proje
     <div style={{ flex: 1, minHeight: 0 }}>
       <ResizableTreeLayout collapsed={treeCollapsed} onToggle={() => setTreeCollapsed((value) => !value)} primary={<section aria-label="文件预览" style={{ minWidth: 0, minHeight: 0, height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {loadError && <div role="alert" style={{ padding: 'var(--space-2) var(--space-3)', color: 'var(--accent-rose)', fontSize: 'var(--font-size-label)', borderBottom: '1px solid var(--border-subtle)', flexShrink: 0 }}>{loadError}</div>}
-        {projectId && selectedPreview ? <FilePreviewPane file={selectedPreview} projectKey={projectKey} projectId={projectId} embedded /> :
+        {projectId && selectedPreview ? <FilePreviewPane key={selectedPreview.path} file={selectedPreview} projectKey={projectKey} projectId={projectId} embedded /> :
           <div style={{ height: '100%', display: 'grid', placeContent: 'center', gap: 'var(--space-2)', padding: 'var(--space-6)', textAlign: 'center', color: 'var(--text-muted)' }}>
             <File size={22} style={{ margin: '0 auto', opacity: 0.55 }} />
             {projectId ? <>

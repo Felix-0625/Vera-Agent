@@ -8,9 +8,7 @@ interface WorkflowGroupDetailProps {
   onDelete: (gid: string) => Promise<void>;
 }
 
-/**
- * 右侧工具 10 - 分组工作流详情查看面板
- */
+
 export const WorkflowGroupDetail: React.FC<WorkflowGroupDetailProps> = ({
   group,
   onBack,

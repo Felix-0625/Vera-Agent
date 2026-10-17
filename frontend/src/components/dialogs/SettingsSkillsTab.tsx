@@ -13,10 +13,7 @@ interface SettingsSkillsTabProps {
   onNewSkill?: () => void;
 }
 
-/**
- * 设置中心 - Skill Tab
- * 严格对齐 Penpot 画板 "系统设置 · Skill"
- */
+
 export const SettingsSkillsTab: React.FC<SettingsSkillsTabProps> = ({
   skills,
   onDelete,
@@ -61,7 +58,7 @@ export const SettingsSkillsTab: React.FC<SettingsSkillsTabProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4-5)' }}>
       <PageHeading title="Skill" description="管理 Agent 可调用的技能。" />
 
-      {/* 搜索与工具条 */}
+      {}
       <div className="settings-skills-toolbar" style={{ display: 'flex', gap: 'var(--space-2-5)', alignItems: 'center' }}>
         <SearchField wrapperClassName="settings-skill-search" aria-label="搜索 Skills" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="搜索 Skills…" />
 
@@ -84,7 +81,7 @@ export const SettingsSkillsTab: React.FC<SettingsSkillsTabProps> = ({
         </Button>
       </div>
 
-      {/* 技能列表或空态 */}
+      {}
       {filtered.length === 0 ? (
         <div
           className="glass-card"

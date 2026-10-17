@@ -12,9 +12,7 @@ interface McpServerListProps {
   onDelete: (id: string) => Promise<void>;
 }
 
-/**
- * 右侧工具 7 - MCP 服务列表组件
- */
+
 export const McpServerList: React.FC<McpServerListProps> = ({
   servers,
   onToggle,

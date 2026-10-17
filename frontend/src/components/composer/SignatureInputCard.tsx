@@ -16,9 +16,7 @@ import { IconButton } from '../common/IconButton';
 import { TextArea } from '../common/Field';
 import { extractWorkflowTaskInput } from './workflowInvocation';
 
-/**
- * 中间区域核心输入卡片 (对齐 Penpot 签名级胶囊输入框)
- */
+
 export const SignatureInputCard: React.FC = () => {
   const {
     sendMessage,
@@ -145,7 +143,7 @@ export const SignatureInputCard: React.FC = () => {
         flexDirection: 'column',
       }}
     >
-      {/* 顶部微渐变细分割线 */}
+      {}
       <div
         style={{
           height: 1,
@@ -155,7 +153,7 @@ export const SignatureInputCard: React.FC = () => {
         }}
       />
 
-      {/* '+' 与 '/' 唤起的宽度对齐能力拓展浮窗 */}
+      {}
       <PlusMenu isOpen={plusOpen} onClose={() => setPlusOpen(false)} requestText={input} onConsumeRequest={() => setInput('')} onSelectRuleTrigger={(trigger) => setInput((current) => current.replace(new RegExp(`^/${trigger}\\b\\s*`, 'i'), ''))} />
 
       <ImageAttachmentStrip images={draftImages} onRemove={removeDraftImage} />
@@ -186,14 +184,14 @@ export const SignatureInputCard: React.FC = () => {
         </div>
       )}
 
-      {/* 附加模式与拓展技能徽章 */}
+      {}
       <AttachedBadges
         ruleTrigger={ruleTrigger}
         attachedSkills={attachedSkills}
         attachedMcps={attachedMcps}
       />
 
-      {/* 文本输入区域 */}
+      {}
       <TextArea
         ref={textareaRef}
         value={input}
@@ -208,7 +206,7 @@ export const SignatureInputCard: React.FC = () => {
         className="composer-prompt-input"
       />
 
-      {/* 底部动作工具条 */}
+      {}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-1) var(--space-3) var(--space-2-5)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
           <input ref={imageInputRef} type="file" accept="image/*" multiple hidden onChange={(e) => { if (e.target.files) void handleImageFiles(e.target.files); e.target.value = ''; }} />

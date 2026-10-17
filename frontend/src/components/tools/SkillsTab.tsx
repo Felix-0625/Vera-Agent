@@ -25,7 +25,10 @@ export const SkillsTab: React.FC<{ active?: boolean }> = ({ active = true }) => 
     setError(errors.join('；'));
   }, []);
 
-  useEffect(() => { if (active) void loadData(); }, [active, loadData]);
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Fetch installed skills and market data when this panel becomes active.
+    if (active) void loadData();
+  }, [active, loadData]);
 
   const handleToggle = async (s: SkillItem) => {
     setBusySkill(s.name);

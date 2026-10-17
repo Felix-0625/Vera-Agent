@@ -13,7 +13,6 @@ from vera_agent.exceptions import FormatError
 from vera_agent.models import GLOBAL_MODEL_STATS
 from vera_agent.models.utils.actions_toolcall import (
     ALL_TOOLS,
-    BASH_TOOL,
     format_toolcall_observation_messages,
     parse_toolcall_actions,
 )
@@ -98,6 +97,14 @@ class LitellmModel:
 
     def _prepare_messages_for_api(self, messages: list[dict]) -> list[dict]:
         prepared = [{k: v for k, v in msg.items() if k != "extra"} for msg in messages if msg.get("role") != "exit"]
+        if "deepseek" in self.config.model_name.casefold():
+            # DeepSeek requires every prior assistant turn to carry this field
+            # when tools are enabled, including turns with no reasoning tokens.
+            prepared = [
+                ({**message, "reasoning_content": message.get("reasoning_content") or ""}
+                 if message.get("role") == "assistant" else message)
+                for message in prepared
+            ]
         prepared = _reorder_anthropic_thinking_blocks(prepared)
         return set_cache_control(prepared, mode=self.config.set_cache_control)
 
@@ -147,6 +154,7 @@ class LitellmModel:
         call_kwargs["stream_options"] = stream_options
 
         content_parts: list[str] = []
+        reasoning_parts: list[str] = []
         tool_calls: dict[int, dict[str, Any]] = {}
         usage: dict[str, Any] | None = None
         response_id = None
@@ -176,6 +184,12 @@ class LitellmModel:
                             choice = choices[0]
                             finish_reason = getattr(choice, "finish_reason", None) or finish_reason
                             delta = getattr(choice, "delta", None)
+                            final_message = getattr(choice, "message", None)
+                            final_reasoning = getattr(final_message, "reasoning_content", None)
+                            if isinstance(final_reasoning, str) and final_reasoning:
+                                accumulated_reasoning = "".join(reasoning_parts)
+                                if final_reasoning != accumulated_reasoning:
+                                    reasoning_parts = [final_reasoning]
                             if delta is None:
                                 continue
                             text = getattr(delta, "content", None)
@@ -183,6 +197,9 @@ class LitellmModel:
                                 content_parts.append(text)
                                 streamed_text = True
                                 on_text(text)
+                            reasoning = getattr(delta, "reasoning_content", None)
+                            if isinstance(reasoning, str) and reasoning:
+                                reasoning_parts.append(reasoning)
                             for call in getattr(delta, "tool_calls", None) or []:
                                 index = getattr(call, "index", 0)
                                 current = tool_calls.setdefault(index, {"id": "", "type": "function", "function": {"name": "", "arguments": ""}})
@@ -218,6 +235,11 @@ class LitellmModel:
             }],
             usage=usage,
         )
+        # Some reasoning models require their reasoning trace to be echoed when
+        # a tool call is followed by another model turn. Keep it in the persisted
+        # assistant message even though it is not shown in the chat UI.
+        if reasoning_parts or "deepseek" in self.config.model_name.casefold():
+            response.choices[0].message.reasoning_content = "".join(reasoning_parts)
         cost_output = self._calculate_cost(response)
         GLOBAL_MODEL_STATS.add(cost_output["cost"])
         try:
@@ -227,6 +249,11 @@ class LitellmModel:
             e.messages[0]["extra"]["response"] = response.model_dump(mode="json")
             raise
         message = response.choices[0].message.model_dump()
+        if "deepseek" in self.config.model_name.casefold():
+            # Keep the field present even when a particular streamed tool turn
+            # contains no reasoning tokens; DeepSeek validates it on follow-up
+            # requests whenever tools are enabled.
+            message["reasoning_content"] = "".join(reasoning_parts)
         message["extra"] = {
             "actions": actions,
             "response": response.model_dump(),

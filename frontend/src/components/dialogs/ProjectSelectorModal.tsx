@@ -27,6 +27,7 @@ export const ProjectSelectorModal: React.FC = () => {
 
   useEffect(() => {
     if (!projectSelectorOpen) return;
+    // oxlint-disable-next-line react/set-state-in-effect -- Seed the editable form from the selected project whenever the dialog context changes.
     setError('');
     if (projectSelectorView === 'edit' && editingProject) {
       setName(editingProject.name || '');

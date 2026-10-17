@@ -3,9 +3,7 @@ import { useToolTabsStore } from '../../stores/toolTabsStore';
 import { TOOL_LAUNCHER_ITEMS } from './toolLauncherData';
 import { Button } from '../common/Button';
 
-/**
- * 右侧工具发射器磁贴大网格 (初始空态页面)
- */
+
 export const ToolLauncherGrid: React.FC = () => {
   const { openTab } = useToolTabsStore();
 

@@ -1,5 +1,4 @@
 // ==============================================================================
-// 3 Sub-Interfaces: 左侧边栏, 中间主工作区, 右侧边栏
 // Strictly aligned with user mockup collage & KokonutUI aesthetics
 // ==============================================================================
 
@@ -31,7 +30,6 @@ function createSvgIn(parent, svgStr, x, y) {
 }
 
 // ==============================================================================
-// BOARD 1: 左侧边栏 (Left Sidebar) - 250 x 900
 // ==============================================================================
 const board1 = penpot.createBoard();
 board1.name = "1. 左侧边栏 (Left Sidebar)";
@@ -58,7 +56,6 @@ createSvgIn(board1, backSvg, 72, 20);
 const forwardSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>`;
 createSvgIn(board1, forwardSvg, 96, 20);
 
-// '+ 新建对话' Button (Capsule)
 const newChatBtn = penpot.createRectangle();
 newChatBtn.name = "New_Chat_Btn";
 newChatBtn.resize(218, 36);
@@ -93,21 +90,18 @@ taskText.fontSize = 12;
 taskText.fills = [{ fillColor: "#8E929E" }];
 addChildTo(board1, taskText, 42, 141);
 
-// Section: 项目 (Projects)
 const projHeader = penpot.createText("项目");
 projHeader.fontSize = 11;
 projHeader.fontWeight = "600";
 projHeader.fills = [{ fillColor: "#636779" }];
 addChildTo(board1, projHeader, 16, 186);
 
-// Filter icon [ ☷ ] and Add icon [ + ] on right of '项目'
 const filterSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`;
 createSvgIn(board1, filterSvg, 194, 187);
 
 const addSvg1 = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
 createSvgIn(board1, addSvg1, 216, 187);
 
-// Item: 📁 项目名称
 const folderSvg1 = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>`;
 createSvgIn(board1, folderSvg1, 18, 212);
 
@@ -117,14 +111,12 @@ projNameText.fontWeight = "600";
 projNameText.fills = [{ fillColor: "#ECEEF2" }];
 addChildTo(board1, projNameText, 38, 211);
 
-// Icons on right of 项目名称: [ ! ] and [ + ]
 const alertSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`;
 createSvgIn(board1, alertSvg, 194, 213);
 
 const addSvg2 = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
 createSvgIn(board1, addSvg2, 216, 213);
 
-// Nested Active Conversation Card: 对话 [ ⋮ ] [ 📌 ] [ + ]
 const activeChatBox = penpot.createRectangle();
 activeChatBox.name = "Active_Chat_Box";
 activeChatBox.resize(206, 32);
@@ -149,7 +141,6 @@ createSvgIn(board1, pinSvg1, 188, 248);
 const addSvg3 = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
 createSvgIn(board1, addSvg3, 208, 248);
 
-// Section: 会话 (Conversations)
 const convHeader = penpot.createText("会话");
 convHeader.fontSize = 11;
 convHeader.fontWeight = "600";
@@ -159,7 +150,6 @@ addChildTo(board1, convHeader, 16, 296);
 const addSvg4 = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
 createSvgIn(board1, addSvg4, 216, 297);
 
-// Standalone Conversation item: 对话 [ ⋮ ] [ 📌 ] [ + ]
 const convItemText = penpot.createText("对话");
 convItemText.fontSize = 12;
 convItemText.fills = [{ fillColor: "#8E929E" }];
@@ -174,7 +164,6 @@ createSvgIn(board1, pinSvg2, 188, 325);
 const addSvg5 = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
 createSvgIn(board1, addSvg5, 208, 325);
 
-// Bottom: ⚙ 设置
 const settingsSvg1 = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#717688" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>`;
 createSvgIn(board1, settingsSvg1, 18, 862);
 
@@ -185,7 +174,6 @@ addChildTo(board1, settingsText, 38, 861);
 
 
 // ==============================================================================
-// BOARD 2: 中间区域 (Center Workspace) - 860 x 900
 // ==============================================================================
 const board2 = penpot.createBoard();
 board2.name = "2. 中间区域 (Center Workspace)";
@@ -216,7 +204,6 @@ createSvgIn(board2, splitSvg2, 794, 23);
 const fullSvg2 = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`;
 createSvgIn(board2, fullSvg2, 822, 23);
 
-// Floating Project Selector Capsule: [ 📁 选择项目 ]
 // Exactly positioned on the left side, above input card!
 const projCapsule = penpot.createRectangle();
 projCapsule.name = "Project_Capsule";
@@ -264,7 +251,6 @@ addChildTo(board2, placeholderText, 84, 486);
 const plusActionSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8E929E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
 createSvgIn(board2, plusActionSvg, 84, 542);
 
-// Model Switch Dropdown Capsule: 模型切换 ▾
 const modelSwitchText = penpot.createText("模型切换 ▾");
 modelSwitchText.fontSize = 12;
 modelSwitchText.fontWeight = "600";
@@ -287,7 +273,6 @@ createSvgIn(board2, sendArrowSvg, 752, 542);
 
 
 // ==============================================================================
-// BOARD 3: 右侧边栏 (Right Sidebar) - 480 x 900
 // ==============================================================================
 const board3 = penpot.createBoard();
 board3.name = "3. 右侧边栏 (Right Sidebar)";
@@ -297,7 +282,6 @@ board3.resize(480, 900);
 board3.fills = [{ fillColor: "#111217" }];
 board3.strokes = [{ strokeColor: "#1E2028", strokeWidth: 1 }];
 
-// Top Tab Bar: ⊕ 新标签页 x   +           [ ⛶ ] [ ◫ ]
 const tabBg = penpot.createRectangle();
 tabBg.resize(130, 32);
 tabBg.borderRadius = 6;
@@ -332,7 +316,6 @@ divider3.resize(480, 1);
 divider3.fills = [{ fillColor: "#1E2028" }];
 addChildTo(board3, divider3, 0, 56);
 
-// Section: 工具 (Header)
 const toolsTitle = penpot.createText("工具");
 toolsTitle.fontSize = 15;
 toolsTitle.fontWeight = "700";
@@ -365,27 +348,23 @@ function createToolItem(x, y, iconSvg, title) {
   }
 }
 
-// Row 1: 变更 | 终端
 const diffIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9"/><path d="M12 12v3"/></svg>`;
 createToolItem(16, 110, diffIcon, "变更");
 
 const termIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/></svg>`;
 createToolItem(246, 110, termIcon, "终端");
 
-// Row 2: 文件 | 侧边聊天
 const fileIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>`;
 createToolItem(16, 174, fileIcon, "文件");
 
 const chatIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
 createToolItem(246, 174, chatIcon, "侧边聊天");
 
-// Row 3: 子智能体 | 指标监控
 const subagentIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>`;
 createToolItem(16, 238, subagentIcon, "子智能体");
 
 createToolItem(246, 238, null, "指标监控");
 
-// Row 4: MCP 市场 | SKILL 市场
 createToolItem(16, 302, null, "MCP 市场");
 
 createToolItem(246, 302, null, "SKILL 市场");

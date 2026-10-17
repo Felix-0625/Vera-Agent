@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 import json
+import logging
 import time
 import uuid
 from pathlib import Path
@@ -14,8 +14,8 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from vera_agent.server.state import ServerState
-from vera_agent.session.templates import BUILTIN_TEMPLATES, get_topology_template
 from vera_agent.session.registry import AgentRegistryEntry, RegistryEdge, RegistryManager
+from vera_agent.session.templates import BUILTIN_TEMPLATES, get_topology_template
 from vera_agent.session.thread import ThreadSession
 
 logger = logging.getLogger("vera_server.groups")
@@ -52,6 +52,13 @@ def _save_group(project_root: Path, group: dict[str, Any]) -> None:
     temporary.replace(target)
 
 
+def _save_run(run_file: Path, run: dict[str, Any]) -> None:
+    run_file.parent.mkdir(parents=True, exist_ok=True)
+    temporary = run_file.with_name(f"{run_file.name}.{uuid.uuid4().hex}.tmp")
+    temporary.write_text(json.dumps(run, indent=2, ensure_ascii=False), encoding="utf-8")
+    temporary.replace(run_file)
+
+
 def _materialize_group_sessions(state: ServerState, project_root: Path, group: dict[str, Any]) -> None:
     """Ensure each agent node has a persistent, independently chat-able project thread."""
     thread_ids = list(group.get("thread_ids", []))
@@ -69,8 +76,13 @@ def _materialize_group_sessions(state: ServerState, project_root: Path, group: d
                 "project_root": str(project_root),
                 "group_mode": group.get("group_mode", "workflow"),
                 "group_goal": group.get("goal", ""),
+                "group_background": group.get("background", ""),
                 "workflow_node_id": str(node.get("id", "")),
+                "node_background": str(node.get("background", "")),
                 "responsibilities": node.get("responsibilities", []) if isinstance(node.get("responsibilities", []), list) else [],
+                "constraints": node.get("constraints", []) if isinstance(node.get("constraints", []), list) else [],
+                "output_spec": str(node.get("output_spec", "")),
+                "system_prompt": str(node.get("prompt_template", "")),
                 "allowed_tools": node.get("allowed_tools", []) if isinstance(node.get("allowed_tools", []), list) else [],
             })
             session.save(state.get_session_file(session))
@@ -96,8 +108,13 @@ def _materialize_group_sessions(state: ServerState, project_root: Path, group: d
                 "project_root": str(project_root),
                 "group_mode": group.get("group_mode", "workflow"),
                 "group_goal": group.get("goal", ""),
+                "group_background": group.get("background", ""),
                 "workflow_node_id": str(node.get("id", "")),
                 "responsibilities": responsibilities,
+                "node_background": str(node.get("background", "")),
+                "constraints": node.get("constraints", []) if isinstance(node.get("constraints", []), list) else [],
+                "output_spec": str(node.get("output_spec", "")),
+                "system_prompt": str(node.get("prompt_template", "")),
                 "allowed_tools": allowed_tools,
             },
         )
@@ -217,11 +234,18 @@ async def update_group(request: Request) -> JSONResponse:
             body = await request.json()
         except Exception:
             return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-        for field in ("name", "goal", "group_mode", "is_pinned", "is_archived", "nodes", "edges", "layout"):
+        if not isinstance(body, dict):
+            return JSONResponse({"error": "Group update must be a JSON object."}, status_code=400)
+        for field, limit in (("goal", 20_000), ("background", 50_000)):
+            if field in body and (not isinstance(body[field], str) or len(body[field]) > limit):
+                return JSONResponse({"error": f"{field} must be text within the configured size limit."}, status_code=400)
+        for field in ("name", "goal", "background", "group_mode", "is_pinned", "is_archived", "nodes", "edges", "layout"):
             if field in body:
                 group_record[field] = body[field]
         nodes = group_record.get("nodes", [])
         edges = group_record.get("edges", [])
+        if not isinstance(nodes, list) or len(nodes) > 60 or not isinstance(edges, list) or len(edges) > 120:
+            return JSONResponse({"error": "Group updates must contain at most 60 nodes and 120 edges."}, status_code=400)
         node_ids = {node.get("id") for node in nodes if isinstance(node, dict)}
         if any(not isinstance(edge, dict) or edge.get("source") not in node_ids or edge.get("target") not in node_ids for edge in edges):
             return JSONResponse({"error": "Every edge must connect two existing nodes"}, status_code=400)
@@ -291,7 +315,7 @@ async def delete_group(request: Request) -> JSONResponse:
             if thread_id in state.sessions:
                 state.sessions[thread_id].group_id = None
                 state.sessions[thread_id].save(session_file)
-            session = state.sessions.pop(thread_id, None)
+            state.sessions.pop(thread_id, None)
         return JSONResponse({"status": "ok", "deleted_group_id": group_id})
     if not state.graph:
         return JSONResponse({"error": "Graph not initialized"}, status_code=500)
@@ -360,7 +384,7 @@ async def create_group_thread(request: Request) -> JSONResponse:
             project_id=project_id or group_record.get("project_id"),
             role=role,
             title=title,
-            metadata={"project_root": str(project_root), "group_mode": group_record.get("group_mode", "team"), "group_goal": group_record.get("goal", ""), "workflow_node_id": node_id, "responsibilities": [str(body.get("responsibilities", ""))] if body.get("responsibilities") else [], "allowed_tools": body.get("allowed_tools", [])},
+            metadata={"project_root": str(project_root), "group_mode": group_record.get("group_mode", "team"), "group_goal": group_record.get("goal", ""), "group_background": group_record.get("background", ""), "workflow_node_id": node_id, "responsibilities": [str(body.get("responsibilities", ""))] if body.get("responsibilities") else [], "allowed_tools": body.get("allowed_tools", [])},
         )
         session.save(state.get_session_file(session))
         state.sessions[thread_id] = session
@@ -482,6 +506,8 @@ async def create_group_instance(request: Request) -> JSONResponse:
     state = _get_state(request)
     try:
         body = await request.json()
+        if not isinstance(body, dict):
+            return JSONResponse({"error": "Group request must be a JSON object."}, status_code=400)
         project_id = str(body.get("project_id", ""))
         project_root = _project_root(state, project_id)
     except (ValueError, TypeError) as exc:
@@ -489,15 +515,19 @@ async def create_group_instance(request: Request) -> JSONResponse:
     name = str(body.get("name", "")).strip()
     group_mode = body.get("group_mode")
     nodes, edges = body.get("nodes"), body.get("edges", [])
-    if not name or group_mode not in {"workflow", "architecture"} or not isinstance(nodes, list) or not nodes or not isinstance(edges, list):
-        return JSONResponse({"error": "name, workflow/architecture type, nodes and edges are required"}, status_code=400)
+    goal = body.get("goal", body.get("description", ""))
+    background = body.get("background", "")
+    if not name or group_mode not in {"workflow", "architecture"} or not isinstance(nodes, list) or not nodes or len(nodes) > 60 or not isinstance(edges, list) or len(edges) > 120:
+        return JSONResponse({"error": "name, workflow/architecture type, 1–60 nodes and at most 120 edges are required"}, status_code=400)
+    if not isinstance(goal, str) or len(goal) > 20_000 or not isinstance(background, str) or len(background) > 50_000:
+        return JSONResponse({"error": "Project goal/background must be text within the configured size limits."}, status_code=400)
     ids = {str(node.get("id", "")) for node in nodes if isinstance(node, dict)}
     if len(ids) != len(nodes) or "" in ids or any(not isinstance(edge, dict) or edge.get("source") not in ids or edge.get("target") not in ids for edge in edges):
         return JSONResponse({"error": "Invalid node IDs or edges"}, status_code=400)
     group_id = f"flow_{uuid.uuid4().hex[:10]}"
     record = {
         "group_id": group_id, "project_id": project_id, "project_path": str(project_root),
-        "group_mode": group_mode, "name": name, "goal": str(body.get("description", "")),
+        "group_mode": group_mode, "name": name, "goal": goal, "background": background,
         "template_id": body.get("template_id"), "template_name": body.get("template_name", name),
         "topology_type": group_mode, "thread_ids": [], "nodes": nodes, "edges": edges,
         "layout": body.get("layout", {}), "is_pinned": False, "is_archived": False, "created_at": time.time(),
@@ -513,6 +543,8 @@ async def create_group_run(request: Request) -> JSONResponse:
     group_id = request.path_params["group_id"]
     try:
         body = await request.json()
+        if not isinstance(body, dict):
+            return JSONResponse({"error": "Run request must be a JSON object."}, status_code=400)
         project_id = str(body.get("project_id", ""))
         project_root = _project_root(state, project_id)
     except (ValueError, TypeError) as exc:
@@ -523,6 +555,16 @@ async def create_group_run(request: Request) -> JSONResponse:
     if body.get("confirmation") != "Y":
         return JSONResponse({"error": "执行前必须明确选择 Y"}, status_code=403)
     requested = body.get("node_ids", [])
+    if not isinstance(requested, list) or any(not isinstance(node_id, str) for node_id in requested):
+        return JSONResponse({"error": "node_ids must be a list of node IDs."}, status_code=400)
+    known_node_ids = {str(node.get("id")) for node in group.get("nodes", []) if isinstance(node, dict)}
+    if requested and not set(requested).issubset(known_node_ids):
+        return JSONResponse({"error": "node_ids contains an unknown workflow node."}, status_code=400)
+    input_text = body.get("input", "")
+    if not isinstance(input_text, str) or not input_text.strip():
+        return JSONResponse({"error": "A non-empty text input is required to start a run."}, status_code=400)
+    if len(input_text) > 100_000:
+        return JSONResponse({"error": "Run input exceeds 100000 characters."}, status_code=413)
     nodes = [node for node in group.get("nodes", []) if (not requested or node.get("id") in requested)]
     if not nodes:
         return JSONResponse({"error": "请选择至少一个对话窗口"}, status_code=400)
@@ -534,8 +576,11 @@ async def create_group_run(request: Request) -> JSONResponse:
         session = ThreadSession(
             thread_id=thread_id, group_id=group_id, project_id=project_id, role=str(node.get("role", "agent")),
             title=f"{node.get('title', 'Agent')} · {run_id}",
-            metadata={"project_root": str(project_root), "group_mode": group.get("group_mode"), "group_goal": group.get("goal", ""),
+            metadata={"project_root": str(project_root), "group_mode": group.get("group_mode"), "group_goal": group.get("goal", ""), "group_background": group.get("background", ""),
                       "workflow_node_id": node["id"], "workflow_run_id": run_id, "responsibilities": node.get("responsibilities", []),
+                      "node_background": str(node.get("background", "")),
+                      "constraints": node.get("constraints", []) if isinstance(node.get("constraints", []), list) else [],
+                      "output_spec": str(node.get("output_spec", "")),
                       "allowed_tools": ["__orchestration_control__"] if node.get("type") in {"condition", "loop"} else node.get("allowed_tools", []),
                       "workflow_control": node.get("type") in {"condition", "loop"},
                       "workflow_node_type": node.get("type", "agent"), "system_prompt": node_prompt, "isolated_run": True},
@@ -543,10 +588,14 @@ async def create_group_run(request: Request) -> JSONResponse:
         session.save(state.get_session_file(session))
         state.sessions[thread_id] = session
         sessions.append({"node_id": node["id"], "thread_id": thread_id, "title": node["title"], "prompt_template": node_prompt})
-    run = {"run_id": run_id, "group_id": group_id, "project_id": project_id, "status": "ready", "input": str(body.get("input", "")), "sessions": sessions, "created_at": time.time(), "nodes": []}
+    run = {
+        "run_id": run_id, "group_id": group_id, "project_id": project_id, "status": "ready",
+        "input": input_text, "sessions": sessions, "created_at": time.time(),
+        "nodes": [{"node_id": node["id"], "status": "pending", "output": "", "inputs": []} for node in nodes],
+        "events": [{"type": "run_created", "at": time.time()}],
+    }
     run_dir = project_root / ".agents" / "runs" / group_id
-    run_dir.mkdir(parents=True, exist_ok=True)
-    (run_dir / f"{run_id}.json").write_text(json.dumps(run, indent=2, ensure_ascii=False), encoding="utf-8")
+    _save_run(run_dir / f"{run_id}.json", run)
     return JSONResponse({"run": run}, status_code=201)
 
 
@@ -558,14 +607,107 @@ async def update_group_run(request: Request) -> JSONResponse:
         project_root = _project_root(state, project_id)
     except ValueError as exc:
         return JSONResponse({"error": str(exc)}, status_code=404)
+    group = _load_group(project_root, group_id)
+    if not group or group.get("project_id") != project_id:
+        return JSONResponse({"error": "流程实例不存在于当前项目"}, status_code=404)
     run_file = project_root / ".agents" / "runs" / group_id / f"{run_id}.json"
     if not run_file.exists():
         return JSONResponse({"error": "Run not found"}, status_code=404)
-    run = json.loads(run_file.read_text(encoding="utf-8"))
-    body = await request.json()
-    if isinstance(body.get("nodes"), list): run["nodes"] = body["nodes"]
-    if body.get("status") in {"running", "completed", "failed", "cancelled"}: run["status"] = body["status"]
-    run_file.write_text(json.dumps(run, indent=2, ensure_ascii=False), encoding="utf-8")
+    try:
+        run = json.loads(run_file.read_text(encoding="utf-8"))
+        body = await request.json()
+    except (OSError, json.JSONDecodeError, ValueError):
+        return JSONResponse({"error": "Run record is invalid or request JSON is malformed."}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"error": "Run update must be a JSON object."}, status_code=400)
+    if run.get("group_id") != group_id or run.get("project_id") != project_id:
+        return JSONResponse({"error": "Run does not belong to this project instance."}, status_code=404)
+
+    allowed_statuses = {"ready", "running", "completed", "failed", "cancelled"}
+    old_status = run.get("status", "ready")
+    next_status = body.get("status", old_status)
+    transitions = {"ready": {"running", "failed", "cancelled"}, "running": {"completed", "failed", "cancelled"}}
+    if not isinstance(next_status, str):
+        return JSONResponse({"error": "Run status must be text."}, status_code=400)
+    if next_status != old_status and (next_status not in allowed_statuses or next_status not in transitions.get(old_status, set())):
+        return JSONResponse({"error": f"Invalid run status transition: {old_status} -> {next_status}"}, status_code=409)
+
+    changed_nodes: list[dict[str, Any]] = []
+    previous_nodes = {item.get("node_id"): item for item in run.get("nodes", []) if isinstance(item, dict)}
+    if "nodes" in body:
+        submitted = body["nodes"]
+        sessions = run.get("sessions", [])
+        known_ids = {str(session.get("node_id")) for session in sessions if isinstance(session, dict)}
+        statuses = {"pending", "running", "completed", "failed", "skipped"}
+        if not isinstance(submitted, list) or len(submitted) > len(known_ids):
+            return JSONResponse({"error": "Run nodes must be a bounded list of known node states."}, status_code=400)
+        seen: set[str] = set()
+        for item in submitted:
+            if not isinstance(item, dict):
+                return JSONResponse({"error": "Each run node state must be an object."}, status_code=400)
+            node_id = str(item.get("node_id", ""))
+            status = item.get("status")
+            output = item.get("output", "")
+            error = item.get("error", previous_nodes.get(str(item.get("node_id", "")), {}).get("error", ""))
+            inputs = item.get("inputs", previous_nodes.get(node_id, {}).get("inputs", []))
+            if node_id not in known_ids or node_id in seen or not isinstance(status, str) or status not in statuses or not isinstance(output, str) or not isinstance(error, str) or len(error) > 4000 or not isinstance(inputs, list) or len(inputs) > 50:
+                return JSONResponse({"error": "Run node state has an unknown node, duplicate node, invalid status, or invalid text inputs/outputs."}, status_code=400)
+            previous_status = previous_nodes.get(node_id, {}).get("status", "pending")
+            allowed_node_transitions = {
+                "pending": {"pending", "running", "completed", "failed", "skipped"},
+                "running": {"running", "completed", "failed"},
+                "completed": {"running", "completed"}, "failed": {"failed"}, "skipped": {"skipped"},
+            }
+            if status not in allowed_node_transitions.get(previous_status, set()):
+                return JSONResponse({"error": f"Invalid node status transition: {previous_status} -> {status}"}, status_code=409)
+            if len(output) > 200_000:
+                return JSONResponse({"error": "A run node output exceeds 200000 characters."}, status_code=413)
+            clean_inputs: list[dict[str, str]] = []
+            input_size = 0
+            for source in inputs:
+                if not isinstance(source, dict) or any(not isinstance(source.get(key), str) for key in ("node_id", "title", "output")):
+                    return JSONResponse({"error": "Each node input must include text node_id, title and output fields."}, status_code=400)
+                if source["node_id"] not in known_ids:
+                    return JSONResponse({"error": "Node input provenance references an unknown run node."}, status_code=400)
+                clean_source = {key: source[key] for key in ("node_id", "title", "output")}
+                for key in ("relation", "label"):
+                    if source.get(key) is not None:
+                        if not isinstance(source[key], str):
+                            return JSONResponse({"error": f"Node input {key} must be text."}, status_code=400)
+                        clean_source[key] = source[key]
+                input_size += sum(len(value) for value in clean_source.values())
+                clean_inputs.append(clean_source)
+            if input_size > 250_000:
+                return JSONResponse({"error": "Node input provenance exceeds 250000 characters."}, status_code=413)
+            seen.add(node_id)
+            changed_nodes.append({"node_id": node_id, "status": status, "output": output, "error": error, "inputs": clean_inputs})
+        merged_nodes = {**previous_nodes, **{item["node_id"]: item for item in changed_nodes}}
+        run["nodes"] = [merged_nodes.get(str(session.get("node_id")), {"node_id": str(session.get("node_id")), "status": "pending", "output": ""}) for session in sessions]
+
+    if next_status == "completed" and any(item.get("status") not in {"completed", "skipped"} for item in run.get("nodes", [])):
+        return JSONResponse({"error": "A run cannot complete while any node is pending or running."}, status_code=409)
+    if "final_output" in body:
+        final_output = body["final_output"]
+        if not isinstance(final_output, str) or len(final_output) > 200_000:
+            return JSONResponse({"error": "final_output must be text of at most 200000 characters."}, status_code=400)
+        run["final_output"] = final_output
+    if "error" in body:
+        error = body["error"]
+        if not isinstance(error, str) or len(error) > 4000:
+            return JSONResponse({"error": "Run error must be text of at most 4000 characters."}, status_code=400)
+        run["error"] = error
+
+    events = run.setdefault("events", [])
+    if next_status != old_status:
+        events.append({"type": "run_status", "from": old_status, "to": next_status, "at": time.time()})
+        run["status"] = next_status
+    for node in changed_nodes:
+        prior = previous_nodes.get(node["node_id"])
+        if prior != node:
+            events.append({"type": "node_status", "node_id": node["node_id"], "status": node["status"], "at": time.time()})
+    if len(events) > 5000:
+        del events[:-5000]
+    _save_run(run_file, run)
     return JSONResponse({"run": run})
 
 
@@ -675,7 +817,6 @@ async def compose_group(request: Request) -> JSONResponse:
             "created_at": time.time(),
         }
         _save_group(project_root, group_record)
-        group_file = _groups_dir(project_root) / f"{group_id}.json"
         created_registry = True
         registry_mgr.create_or_update_group(
             group_id=group_id,

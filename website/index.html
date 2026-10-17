@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b0d12">
+    <meta name="description" content="VeraAgent 是面向本地软件项目的 AI Agent 工作站，连接项目任务、Agent 对话与多窗口协作。">
+    <title>VeraAgent — 项目里的 Agent 工作站</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="./assets/site.css">
+    <script src="./assets/site.js" defer></script>
+  </head>
+  <body class="landing-page">
+    <header class="topbar">
+      <div class="nav-shell">
+        <a class="brand" href="./" aria-label="VeraAgent 首页"><span class="brand-mark">V</span><span>VeraAgent</span></a>
+        <nav class="main-nav" aria-label="主导航">
+          <a class="nav-link is-active" href="./" aria-current="page">设计</a>
+          <a class="nav-link" href="./docs/">文档</a>
+          <a class="nav-link" href="./playground/">交互演示</a>
+          <a class="nav-github" href="https://github.com/Felix-0625/Agents" target="_blank" rel="noreferrer">GitHub</a>
+        </nav>
+        <div class="header-actions">
+          <div class="language-switch" role="group" aria-label="语言">
+            <button class="is-active" type="button" aria-pressed="true">中文</button>
+            <button type="button" disabled title="英文版暂未提供">EN</button>
+          </div>
+          <button class="menu-toggle" type="button" aria-label="打开导航" aria-expanded="false"><span></span><span></span></button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="landing-hero">
+        <div class="landing-hero-copy">
+          <p class="landing-kicker">LOCAL AI WORKSTATION</p>
+          <h1>让 Agent 在<br><span>项目里协作</span></h1>
+          <p class="landing-lead">VeraAgent 把任务看板、主 Agent 对话、多窗口协作和可编排工作流放进同一个本地工作站。</p>
+          <div class="landing-actions">
+            <a class="landing-primary" href="./playground/">立即体验 <span aria-hidden="true">↗</span></a>
+            <a class="landing-secondary" href="./docs/">查看文档</a>
+          </div>
+          <p class="landing-reality">面向本地软件项目 · Windows 桌面端 · 模型由用户配置</p>
+        </div>
+
+        <div class="landing-visual" aria-label="项目任务与 Agent 协作界面示意">
+          <div class="visual-toolbar"><span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span><span>VERAAGENT / PROJECT</span><span class="visual-local">本地项目</span></div>
+          <div class="visual-workspace">
+            <aside class="visual-taskboard">
+              <div class="visual-small-title">任务</div>
+              <div class="visual-task is-active"><span class="task-check">◉</span><span>检查状态同步</span><i>运行中</i></div>
+              <div class="visual-task"><span class="task-check">○</span><span>审查工作流</span></div>
+              <div class="visual-task"><span class="task-check">✓</span><span>整理验证清单</span></div>
+            </aside>
+            <div class="visual-chat">
+              <div class="visual-chat-title"><span class="agent-mark">V</span><span>项目对话</span><small>VA-101</small></div>
+              <div class="visual-message user-message">检查任务完成后，状态和对话是否保持同步。</div>
+              <div class="visual-message agent-message"><b>主 Agent</b><p>我会沿着任务状态、项目会话和运行记录逐项核对。</p></div>
+              <div class="visual-delegation"><span class="delegation-line"></span><span>拆分给协作窗口</span><i>↗</i></div>
+              <div class="visual-workers"><span><i></i>分析窗口 <small>检查数据流</small></span><span><i></i>复核窗口 <small>核对边界</small></span></div>
+            </div>
+            <aside class="visual-run">
+              <div class="visual-small-title">运行轨迹</div>
+              <div class="visual-run-step done"><i></i><span>拆解目标</span><small>完成</small></div>
+              <div class="visual-run-step active"><i></i><span>检查数据流</span><small>执行中</small></div>
+              <div class="visual-run-step"><i></i><span>核对边界</span></div>
+              <div class="visual-run-step"><i></i><span>返回结果</span></div>
+            </aside>
+          </div>
+          <div class="visual-caption"><span>任务保留在项目中</span><span>角色分工清晰可见</span><span>运行结果回到对话</span></div>
+        </div>
+      </section>
+
+      <section class="landing-story" aria-labelledby="story-title">
+        <div class="story-heading">
+          <p class="landing-kicker">ONE PROJECT, SHARED CONTEXT</p>
+          <h2 id="story-title">从项目任务，到协作结果</h2>
+        </div>
+        <div class="story-track">
+          <article class="story-card">
+            <span class="story-index">01</span>
+            <div class="story-symbol task-symbol" aria-hidden="true"><i></i><i></i><i></i></div>
+            <h3>任务有归属</h3>
+            <p>把工作项放在对应项目里，并关联到项目对话，任务状态和讨论有迹可循。</p>
+          </article>
+          <span class="story-connector" aria-hidden="true"></span>
+          <article class="story-card">
+            <span class="story-index">02</span>
+            <div class="story-symbol agent-symbol" aria-hidden="true"><i></i><i></i></div>
+            <h3>角色来协作</h3>
+            <p>主 Agent 组织任务，协作窗口按各自职责处理，并把结果交回运行流程。</p>
+          </article>
+          <span class="story-connector" aria-hidden="true"></span>
+          <article class="story-card">
+            <span class="story-index">03</span>
+            <div class="story-symbol result-symbol" aria-hidden="true"><i></i><i></i><i></i></div>
+            <h3>过程看得见</h3>
+            <p>查看节点状态、传入内容和输出；失败时停止后续节点并保留运行记录。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="landing-tour" aria-labelledby="tour-title">
+        <div class="tour-copy">
+          <p class="landing-kicker">A TASK IN MOTION</p>
+          <h2 id="tour-title">看一条任务<br>怎样展开协作</h2>
+          <p>从任务目标到角色分工，再到节点结果回传。演示使用预设样例，呈现的是工作站交互方式，不代表真实模型执行记录。</p>
+          <a class="landing-text-link" href="./playground/">打开可交互演示 <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="tour-video-frame">
+          <span class="tour-video-label"><i></i>预设数据 · 本地录制</span>
+          <video class="tour-video" controls playsinline preload="metadata" poster="./assets/video/demo-poster.png" aria-label="VeraAgent 多 Agent 协作 mock 演示">
+            <source src="./assets/video/veraagent-task-collaboration-demo.webm" type="video/webm">
+            当前浏览器不支持播放 WebM 视频。<a href="./playground/">打开交互演示</a>
+          </video>
+          <p class="tour-video-caption">画面来自交互演示页的预设脚本，不连接模型、后端或真实项目。<a href="./playground/">试用交互演示 <span aria-hidden="true">→</span></a></p>
+        </div>
+      </section>
+
+      <section class="landing-start" aria-labelledby="start-title">
+        <div>
+          <p class="landing-kicker">START WITH YOUR PROJECT</p>
+          <h2 id="start-title">从一个真实项目开始</h2>
+          <p>先体验交互，再按文档绑定本地项目并配置模型。</p>
+        </div>
+        <div class="start-actions"><a class="landing-primary" href="./playground/">立即体验 <span aria-hidden="true">↗</span></a><a class="landing-secondary" href="./docs/#quick-start">Windows 快速开始</a></div>
+      </section>
+
+      <section class="landing-community" aria-labelledby="community-title">
+        <div class="community-orbit" aria-hidden="true"><i></i><i></i><i></i><span>V</span></div>
+        <div class="community-copy">
+          <p class="landing-kicker">BUILT FOR REAL PROJECT WORK</p>
+          <h2 id="community-title">把工作站带进你的项目</h2>
+          <p>VeraAgent 开源开发中。查看代码、了解实现，或从交互演示开始。</p>
+          <div class="community-links"><a href="https://github.com/Felix-0625/Agents" target="_blank" rel="noreferrer"><span aria-hidden="true">↗</span>查看 GitHub</a><a href="./docs/">阅读开发文档</a><a href="./playground/">体验交互演示</a></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-shell">
+        <a class="brand" href="./"><span class="brand-mark">V</span><span>VeraAgent</span></a>
+        <p>面向本地软件项目的 Agent 工作站。</p>
+        <nav aria-label="页脚导航"><a href="./docs/">文档</a><a href="./playground/">交互演示</a><a href="https://github.com/Felix-0625/Agents">GitHub</a></nav>
+        <small>© VeraAgent contributors · 持续开发中</small>
+      </div>
+    </footer>
+  </body>
+</html>

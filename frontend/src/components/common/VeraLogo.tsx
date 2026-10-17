@@ -6,9 +6,7 @@ interface VeraLogoProps {
   className?: string;
 }
 
-/**
- * 品牌 Logo 组件 (严格使用根目录挪动的 图标.png)
- */
+
 export const VeraLogo: React.FC<VeraLogoProps> = ({ size = 24, className = '' }) => {
   return (
     <img

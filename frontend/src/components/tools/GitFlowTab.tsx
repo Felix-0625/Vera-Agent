@@ -193,7 +193,10 @@ export const GitFlowTab: React.FC<{ projectId?: string | null }> = ({ projectId:
     } catch (reason) { setError(reason instanceof Error ? reason.message : String(reason)); }
     finally { setLoading(false); }
   }, [projectId]);
-  useEffect(() => { void loadData(); }, [loadData]);
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Refresh Git topology when the conversation's project changes.
+    void loadData();
+  }, [loadData]);
 
   const runAction = async (action: () => Promise<unknown>) => {
     setBusy(true);

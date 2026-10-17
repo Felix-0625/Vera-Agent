@@ -78,6 +78,25 @@ export interface ScheduledTask {
   last_error?: string | null;
 }
 
+export type WorkItemStatus = 'backlog' | 'todo' | 'in_progress' | 'blocked' | 'in_review' | 'done' | 'canceled';
+export type WorkItemPriority = 'urgent' | 'high' | 'medium' | 'low' | 'none';
+
+export interface WorkItem {
+  id: string;
+  project_id: string;
+  identifier: string;
+  title: string;
+  description: string;
+  status: WorkItemStatus;
+  priority: WorkItemPriority;
+  labels: string[];
+  sort_order: number;
+  thread_id: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AnalyticsDashboard {
   summary: {
     total_cost_usd: number;

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Windows source bootstrapper for the VeraAgent pywebview desktop app",
+  "license": "MIT",
   "bin": {
     "vera-agent": "installer/cli.cjs"
   },

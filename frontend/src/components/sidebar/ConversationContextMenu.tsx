@@ -13,10 +13,7 @@ interface ConversationContextMenuProps {
   onDelete: (thread: Thread) => void;
 }
 
-/**
- * 对话右侧三个点弹出的完整操作菜单
- * 确保图标与中文文本完整清晰可见，防止任何截断
- */
+
 export const ConversationContextMenu: React.FC<ConversationContextMenuProps> = ({
   thread,
   position,
@@ -66,7 +63,7 @@ export const ConversationContextMenu: React.FC<ConversationContextMenuProps> = (
 
   return createPortal((
     <>
-      {/* 全屏透明遮罩用于点击外部关闭 */}
+      {}
       <div
         style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
         onClick={onClose}
@@ -76,7 +73,7 @@ export const ConversationContextMenu: React.FC<ConversationContextMenuProps> = (
         }}
       />
 
-      {/* 浮动菜单实体 */}
+      {}
       <div
         ref={menuRef}
         className="animate-fade-in"

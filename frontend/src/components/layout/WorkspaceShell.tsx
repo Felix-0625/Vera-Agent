@@ -7,6 +7,7 @@ import { CenterWorkspace } from '../composer/CenterWorkspace';
 import { RightToolsContainer } from '../tools/RightToolsContainer';
 import { useRightSidebarLayout } from '../../stores/rightSidebarLayout';
 import { ResizeHandle } from './ResizeHandle';
+import { TaskboardWorkspace } from '../tools/TaskboardWorkspace';
 
 // Modals
 import { ProjectSelectorModal } from '../dialogs/ProjectSelectorModal';
@@ -24,18 +25,27 @@ export const WorkspaceShell: React.FC = () => {
     leftWidth,
     setLeftWidth,
     toggleLeft,
+    taskboardOpen,
+    setTaskboardOpen,
   } = useLayoutStore();
   const { rightCollapsed, rightWidth, setRightWidth, toggleRight, rightMaximized } = useRightSidebarLayout();
 
   const { loadCurrentProject, loadProjectsHistory, loadGroups } = useProjectStore();
+  const activeThreadId = useChatStore((state) => state.activeThreadId);
   const { loadThreads } = useChatStore();
+  const previousThreadId = React.useRef(activeThreadId);
 
   useEffect(() => {
     loadCurrentProject();
     loadProjectsHistory();
     loadGroups();
     loadThreads();
-  }, []);
+  }, [loadCurrentProject, loadProjectsHistory, loadGroups, loadThreads]);
+
+  useEffect(() => {
+    if (previousThreadId.current !== activeThreadId && taskboardOpen) setTaskboardOpen(false);
+    previousThreadId.current = activeThreadId;
+  }, [activeThreadId, setTaskboardOpen, taskboardOpen]);
 
   const handleResizeLeft = (deltaX: number) => {
     const winWidth = window.innerWidth;
@@ -78,21 +88,27 @@ export const WorkspaceShell: React.FC = () => {
       {/* 1. Left Sidebar */}
       <LeftSidebar />
 
-      {/* Resize Handle 1 */}
-      {!leftCollapsed && !rightMaximized && (
-        <ResizeHandle onResize={handleResizeLeft} direction="left" />
+      {taskboardOpen ? (
+        <TaskboardWorkspace onClose={() => setTaskboardOpen(false)} />
+      ) : (
+        <>
+          {/* Resize Handle 1 */}
+          {!leftCollapsed && !rightMaximized && (
+            <ResizeHandle onResize={handleResizeLeft} direction="left" />
+          )}
+
+          {/* 2. Middle Workspace */}
+          {!rightMaximized && <CenterWorkspace />}
+
+          {/* Resize Handle 2 */}
+          {!rightCollapsed && !rightMaximized && (
+            <ResizeHandle onResize={handleResizeRight} direction="right" />
+          )}
+
+          {/* 3. Right Tools Panel */}
+          <RightToolsContainer />
+        </>
       )}
-
-      {/* 2. Middle Workspace */}
-      {!rightMaximized && <CenterWorkspace />}
-
-      {/* Resize Handle 2 */}
-      {!rightCollapsed && !rightMaximized && (
-        <ResizeHandle onResize={handleResizeRight} direction="right" />
-      )}
-
-      {/* 3. Right Tools Panel */}
-      <RightToolsContainer />
 
       {/* Global Modals */}
       <ProjectSelectorModal />

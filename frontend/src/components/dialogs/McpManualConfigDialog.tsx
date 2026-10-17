@@ -6,7 +6,7 @@ import { Button } from '../common/Button';
 import { TextArea } from '../common/Field';
 import { createMcpServer, updateMcpServer } from '../../api/settingsApi';
 
-const exampleConfig = `// 示例：
+const exampleConfig = `
 // {
 //   "mcpServers": {
 //     "example-server": {
@@ -29,6 +29,7 @@ export const McpManualConfigDialog: React.FC = () => {
   const lineCount = useMemo(() => Math.max(1, configText.split('\n').length), [configText]);
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- Populate the editor from the selected MCP record when the dialog opens.
     setError('');
     if (editingMcp) {
       const serverConfig: ParsedServer = { type: editingMcp.type, command: editingMcp.command, args: editingMcp.args, url: editingMcp.url, headers: editingMcp.headers, ...(editingMcp.env ? { env: editingMcp.env } : {}) };

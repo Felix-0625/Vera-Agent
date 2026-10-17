@@ -12,10 +12,11 @@ VeraAgent is under active development. Small, reviewable changes with reproducib
 
 ## Code conventions
 
-- Python source is in `vera-agent/src/vera_agent`; format/lint settings live in `vera-agent/pyproject.toml`.
-- React/TypeScript source is in `frontend/src`; shared styles and controls belong in the shared tokens/components rather than page-local hard-coded themes.
+- Python source is in `vera-agent/src/vera_agent`; use `snake_case` for modules, functions, and variables, and `PascalCase` for classes. Format/lint settings live in `vera-agent/pyproject.toml`.
+- React/TypeScript source is in `frontend/src`; use `PascalCase` for React component files and exports, `camelCase` for functions, variables, and hooks (`useThing`), and `kebab-case` for CSS files and classes. Keep shared styles and controls in shared tokens/components rather than page-local hard-coded themes.
+- Use English for source-code comments and docstrings. Comments should explain non-obvious constraints or decisions, not paraphrase the next line.
 - Keep API request/response fields aligned with `frontend/src/types` and test the route contract when changing it.
-- Comments should explain non-obvious constraints or decisions, not paraphrase the next line.
+- Document runtime configuration in the root README and `.env.example`; update both when environment-variable behavior changes.
 
 ## Pull requests
 

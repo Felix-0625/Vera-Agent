@@ -1,5 +1,6 @@
 import React from 'react';
-import { CodeEditor, highlightCodeLine } from './CodeEditor';
+import { CodeEditor } from './CodeEditor';
+import { highlightCodeLine } from './codeEditorUtils';
 
 interface DiffCodeViewProps {
   diffText?: string;
@@ -8,9 +9,7 @@ interface DiffCodeViewProps {
   message?: string | null;
 }
 
-/**
- * 差异对比查看器的代码差异统一视窗
- */
+
 export const DiffCodeView: React.FC<DiffCodeViewProps> = ({ diffText, fileName, sourceText, message }) => {
   if (sourceText !== null && sourceText !== undefined) {
     return <div style={{ flex: 1, minWidth: 0, overflow: 'auto', padding: 'var(--space-3-5)', fontFamily: 'monospace', fontSize: 'var(--font-size-sm)' }}>

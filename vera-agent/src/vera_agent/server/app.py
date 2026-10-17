@@ -20,8 +20,8 @@ Adheres to Pi-agent minimalism and strict modular domain architecture:
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from starlette.applications import Starlette
@@ -29,22 +29,23 @@ from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.routing import Route
 
-from vera_agent.session.graph import GitFlowGraph
-from vera_agent.server.state import ServerState
-from vera_agent.server.routes.chat import chat_routes
-from vera_agent.server.routes.projects import project_routes
-from vera_agent.server.routes.threads import thread_routes
-from vera_agent.server.routes.groups import group_routes
-from vera_agent.server.routes.files import file_routes
-from vera_agent.server.routes.worktrees import worktree_routes
-from vera_agent.server.routes.gitflow import gitflow_routes
-from vera_agent.server.routes.terminal import terminal_routes
-from vera_agent.server.routes.tasks import start_scheduler, stop_scheduler, task_routes
-from vera_agent.server.routes.settings import settings_routes
-from vera_agent.server.routes.mcp import mcp_routes
-from vera_agent.server.routes.skills import skill_routes
 from vera_agent.server.routes.analytics import analytics_routes
+from vera_agent.server.routes.chat import chat_routes
+from vera_agent.server.routes.files import file_routes
+from vera_agent.server.routes.gitflow import gitflow_routes
+from vera_agent.server.routes.groups import group_routes
+from vera_agent.server.routes.mcp import mcp_routes
+from vera_agent.server.routes.projects import project_routes
 from vera_agent.server.routes.sessions import session_routes
+from vera_agent.server.routes.settings import settings_routes
+from vera_agent.server.routes.skills import skill_routes
+from vera_agent.server.routes.taskboard import taskboard_routes
+from vera_agent.server.routes.tasks import start_scheduler, stop_scheduler, task_routes
+from vera_agent.server.routes.terminal import terminal_routes
+from vera_agent.server.routes.threads import thread_routes
+from vera_agent.server.routes.worktrees import worktree_routes
+from vera_agent.server.state import ServerState
+from vera_agent.session.graph import GitFlowGraph
 
 logger = logging.getLogger("vera_server")
 
@@ -67,6 +68,7 @@ def create_app(
         *gitflow_routes,
         *terminal_routes,
         *task_routes,
+        *taskboard_routes,
         *settings_routes,
         *mcp_routes,
         *skill_routes,

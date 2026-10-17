@@ -4,10 +4,7 @@ import { VeraLogo } from '../common/VeraLogo';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { IconButton } from '../common/IconButton';
 
-/**
- * 侧边栏顶部品牌头
- * 严格按照 Penpot 用户截图：Logo + VeraAgent + WORKSPACE，右侧仅单个折叠图标
- */
+
 export const BrandHeader: React.FC = () => {
   const { toggleLeft } = useLayoutStore();
 

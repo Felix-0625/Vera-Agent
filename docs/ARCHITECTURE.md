@@ -23,6 +23,10 @@ The chat route receives the selected thread/project and model configuration, app
 
 The implementation has multiple layers of state: process-local active objects in `ServerState`, project/application configuration in `.agents`, and project files/Git state in the selected workspace. Restart behavior and project ownership must be checked against the specific route; not every in-memory object is a durable database record.
 
+## Project task board
+
+The task board tracks durable project work items; it is intentionally separate from one-time scheduled Agent prompts. Work items are stored in a local SQLite database at `<projects_config_root>/.agents/taskboard.sqlite`, while each item carries a `project_id` and may link to a conversation owned by that same project. The Starlette API exposes list/create/update/archive routes under `/api/taskboard/tasks`. Updates use a version field to reject stale writes, and archive is a soft delete. The React board is opened from the left navigation and occupies the main workspace; its current project is selected in the board header. It does not claim that a linked Agent conversation has completed a task: status changes remain explicit board actions.
+
 ## Project and application scope
 
 - Projects are selected by local path and recorded in project history.
@@ -32,7 +36,11 @@ The implementation has multiple layers of state: process-local active objects in
 
 ## Workflow and architecture instances
 
-The UI exposes global templates and project-owned instances. A saved template is a definition, not proof that a workflow runner ran. Runtime acceptance requires a run record, node-level status, input/output provenance, and a surfaced final result. Consult the current implementation and tests before claiming every editor feature is executable; see [testing and limitations](TESTING.md).
+The UI exposes global templates and project-owned instances. A template defines agent roles, responsibilities, prompt templates, model choices, and graph edges; the project instance is the copied, editable definition used for a real run. It does not capture a model credential. Each run creates isolated conversation sessions for its nodes and stores task input, node outputs, status snapshots, and bounded status events under the project `.agents/runs` directory.
+
+The current runner is deliberately dependency-light: the UI schedules one node at a time and calls the existing chat SSE endpoint for model work; the backend owns isolated sessions, validates chat handoff data, validates legal run/node state transitions, and atomically persists each run update. Agent outputs are passed as structured records (`node_id`, title, edge relation/label, output). The runner waits for active branch inputs before a merge node, sends only outputs on active edges, routes condition and loop decisions through a strict `YES`/`NO` response, and caps loop iterations. One node's output is the handoff payload; there is no additional manager model call to rewrite every handoff. A final Supervisor turn reviews the collected results and returns the answer to the originating conversation.
+
+This runtime is serial, so it favors predictable ordering and lower orchestration overhead over parallel branch execution. The scheduler still lives in the renderer, so closing/reloading the UI can interrupt scheduling even though the backend has persisted progress. Run events are currently stored with the run record; there is not yet a separate run-history query or resume endpoint. MCP/Skill references in a node are not executable node-level integrations unless the existing chat permissions attach them to that conversation. See [testing and limitations](TESTING.md) before treating editor node types as runtime executors.
 
 ## Trust boundaries
 

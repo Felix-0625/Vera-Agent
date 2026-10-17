@@ -20,10 +20,7 @@ export interface ToolLauncherItem {
   borderColor: string;
 }
 
-/**
- * 右侧工具发射器磁贴数据配置
- * 右侧工具快捷入口
- */
+
 export const TOOL_LAUNCHER_ITEMS: ToolLauncherItem[] = [
   {
     id: 'subagents',

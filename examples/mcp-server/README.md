@@ -1,24 +1,33 @@
-# Minimal stdio MCP example
+# Read-only task board MCP server
 
-This standalone Python example implements a small JSON-RPC 2.0 stdio server with `system_metrics`, `analyze_codebase`, and `ping_diagnostic` tools. It is intended to illustrate protocol message flow and can be inspected before configuring it in an MCP client.
+This example exposes two read-only tools over MCP stdio: `list_tasks` and `get_task`. Both return a fixed three-task fixture representing a small VeraAgent project. The server does not access the host filesystem, make network requests, or mutate project data.
 
-## Requirements and run
+It uses the [official MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) instead of implementing JSON-RPC or MCP framing by hand.
 
-Python 3.10+; no third-party package is required by the server source.
+## Requirements
+
+- Python 3.10 or newer
+- `uv` (recommended) or `pip`
+- Network access only for the first dependency installation
+
+## Run in the MCP Inspector
+
+From this directory:
 
 ```powershell
-cd examples\mcp-server
-python server.py
+uv run --with "mcp>=1.12,<2" mcp dev server.py
 ```
 
-The server reads protocol messages from stdin and writes protocol messages to stdout. Diagnostics belong on stderr. For a local client smoke check:
+The Inspector launches the server as a local stdio subprocess. Try `list_tasks` with no arguments, filter by `status`, then call `get_task` with `VA-102`.
+
+## Run the smoke check
 
 ```powershell
-python test_client.py
+uv run --with "mcp>=1.12,<2" python test_client.py
 ```
 
-The smoke client starts the local server process and sends protocol requests. It does not test VeraAgent's settings UI or certify the security of arbitrary MCP servers. `analyze_codebase` inspects paths provided to it; run it only against a directory you trust.
+The client performs a real local MCP handshake, lists the advertised tools, and makes four read-only calls, including a missing-task case. It verifies this example server only; it is not an integration test of VeraAgent's settings UI or a security certification.
 
-## Configure manually
+## Review boundary
 
-An MCP client typically needs the absolute path to a Python interpreter and this example's `server.py` as arguments. Configuration formats vary by client/version; use that client's current documentation rather than copying a stale global config template.
+The fixture is deliberately read-only and has no permissions beyond its embedded sample data. That does not make third-party MCP servers safe. Before connecting a server to VeraAgent, inspect its source, dependencies, environment variables, filesystem/network access, and the permissions it requests. The MCP host process runs with the operating-system permissions of the user unless a separate sandbox is configured.

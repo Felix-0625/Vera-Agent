@@ -1,3 +1,5 @@
+import pytest
+
 from vera_agent.server.model_profile import resolve_model_profile
 
 
@@ -7,7 +9,7 @@ class ConfigState:
 
     def load_json_config(self, name, default):
         assert name == "models_config.json"
-        return {"models": self.models}
+        return {"models": self.models} if self.models is not None else default
 
 
 def _model(model_id, name, **extra):
@@ -22,27 +24,27 @@ def test_missing_selection_uses_only_enabled_configured_model():
     assert profile["config"]["id"] == "cfg_1"
 
 
+def test_unsaved_default_model_id_resolves_to_provider_model_name():
+    profile = resolve_model_profile(ConfigState(None), "model_deepseek")
+
+    assert profile["name"] == "deepseek/deepseek-chat"
+    assert profile["config"]["provider"] == "deepseek"
+    assert profile["model_kwargs"]["api_base"] == "https://api.deepseek.com"
+
+
 def test_missing_selection_requires_default_when_multiple_models_enabled():
     state = ConfigState([_model("cfg_1", "one"), _model("cfg_2", "two")])
 
-    try:
+    with pytest.raises(ValueError, match="No default model"):
         resolve_model_profile(state)
-    except ValueError as error:
-        assert "No default model" in str(error)
-    else:
-        raise AssertionError("ambiguous model configuration must not fall back to environment credentials")
 
 
 def test_unknown_or_disabled_selection_is_rejected():
     state = ConfigState([_model("cfg_1", "one"), _model("cfg_2", "two", enabled=False)])
 
     for requested, expected in (("missing", "not found"), ("cfg_2", "disabled")):
-        try:
+        with pytest.raises(ValueError, match=expected):
             resolve_model_profile(state, requested)
-        except ValueError as error:
-            assert expected in str(error)
-        else:
-            raise AssertionError(f"{requested} must be rejected")
 
 
 def test_missing_selection_uses_explicit_enabled_default():

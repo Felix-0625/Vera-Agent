@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { ModelProvider } from '../../types/settings';
+import { getProviderBaseUrl, MODEL_PROVIDERS } from './modelProviders';
 import { SelectField, TextInput } from '../common/Field';
 import { IconButton } from '../common/IconButton';
 
@@ -15,25 +16,6 @@ interface ModelBasicFieldsProps {
 
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 'var(--space-1-25)' };
 const helperStyle: React.CSSProperties = { fontSize: 'var(--font-size-subtle)', lineHeight: 1.4, color: 'var(--text-muted)', margin: '0 0 var(--space-1-5)' };
-
-export const MODEL_PROVIDERS = [
-  { id: 'openai', label: 'OpenAI', baseUrl: 'https://api.openai.com/v1' },
-  { id: 'anthropic', label: 'Anthropic', baseUrl: 'https://api.anthropic.com' },
-  { id: 'google', label: 'Google Gemini', baseUrl: 'https://generativelanguage.googleapis.com/v1beta' },
-  { id: 'deepseek', label: 'DeepSeek', baseUrl: 'https://api.deepseek.com' },
-  { id: 'openrouter', label: 'OpenRouter', baseUrl: 'https://openrouter.ai/api/v1' },
-  { id: 'ollama', label: 'Ollama（本地）', baseUrl: 'http://localhost:11434' },
-  { id: 'qwen', label: '阿里云百炼 / Qwen', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1' },
-  { id: 'zhipu', label: '智谱 AI', baseUrl: 'https://open.bigmodel.cn/api/paas/v4' },
-  { id: 'moonshot', label: '月之暗面 / Kimi', baseUrl: 'https://api.moonshot.cn/v1' },
-  { id: 'siliconflow', label: '硅基流动', baseUrl: 'https://api.siliconflow.cn/v1' },
-  { id: 'volcengine', label: '火山引擎 / 豆包', baseUrl: 'https://ark.cn-beijing.volces.com/api/v3' },
-  { id: 'xai', label: 'xAI', baseUrl: 'https://api.x.ai/v1' },
-  { id: 'mistral', label: 'Mistral AI', baseUrl: 'https://api.mistral.ai/v1' },
-  { id: 'custom', label: '自定义兼容服务', baseUrl: '' },
-];
-
-export const getProviderBaseUrl = (provider: ModelProvider): string => MODEL_PROVIDERS.find(item => item.id === provider)?.baseUrl ?? '';
 
 export const ModelBasicFields: React.FC<ModelBasicFieldsProps> = ({ provider, setProvider, name, setName, displayName, setDisplayName, baseUrl, setBaseUrl, apiKey, setApiKey, isEditing }) => (
   <ModelBasicFieldsContent provider={provider} setProvider={setProvider} name={name} setName={setName} displayName={displayName} setDisplayName={setDisplayName} baseUrl={baseUrl} setBaseUrl={setBaseUrl} apiKey={apiKey} setApiKey={setApiKey} isEditing={isEditing} />

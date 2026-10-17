@@ -22,6 +22,8 @@ jobs:
         run: uv sync --locked --extra dev
       - name: Run backend suite
         run: uv run --locked pytest tests
+      - name: Exercise the MCP stdio example
+        run: uv run --locked python ../examples/mcp-server/test_client.py
 
   frontend:
     runs-on: ubuntu-latest
@@ -38,3 +40,10 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate static site pages, links, anchors, and assets
+        run: python website/check_site.py

@@ -85,7 +85,7 @@ async def main():
     workspace_root.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------------
-    # 阶段 1: 绑定项目并建立 Git 基础仓库
+    # Phase 1: Bind a project and initialize its Git repository
     # ------------------------------------------------------------------------
     print("\n[阶段 1/9] 📦 绑定项目并初始化独立 Git 仓库...")
     git_dir = workspace_root / ".git"
@@ -104,7 +104,7 @@ async def main():
         print(f"  ✓ 仓库已存在，工作区路径: {workspace_root}")
 
     # ------------------------------------------------------------------------
-    # 阶段 2: 注入与发现 MCP 专业技能 (Skill Discovery)
+    # Phase 2: Configure and discover MCP tools and skills
     # ------------------------------------------------------------------------
     print("\n[阶段 2/9] 🧠 配置并动态发现项目开发技能 (SkillManager)...")
     skill_dir = workspace_root / ".agents" / "skills" / "mcp-server-dev"
@@ -139,11 +139,11 @@ version: 1.0.0
     print(f"    描述: {discovered['mcp-server-dev'].description}")
 
     # ------------------------------------------------------------------------
-    # 阶段 3: 项目分组与多智能体异步路由 (ProjectGroup & SessionRouter)
+    # Phase 3: Exercise project groups and asynchronous multi-agent routing
     # ------------------------------------------------------------------------
     print("\n[阶段 3/9] 👥 项目内分组会话与异步消息总线路由 (SessionRouter & GitFlowGraph)...")
     wt_manager = WorktreeManager(repo_root=workspace_root)
-    # 清理历史遗留工作树与分支（若有）
+    # Remove any stale worktrees and branches
     wt_manager.remove_worktree("feat-mcp-server", force=True)
     try:
         run_cmd(["git", "branch", "-D", "feat-mcp-server"], workspace_root)
@@ -153,7 +153,7 @@ version: 1.0.0
     graph = GitFlowGraph(repo_root=workspace_root, worktree_manager=wt_manager)
     router = SessionRouter(graph=graph)
 
-    # 创建绑定 Git Worktree 的项目组
+    # Create a project group backed by Git worktrees
     group = graph.create_group(
         group_id="mcp-core-team",
         branch_name="feat-mcp-server",
@@ -162,7 +162,7 @@ version: 1.0.0
     )
     wt_path = group.worktree_path
 
-    # 建立多角色会话并挂载至图谱与工作组
+    # Create role-specific sessions and attach them to the graph and workgroup
     arch_session = ThreadSession(role="main", metadata={"title": "System Architect", "tier": "L1"})
     dev_session = ThreadSession(role="main", metadata={"title": "Core Developer", "tier": "L2"})
     review_session = ThreadSession(role="reviewer", metadata={"title": "Quality Reviewer", "tier": "L3"})
@@ -171,7 +171,7 @@ version: 1.0.0
     graph.register_session(dev_session.thread_id, role="developer", group_id="mcp-core-team")
     graph.register_session(review_session.thread_id, role="reviewer", group_id="mcp-core-team")
 
-    # 架构师派发研发任务消息给开发者
+    # Have the architect assign a development task to the developer
     sent_msg = await router.send_message(
         source_thread_id=arch_session.thread_id,
         target_thread_id=dev_session.thread_id,
@@ -182,7 +182,7 @@ version: 1.0.0
     print(f"    内容: {received.content}")
 
     # ------------------------------------------------------------------------
-    # 阶段 4: GitFlow 工作树任务隔离 (WorktreeManager)
+    # Phase 4: Verify task isolation with GitFlow worktrees
     # ------------------------------------------------------------------------
     print("\n[阶段 4/9] 🌿 GitFlow 特性工作树物理隔离 (WorktreeManager)...")
     feature_branch = "feat-mcp-server"
@@ -190,7 +190,7 @@ version: 1.0.0
     print(f"    分支: {feature_branch} (物理目录隔离，零踩踏)")
 
     # ------------------------------------------------------------------------
-    # 阶段 5: 真实多轮对话与工具四基元调用 (Real LLM Multi-Turn Loop)
+    # Phase 5: Exercise a real multi-turn model conversation and core tools
     # ------------------------------------------------------------------------
     print("\n[阶段 5/9] 🤖 真实智能体多轮业务对话与工具文件读写改 (DeepSeek-Chat)...")
     model = LitellmModel(
@@ -212,7 +212,7 @@ version: 1.0.0
         step_limit=30,
     )
 
-    # --- Turn 1: 项目架构与核心骨架开发 (write 工具创建 protocol.py, tools.py, server.py) ---
+    # --- Turn 1: Create the project skeleton with the write tool ---
     print("\n  👉 [对话第 1 轮]: 指令智能体编写 MCP 核心骨架 (protocol.py, tools.py, server.py)...")
     turn1_task = (
         "请在当前工作区实现一个遵循 Model Context Protocol (MCP) 规范的 Python stdio JSON-RPC 2.0 服务端核心骨架：\n"
@@ -229,20 +229,20 @@ version: 1.0.0
     t1_duration = time.time() - start_t1
     print(f"    第 1 轮完成 (耗时: {t1_duration:.1f}s, 调用数: {agent.n_calls}, 费用: ${agent.cost:.4f})")
 
-    # 验证文件是否已真实创建在特性分支工作树上
+    # Verify that the files were created in the feature worktree
     created_files = [f.name for f in wt_path.glob("*.py")]
     print(f"    工作树中已创建文件: {created_files}")
     assert (wt_path / "server.py").exists(), "server.py 未成功创建！"
     assert (wt_path / "tools.py").exists(), "tools.py 未成功创建！"
     assert (wt_path / "protocol.py").exists(), "protocol.py 未成功创建！"
 
-    # AST 语法校验
+    # Validate Python syntax with the AST parser
     for py_file in (wt_path / "server.py", wt_path / "tools.py", wt_path / "protocol.py"):
         is_valid, msg = check_syntax_op(py_file.read_text(encoding="utf-8"), py_file.name)
         assert is_valid, f"{py_file.name} 语法错误: {msg}"
         print(f"    ✓ AST 静态语法检验通过: {py_file.name}")
 
-    # --- Turn 2: 特性精准增强 (edit 工具添加 ping_diagnostic 工具) ---
+    # --- Turn 2: Add the ping_diagnostic tool with the edit tool ---
     print("\n  👉 [对话第 2 轮]: 指令智能体追加自检诊断工具 (使用 edit 精准局部修改)...")
     turn2_task = (
         "很好！现在我们要扩展该 MCP 服务的功能：\n"
@@ -257,14 +257,14 @@ version: 1.0.0
     t2_duration = time.time() - start_t2
     print(f"    第 2 轮完成 (耗时: {t2_duration:.1f}s, 总调用数: {agent.n_calls}, 总费用: ${agent.cost:.4f})")
 
-    # 验证 tools.py 和 server.py 是否包含 ping_diagnostic
+    # Verify that tools.py and server.py contain ping_diagnostic
     tools_src = (wt_path / "tools.py").read_text(encoding="utf-8")
     server_src = (wt_path / "server.py").read_text(encoding="utf-8")
     assert "ping_diagnostic" in tools_src, "ping_diagnostic 未成功加入 tools.py！"
     assert "ping_diagnostic" in server_src, "ping_diagnostic 未注册到 server.py！"
     print("    ✓ 精准 edit 成功: ping_diagnostic 工具已成功植入并注册！")
 
-    # --- Turn 3: 编写单机测试客户端并由 Agent 通过 bash 实际运行联调 ---
+    # --- Turn 3: Create and run the standalone integration client through bash ---
     print("\n  👉 [对话第 3 轮]: 指令智能体创建 test_client.py 并使用 bash 工具实际执行测试...")
     turn3_task = (
         "现在请编写单机验证客户端并实际测试：\n"
@@ -284,13 +284,13 @@ version: 1.0.0
 
     assert (wt_path / "test_client.py").exists(), "test_client.py 未被创建！"
 
-    # 本地直接再跑一次 test_client 确保双重把关
+    # Run test_client locally once more for independent verification
     client_res = run_cmd([sys.executable, "test_client.py"], wt_path)
     print("    ✓ 真实 MCP 客户端测试运行结果:\n" + "\n".join("      " + line for line in client_res.splitlines()))
     assert "TEST PASSED" in client_res or "verified" in client_res.lower() or "ping_diagnostic" in client_res, "客户端测试未返回预期成功标志！"
 
     # ------------------------------------------------------------------------
-    # 阶段 6: 上下文监控与动态边界压缩 (WatermarkPolicy & Level-2 Compaction)
+    # Phase 6: Monitor context and exercise watermark-based compaction
     # ------------------------------------------------------------------------
     print("\n[阶段 6/9] 📉 上下文水位监控与动态边界压缩 (Context Compaction)...")
     policy = WatermarkPolicy(max_turns=4, max_chars=80000, max_cost=0.50)
@@ -298,7 +298,7 @@ version: 1.0.0
     print(f"  ✓ 水位监控检测: is_breached={is_breached}, 原因: {reason}")
     print(f"    当前会话消息数: {len(agent.session.messages)}, 总字符数: {sum(len(str(m.get('content') or '')) for m in agent.session.messages)}")
 
-    # 执行 Level 2 边界剪枝压缩
+    # Apply level-two context pruning
     before_msg_count = len(agent.session.messages)
     compaction_ok = agent.session.compact(
         summary="已完成 Python stdio MCP Server 核心实现，包含 protocol.py, tools.py (提供 system_metrics, analyze_codebase, ping_diagnostic), server.py 及 test_client.py，测试全部绿灯通过。",
@@ -309,7 +309,7 @@ version: 1.0.0
     print(f"    系统摘要与关键边界已提炼固化。")
 
     # ------------------------------------------------------------------------
-    # 阶段 7: 临时快照与三路内存审查合并 (Checkpointing & 3-Way Merge Review)
+    # Phase 7: Create a checkpoint and perform a three-way review merge
     # ------------------------------------------------------------------------
     print("\n[阶段 7/9] 🛡️ 临时快照提交与三路内存审查合并 (GitFlow In-Memory Merge)...")
     commit_sha = wt_manager.create_checkpoint(
@@ -318,12 +318,12 @@ version: 1.0.0
     )
     print(f"  ✓ Aider-style 快照提交成功，commit: {commit_sha}")
 
-    # 三路内存审查
+    # Review the three-way merge result
     can_merge, conflicts, diff_summary = wt_manager.try_merge(feature_branch, "main")
     print(f"  ✓ 内存三路冲突预检: can_merge={can_merge}, 冲突数={len(conflicts)}")
     assert can_merge, f"特性分支与主分支存在代码冲突: {conflicts}"
 
-    # 执行合并并清理特性分支工作树
+    # Merge the feature branch and clean up its worktree
     run_cmd(["git", "checkout", "main"], workspace_root)
     run_cmd(["git", "merge", feature_branch, "-m", "feat(mcp): implement production-ready stdio MCP server", "--no-ff"], workspace_root)
     wt_manager.remove_worktree(feature_branch, force=True)
@@ -333,7 +333,7 @@ version: 1.0.0
     print(f"  ✓ main 分支已同步获取所有生产源码: {[f.name for f in workspace_root.glob('*.py')]}")
 
     # ------------------------------------------------------------------------
-    # 阶段 8: 智能体交接与质量审查 (HandoffPipeline & Reviewer Subagent)
+    # Phase 8: Exercise agent handoff and reviewer subagent checks
     # ------------------------------------------------------------------------
     print("\n[阶段 8/9] 🔄 智能体类型化交接与质检审查 (HandoffPipeline)...")
     handoff_pipe = HandoffPipeline(
@@ -351,7 +351,7 @@ version: 1.0.0
     print(f"    审查交接简报:\n      - 目标问题: {handover_payload.target_problem}\n      - 下一步动作: {handover_payload.next_action}")
 
     # ------------------------------------------------------------------------
-    # 阶段 9: 长期记忆固化与交付文档生成 (Long-term Memory & Documentation)
+    # Phase 9: Persist long-term memory and generate delivery documentation
     # ------------------------------------------------------------------------
     print("\n[阶段 9/9] 💾 长期记忆固化、轨迹序列化与交付文档生成...")
     trajectory_file = workspace_root / ".agents" / "trajectory.json"
@@ -360,7 +360,7 @@ version: 1.0.0
     trajectory_file.write_text(json.dumps(traj_data, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"  ✓ 完整会话轨迹已持久化: {trajectory_file} (总成本: ${agent.cost:.4f}, 总调用: {agent.n_calls})")
 
-    # 最终项目 README.md 编写
+    # Write the final project README.md
     readme_path = workspace_root / "README.md"
     readme_content = f"""# Python MCP Server (Model Context Protocol)
 
@@ -399,7 +399,7 @@ python test_client.py
     readme_path.write_text(readme_content, encoding="utf-8")
     print(f"  ✓ 交付文档已生成: {readme_path}")
 
-    # 将最终成果提交到 main 分支
+    # Commit the final result to the main branch
     run_cmd(["git", "add", "."], workspace_root)
     run_cmd(["git", "commit", "-m", "docs: add project README and finalize delivery"], workspace_root)
     print(f"  ✓ Git main 分支最终提交完成，当前提交历史:")

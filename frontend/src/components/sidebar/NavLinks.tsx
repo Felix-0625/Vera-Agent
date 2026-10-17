@@ -1,24 +1,19 @@
 import React from 'react';
-import { Plus, History, Clock, Workflow } from 'lucide-react';
+import { Plus, History, Clock, Workflow, CheckSquare } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useProjectStore } from '../../stores/projectStore';
 import { Button } from '../common/Button';
 
-/**
- * 侧边栏顶部快捷导航区
- * 严格按照用户 Penpot 截图实现：
- * 1. 顶部 "+ 新建对话" 按钮
- * 2. 紧凑左对齐 "对话历史" 与 "计划任务"
- */
+
 export const NavLinks: React.FC = () => {
   const { openDraftConversation } = useChatStore();
   const { currentProject } = useProjectStore();
-  const { setHistoryOpen } = useLayoutStore();
+  const { setHistoryOpen, taskboardOpen, setTaskboardOpen } = useLayoutStore();
 
   const handleNewConversation = () => {
     openDraftConversation(currentProject?.id || null);
-    // 聚焦中心输入框，确保用户立即输入
+    setTaskboardOpen(false);
     setTimeout(() => {
       const textarea = document.querySelector('textarea');
       if (textarea) textarea.focus();
@@ -27,17 +22,27 @@ export const NavLinks: React.FC = () => {
 
   return (
     <div style={{ padding: 'var(--space-2-5) var(--space-3) var(--space-1-5)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-      {/* "+ 新建对话" 按钮：严格对齐用户 Penpot 截图 (左对齐紫框胶囊) */}
+      {}
       <Button variant="outline" size="md" className="sidebar-new-conversation" onClick={handleNewConversation}>
         <Plus size={16} color="var(--accent-primary)" />
         <span>新建对话</span>
       </Button>
 
-      {/* 对话历史与计划任务：严格左对齐与新建对话图标列对齐 */}
+      {}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-0-5)' }}>
         <Button variant="ghost" size="sm" className="sidebar-navigation-button" onClick={() => setHistoryOpen(true)}>
           <History size={15} color="var(--text-muted)" />
           <span>对话历史</span>
+        </Button>
+        <Button
+          variant={taskboardOpen ? 'secondary' : 'ghost'}
+          size="sm"
+          className={`sidebar-navigation-button${taskboardOpen ? ' is-current-page' : ''}`}
+          onClick={() => setTaskboardOpen(!taskboardOpen)}
+          aria-current={taskboardOpen ? 'page' : undefined}
+        >
+          <CheckSquare size={15} color={taskboardOpen ? 'var(--accent-primary)' : 'var(--text-muted)'} />
+          <span>任务面板</span>
         </Button>
 
       </div>

@@ -3,9 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { ApprovalActionButtons } from './ApprovalActionButtons';
 
-/**
- * 中间区域 - 高危操作安全审批门禁卡片
- */
+
 export const ApprovalBanner: React.FC = () => {
   const { approvalRequest, confirmAction } = useChatStore();
 

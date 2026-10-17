@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Activity, BarChart3, ChartNoAxesColumnIncreasing, Coins, RefreshCw, Sparkles } from 'lucide-react';
 import { fetchAnalyticsDashboard } from '../../api/toolApi';
 import { AnalyticsDashboard } from '../../types/tool';
@@ -42,15 +42,17 @@ export const MetricsTab: React.FC<{ projectId?: string | null }> = ({ projectId:
   const chartFrameRef = useRef<HTMLDivElement>(null);
   const [chartFrameWidth, setChartFrameWidth] = useState(620);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!projectId) { setData(null); return; }
     setLoading(true);
     setError('');
     try { setData(await fetchAnalyticsDashboard(projectId)); }
     catch (cause) { setError(cause instanceof Error ? cause.message : '数据加载失败'); }
     finally { setLoading(false); }
-  };
-  useEffect(() => { void loadData(); }, [projectId]);
+  }, [projectId]);
+  // This effect starts the project-scoped request; loadData owns the request lifecycle and loading state.
+  // oxlint-disable-next-line react/set-state-in-effect -- The request must begin when the selected project changes.
+  useEffect(() => { void loadData(); }, [loadData]);
   useEffect(() => {
     const element = chartFrameRef.current;
     if (!element) return;
@@ -61,15 +63,13 @@ export const MetricsTab: React.FC<{ projectId?: string | null }> = ({ projectId:
   }, [data, period, selectedMonth]);
 
   const months = data?.retained_months || [];
-  useEffect(() => {
-    if (months.length && (!selectedMonth || !months.includes(selectedMonth))) setSelectedMonth(months[months.length - 1]);
-  }, [months, selectedMonth]);
-  const activeMonth = data?.monthly_models.find((item) => item.month === selectedMonth);
+  const activeMonthKey = months.includes(selectedMonth) ? selectedMonth : months.at(-1) || '';
+  const activeMonth = data?.monthly_models.find((item) => item.month === activeMonthKey);
   const chart = useMemo(() => {
     if (period === 'month') return (activeMonth?.models || []).filter((item) => item.tokens > 0 || item.cost_usd > 0).map((item) => ({ name: item.name, tokens: item.tokens, cost_usd: item.cost_usd }));
-    if (period === 'day') return (data?.daily_trends || []).filter((item) => item.month === selectedMonth).map((item) => ({ name: item.date, tokens: item.tokens, cost_usd: item.cost_usd }));
-    return (data?.weekly_trends || []).filter((item) => item.month === selectedMonth).map((item) => ({ name: item.label, tokens: item.tokens, cost_usd: item.cost_usd }));
-  }, [activeMonth, data, period, selectedMonth]);
+    if (period === 'day') return (data?.daily_trends || []).filter((item) => item.month === activeMonthKey).map((item) => ({ name: item.date, tokens: item.tokens, cost_usd: item.cost_usd }));
+    return (data?.weekly_trends || []).filter((item) => item.month === activeMonthKey).map((item) => ({ name: item.label, tokens: item.tokens, cost_usd: item.cost_usd }));
+  }, [activeMonth, activeMonthKey, data, period]);
   const maxTokens = Math.max(1, ...chart.map((item) => item.tokens));
   const rawStep = maxTokens / 4;
   const magnitude = 10 ** Math.floor(Math.log10(rawStep));
@@ -112,7 +112,7 @@ export const MetricsTab: React.FC<{ projectId?: string | null }> = ({ projectId:
             <div className="metrics-periods">{(['day', 'week', 'month'] as Period[]).map((value) => <button key={value} className={period === value ? 'active' : ''} onClick={() => { setPeriod(value); setHovered(null); }}>{value === 'day' ? '每日' : value === 'week' ? '每周' : '按月'}</button>)}</div>
           </header>
           <div className="metrics-month-select">
-            <SelectField aria-label="选择统计月份" value={selectedMonth} onChange={(event) => { setSelectedMonth(event.target.value); setHovered(null); }}>{months.map((month) => <option key={month} value={month}>{month}</option>)}</SelectField>
+            <SelectField aria-label="选择统计月份" value={activeMonthKey} onChange={(event) => { setSelectedMonth(event.target.value); setHovered(null); }}>{months.map((month) => <option key={month} value={month}>{month}</option>)}</SelectField>
           </div>
           {!chart.length ? <div className="metrics-chart-empty">暂无 Token 用量记录</div> : period === 'month' ? <div className="metrics-model-chart" ref={chartFrameRef}>
             <div className="metrics-model-bars" style={{ width: chartWidth, minWidth: '100%' }}>{chart.map((item, index) => <div className="metrics-model-column" key={item.name} onMouseEnter={() => setHovered(index)} onMouseLeave={() => setHovered(null)}>
@@ -121,7 +121,7 @@ export const MetricsTab: React.FC<{ projectId?: string | null }> = ({ projectId:
               <span className="metrics-model-name" title={item.name}>{item.name}</span>
             </div>)}</div>
             <div className="metrics-month-details">{chart.map((item, index) => <div className="metrics-month-detail" key={item.name}><span className="metrics-usage-dot" style={{ background: MODEL_COLORS[index % MODEL_COLORS.length] }} /><span className="metrics-month-model" title={item.name}>{item.name}</span><span>{item.tokens.toLocaleString()} Token</span><strong>{money(item.cost_usd)}</strong></div>)}</div>
-            <div className="metrics-chart-caption"><span>Token 与人民币费用</span><span>{selectedMonth}</span></div>
+            <div className="metrics-chart-caption"><span>Token 与人民币费用</span><span>{activeMonthKey}</span></div>
           </div> : <div className="metrics-line-chart" ref={chartFrameRef}>
             <div className="metrics-chart-scroll"><div className="metrics-chart-axis">{ticks.map((tick) => <span key={tick}>{tick.toLocaleString()}</span>)}</div><svg viewBox={`0 0 ${chartWidth} 178`} style={{ width: chartWidth }} role="img" aria-label={period === 'day' ? '每日 Token 折线图' : '每周 Token 柱形图'}><defs><linearGradient id="metrics-area-gradient" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="var(--accent-primary)" /><stop offset="100%" stopColor="var(--accent-primary)" stopOpacity="0" /></linearGradient></defs>
               {[30, 61.5, 93, 124.5, 156].map((y) => <line key={y} x1="20" y1={y} x2={chartWidth - 20} y2={y} className="metrics-grid-line" />)}
