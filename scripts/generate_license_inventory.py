@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 from datetime import date
 import json
-import re
 import subprocess
 from pathlib import Path
 
