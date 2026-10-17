@@ -6,18 +6,16 @@ The repository-root `LICENSE` applies to VeraAgent-authored code unless a file o
 
 ## Known third-party components
 
-This is a scoped release review, not a complete Software Bill of Materials (SBOM). The current dependency and asset inspection identified:
+The dependency inventory is generated in [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md) from the locked Windows desktop runtime and frontend lockfile. It records package versions and declared license identifiers; it is not a legal opinion and does not replace review of upstream license texts.
 
 | Component or scope | Known license/provenance | Release handling |
 | --- | --- | --- |
-| Python runtime dependencies | Mixed permissive licenses; `certifi` reports MPL-2.0 in the installed runtime metadata | Include exact versions and notices in a generated release inventory before distribution |
+| Python runtime dependencies | Mixed licenses; `certifi` reports MPL-2.0 and the inventory lists exact locked versions | Review the recorded license families and required notices for each release |
 | Optional Python `full`/development environment | Includes SWE-ReX; its dependency tree includes `bashlex` (GPL-3.0-or-later) | The Windows desktop installer uses `uv sync --no-dev --extra desktop` and does not install these optional extras; document this boundary in future package artifacts |
-| Frontend runtime dependencies | Lockfile inventory observed MIT, ISC, and BSD-3-Clause packages | Generate and retain a versioned license report for each release build |
-| Frontend build dependencies | The lockfile includes Lightning CSS packages under MPL-2.0 | Review the selected notices and distribution implications for the exact release artifact |
-| VeraAgent logo source | `VeraLogo.tsx` imports `frontend/src/assets/logo.png`; a matching source image exists at the repository root | The maintainer must confirm ownership or provide the upstream license/provenance before public release |
-| Desktop icon and favicon | `frontend/public/logo.ico` is used by the Windows desktop shell; `frontend/public/favicon.svg` is used by the website | Confirm authorship or record the source license before public release |
+| Frontend dependencies | The lockfile inventory includes runtime and build dependencies, including MPL-2.0-licensed Lightning CSS packages | Review package licenses and preserve required notices when redistributing build artifacts |
+| VeraAgent logos and icons | The maintainer confirms `frontend/src/assets/logo.png`, `frontend/public/logo.ico`, and `frontend/public/favicon.svg` were AI-generated at their request | No third-party source was identified; the generating service and its applicable terms were not recorded, so retain this provenance note with the release review |
 
-Dependency licenses above are observations from the current lockfiles and installed metadata, not a complete transitive report. The release inventory must be regenerated from a clean locked install and include exact package versions, license identifiers, and required notices. A top-level MIT license does not relicense third-party material.
+The inventory was generated from a clean Windows release dependency install and the frontend npm lockfile. Regenerate it after dependency changes using the instructions in `THIRD_PARTY_LICENSES.md`. A top-level MIT license does not relicense third-party material.
 
 ## Excluded local checkouts
 
@@ -25,4 +23,4 @@ The ignored `mini-coding-agent/`, `pi-agent/`, and `mcp-sever/` directories are 
 
 ## Release status
 
-**License review is not complete.** Logo/icon provenance and a clean, versioned transitive dependency inventory remain release blockers. This document is a technical inventory note, not legal advice.
+**License review is substantially inventoried, but a maintainer review remains required before distribution.** The logo provenance is maintainer-confirmed as AI-generated; the generating service terms remain unknown. This document is a technical inventory note, not legal advice.

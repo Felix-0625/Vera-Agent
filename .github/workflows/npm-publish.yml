@@ -1,0 +1,45 @@
+name: Publish Windows bootstrapper to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish this package version to npm (otherwise run a dry run only)
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Check package contents without publishing
+        run: npm publish --dry-run --access public --registry=https://registry.npmjs.org
+
+  publish:
+    if: inputs.publish
+    needs: verify-package
+    runs-on: ubuntu-latest
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Install npm with trusted-publishing support
+        run: npm install --global 'npm@^11.5.1'
+      - name: Publish with npm trusted publishing
+        run: npm publish --access public --registry=https://registry.npmjs.org

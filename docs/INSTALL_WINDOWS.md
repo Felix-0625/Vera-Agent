@@ -2,13 +2,27 @@
 
 ## Source bootstrap through npx
 
+### Current GitHub source command
+
 After the installer files are present on the public GitHub `main` branch, run:
 
 ```powershell
 npx --yes github:Felix-0625/Agents
 ```
 
-This is a GitHub-sourced npm executable; the package name `vera-agent` is already used on npm, so the repository does not claim that name. The current bootstrapper itself is not published to the npm Registry. A Registry installation such as `npx vera-agent` must not be advertised until a package is published under a name the maintainers control.
+### npm Registry command after first release
+
+The intended npm package name is `vera-agent-bootstrap-github`; npm Registry returned 404 for that name during this review, so it is currently unpublished and not reserved. Another user may claim it before the first release. After the first public version is published, the Registry command will be:
+
+```powershell
+npx --yes vera-agent-bootstrap-github
+```
+
+The first Registry publication has not been performed. An npm maintainer must first publish the package under an account that controls the name, then configure npm Trusted Publishing for the `Felix-0625/Agents` repository, workflow file `.github/workflows/npm-publish.yml`, and GitHub environment `npm-release`. The workflow uses GitHub OIDC (`id-token: write`) and requires no long-lived npm write token. Protect the `npm-release` GitHub environment with a required reviewer. A manual workflow run defaults to package dry-run; set its `publish` input to `true` only for an explicitly approved release. npm Trusted Publishing requires npm CLI 11.5.1 or newer and Node.js 22.14 or newer on the publishing runner; the workflow uses Node 24 and installs a compatible npm CLI.
+
+The initial package creation is a one-time manual step because npm Trusted Publishing is configured against an existing package. Use the npm account's 2FA-protected publishing flow and verify the package name and version before publishing. Do not put an npm token in this repository or in chat. Once the package exists and trusted publishing is configured, use the protected workflow for later versions. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) and [npm provenance](https://docs.npmjs.com/generating-provenance-statements/).
+
+The command above runs the repository package directly from GitHub; it does not install from the npm Registry. The package name `vera-agent` is already used on npm, so this project uses the separate bootstrapper name listed above. The npm Registry command remains unavailable until its first package publication.
 
 The bootstrapper asks before changing files, clones or fast-forward-updates the source in `%LOCALAPPDATA%\VeraAgent\app`, creates a small local uv bootstrap environment, installs Python dependencies from the committed `uv.lock`, runs `npm ci`, and starts `start-desktop.ps1`. It does not install Python or Node.js, write system-wide packages, or publish anything.
 
