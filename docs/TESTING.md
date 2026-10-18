@@ -67,21 +67,20 @@ The Task Board test items were archived and are excluded from normal board listi
 | Website | Static route, asset, and anchor checker | Passed for all three pages |
 | Locked installs | `uv lock --check`; clean temporary `npm ci --ignore-scripts` from `frontend/package-lock.json` | Passed |
 | License inventory | Clean temporary Windows desktop runtime environment plus all npm lockfile entries | 98 Python packages and 92 npm lockfile packages; no unknown license metadata |
-| npm package | `npm publish --dry-run --access public --registry=https://registry.npmjs.org` | Passed; tarball contained five expected files. No publication occurred. |
-| Workflow files | `actionlint` 1.7.12 and YAML parsing for CI, npm publish, Pages deploy, and Dependabot; Actions pinned to verified release commit SHAs | Passed locally; GitHub-hosted workflow runs have not been observed |
+| Workflow files | `actionlint` 1.7.12 and YAML parsing for CI, Pages deploy, and Dependabot; Actions pinned to verified release commit SHAs | Passed locally; GitHub-hosted workflow runs have not been observed |
 
-These checks do not prove a clean-machine Windows install, a public GitHub Pages deployment, npm account ownership, or first publication. The npm package is not registered and its name is not reserved. Review [release limitations](INSTALL_WINDOWS.md) and [license provenance](LICENSES.md) before claiming public-release readiness.
+These checks do not prove a clean-machine Windows desktop launch or a public GitHub Pages deployment. Review [installation limitations](INSTALL_WINDOWS.md) and [license provenance](LICENSES.md) before claiming distribution readiness.
 
 ## Release-preparation follow-up (2026-10-18)
 
 | Area | Verification | Result |
 | --- | --- | --- |
-| Repository checks | `./tests/check-all.ps1` | Passed: 681 passed, 56 skipped, 3 warnings; Python naming lint, MCP stdio smoke, website checker, frontend lint, and production build passed |
+| Repository checks | `./tests/check-all.ps1` | Passed: 681 passed, 56 skipped, 1 upstream Pydantic warning; Python naming lint, MCP stdio smoke, website checker, frontend lint, and production build passed |
 | Clean Windows desktop dependencies | `uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.12` into a fresh temporary environment, followed by importing VeraAgent, pywebview, and uvicorn | Passed; 99 locked packages resolved, 98 runtime distributions inventoried |
 | Minimum Python runtime | Fresh `uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.10` environment and imports for VeraAgent, pywebview, and uvicorn | Passed on CPython 3.10.20; 103 locked packages installed |
 | Frontend clean install | Copied tracked frontend sources without `node_modules` or `dist` into a new temporary directory and ran `npm ci` | Passed; 49 packages installed, npm audit reported 0 vulnerabilities |
 | Frontend clean build | `npm run lint` and `npm run build` in that clean directory | Passed; Oxlint exited 0 and TypeScript/Vite production build completed |
-| GitHub npx package resolution | `npm pack 'github:Felix-0625/Agents#main' --dry-run --ignore-scripts --json` against the pushed branch | Passed; resolved `vera-agent-bootstrap-github@0.1.0` and the five expected package files without running installer scripts |
 | License inventory | Regenerated from clean Python 3.10 and 3.12 Windows desktop environments plus `frontend/package-lock.json` | Passed; 200 Python rows across both runtime versions and 92 npm package rows, no unknown license metadata |
+| Desktop startup with port collision | Ran `start-desktop.ps1` while 8000–8002 were occupied by unrelated services; inspected the VeraAgent WebView and its API traffic | Passed; launcher selected port 8003, built the desktop bundle with that API URL, and loaded projects, model settings, groups, conversations, and context status |
 
-The temporary verification environment and frontend copy are local build artifacts, not tracked repository content. These results verify reproducible dependency installation and frontend compilation; they do not replace a clean-machine desktop launch or external GitHub/npm account setup.
+The temporary verification environment and frontend copy are local build artifacts, not tracked repository content. These results verify reproducible dependency installation and frontend compilation; they do not replace a clean-machine desktop launch or an actual GitHub Pages deployment.

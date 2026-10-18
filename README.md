@@ -17,17 +17,19 @@ VeraAgent 是一个面向本地软件项目的桌面 AI Agent 工作站：把项
 
 ## Windows 桌面版
 
-仓库包含一个基于 GitHub 源码的 npx 引导入口。它会在本机准备源码、Python 虚拟环境和前端依赖，再启动桌面应用。**npm Registry 包尚未发布**。当前可在 Windows PowerShell 中直接从 GitHub 运行：
+当前以源码方式运行 Windows 桌面版。安装 Git、Node.js/npm、Python 3.10+、uv 0.11.15 和 Microsoft Edge WebView2 Runtime 后，在 PowerShell 中执行：
 
 ```powershell
-npx --yes github:Felix-0625/Agents
+git clone https://github.com/Felix-0625/Agents.git
+cd Agents/frontend
+npm ci
+cd ..\vera-agent
+uv sync --locked --no-dev --extra desktop
+cd ..
+.\start-desktop.ps1
 ```
 
-The GitHub command becomes available after the installer files are pushed to the public repository's `main` branch.
-
-完成首次 npm 发布后，计划使用 `npx --yes vera-agent-bootstrap-github`。CI 已包含包内容 dry-run；正式发布由 GitHub Actions 手动触发，默认只 dry-run，启用发布时通过 npm Trusted Publishing 的 OIDC 认证，不在仓库保存长期 npm 写入令牌。配置步骤见 [Windows 安装与发布](docs/INSTALL_WINDOWS.md)。
-
-前置条件：Windows 10/11、Git、Node.js/npm、Python 3.10+、Microsoft Edge WebView2 Runtime，以及可访问依赖仓库的网络。首次运行会下载源码和依赖，需要较长时间；引导程序会先说明操作并要求确认。模型 API Key 需要在应用设置中由用户自行填写。详见 [Windows 安装与更新](docs/INSTALL_WINDOWS.md)。
+这会从源码安装锁定依赖并启动桌面应用；需要访问 GitHub、npm 和 Python 包索引。模型 API Key 由用户在应用设置中填写。详见 [Windows 源码安装](docs/INSTALL_WINDOWS.md)。
 
 开发者也可以走本地源码启动流程，见 [开发指南](docs/DEVELOPMENT.md)。
 

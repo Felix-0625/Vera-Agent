@@ -22,4 +22,4 @@ Binding a folder records a local project path. It does not copy or sandbox the p
 
 ## Backups and updates
 
-Keep a backup before replacing an installation directory. The npx bootstrapper refuses to update a different Git remote or a checkout with tracked local modifications. Ignored `.agents` content is preserved by ordinary fast-forward updates, but it is not automatically backed up or synced.
+Keep a backup before replacing or updating a source checkout. Git updates can preserve ignored `.agents` content, but that data is not automatically backed up or synced. Close VeraAgent and verify the checkout is clean before updating it.

@@ -2,7 +2,7 @@
 
 ## Desktop application
 
-The supported current shape is a local Windows desktop process: pywebview hosts the built Vite assets and a local Uvicorn API listens on loopback. See [Windows installation](INSTALL_WINDOWS.md). This is a source bootstrap, not a production-grade signed Windows installer. Do not expose port 8000 on a public interface without a designed authentication boundary.
+The supported current shape is a local Windows desktop process: pywebview hosts the built Vite assets and a local Uvicorn API listens on loopback. See [Windows source installation](INSTALL_WINDOWS.md). The project currently distributes source instructions, not a production-grade signed Windows installer. Do not expose port 8000 on a public interface without a designed authentication boundary.
 
 ## Product introduction page
 
@@ -14,4 +14,4 @@ For another static host, publish the contents of `website/` as the document root
 
 ## Production readiness boundary
 
-Before distributing a signed installer, define versioned releases, artifact checksums/signing, supported Python/Node/WebView2 versions, dependency update policy, data migration/backup behavior, and an uninstall path. These are not claimed to be complete by the current npx bootstrapper.
+Before distributing a signed installer, define versioned releases, artifact checksums/signing, supported Python/Node/WebView2 versions, dependency update policy, data migration/backup behavior, and an uninstall path. These are not provided by the current source-based installation path.

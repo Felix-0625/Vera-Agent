@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
     base: mode === 'desktop' ? './' : '/',
     define: {
       'import.meta.env.VITE_API_BASE_URL': JSON.stringify(
-        mode === 'desktop' ? 'http://127.0.0.1:8000' : env.VITE_API_BASE_URL || '',
+        mode === 'desktop' ? env.VITE_API_BASE_URL || 'http://127.0.0.1:8000' : env.VITE_API_BASE_URL || '',
       ),
     },
     plugins: [react()],
