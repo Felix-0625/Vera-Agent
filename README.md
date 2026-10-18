@@ -4,6 +4,12 @@ VeraAgent 是一个面向本地软件项目的桌面 AI Agent 工作站：把项
 
 目前桌面壳采用 **pywebview + WebView2**，界面由 React、TypeScript 和 Vite 构建，后端是 Python/Starlette。项目仍处于积极开发阶段；本仓库如实记录当前行为和已知限制，不把计划中的能力描述成已交付能力。
 
+## 先看演示
+
+[![VeraAgent 交互演示预览](website/assets/video/demo-poster.png)](website/assets/video/veraagent-task-collaboration-demo.webm)
+
+这是一个基于脚本数据的交互演示，不连接 VeraAgent 后端、模型服务或访客本地文件。可以[查看演示页面源码](website/playground/)或[打开演示录像](website/assets/video/veraagent-task-collaboration-demo.webm)。
+
 ## 当前能做什么
 
 - 绑定本地项目目录并在项目上下文中进行 Agent 对话。
