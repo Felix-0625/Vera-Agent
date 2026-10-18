@@ -1,18 +1,31 @@
 # VeraAgent examples
 
-Examples are small, runnable ways to understand one VeraAgent workflow. They are not production templates, security certifications, or evidence that a live model run has completed.
+Small, runnable examples. Each one states what it proves and what it does not.
+None of them ship API keys or claim model output.
 
-## Start here
+| Example | What it shows | Needs a model? |
+| --- | --- | --- |
+| [`workflow-quickstart/`](workflow-quickstart/README.md) | **Start here.** Template → project instance → invocation from chat, tracked on the task board. Includes a workflow template with a YES/NO branch, an organization template, a demo project, and a setup script with a `--dry-run` check. | Only for the final run in the desktop app |
+| [`sample-project/`](sample-project/README.md) | Minimal project with rules (`AGENTS.md`) and a task brief for a plain project conversation. | Yes, for the conversation |
+| [`mcp-server/`](mcp-server/README.md) | Minimal read-only MCP server using the official Python SDK, with a stdio smoke test. | No |
 
-- [`sample-project/`](sample-project/README.md) shows how a project, task, and conversation fit together in the workstation. It includes a small task brief and project-local rules; bind it in VeraAgent and follow the walkthrough.
-- [`mcp-server/`](mcp-server/README.md) is a minimal MCP server built with the official Python SDK. It exposes read-only fixture tasks, not the host filesystem or VeraAgent's private data.
+Automated checks: `tests/test_examples.py` runs the workflow quickstart dry run and
+validates the template files; `examples/mcp-server/test_client.py` performs a real
+MCP stdio handshake. Both run in CI and in `tests/check-all.ps1`.
 
-The website's [interactive demo](../website/playground/) is separate from these runnable examples. It uses scripted local data and does not contact VeraAgent, a model provider, or a project on disk.
+The website's [interactive demo](../website/playground/) is separate: it replays
+scripted data in the browser and does not contact VeraAgent or a model provider.
 
-## Product model
+## Concepts used by the examples
 
-VeraAgent combines a local project workspace and task board with a Pi Agent-inspired conversation loop, multi-agent collaboration, and project workflow/organization instances. The examples focus on these boundaries instead of copying another project's UI or presenting a generic agent benchmark.
+- **Template**: reusable roles (nodes) and connections (edges). Built-in templates live in
+  `vera-agent/src/vera_agent/session/templates.py`; custom ones are saved as JSON.
+- **Instance**: a template copied into one project, plus that project's goal and background.
+  Two modes: `workflow` (steps with branches/loops) and `architecture` (an organization of roles).
+- **Run**: one execution of an instance, started from a conversation after explicit `Y`
+  confirmation. Each node gets an isolated session; outputs flow along active edges.
 
-When using a real project, templates describe reusable roles and connections; a project instance contains that project's goal and background; a run starts from a conversation and carries its task plus completed upstream outputs to the relevant nodes. The desktop UI and backend remain the source of truth for actual run behavior. See [architecture](../docs/ARCHITECTURE.md) and [workflow/tool contracts](../docs/TOOLS_AND_MCP.md).
+Details: [architecture](../docs/ARCHITECTURE.md), [data model](../docs/DATA_MODEL.md), [API](../docs/API.md).
 
-Review code and permissions before connecting any third-party MCP server or Skill. A small example is easier to inspect, but it does not make arbitrary extensions safe.
+Review code and permissions before connecting any third-party MCP server or Skill. A
+small example is easier to inspect, but it does not make arbitrary extensions safe.

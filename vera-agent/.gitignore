@@ -1,9 +1,11 @@
 .cursor/rules/_*
-uv.lock
+# uv.lock is tracked: installs and CI use `uv sync --locked`.
 patch.txt
 exit_statuses*.yaml
 preds.json
 *.traj.json
+# Recorded trajectories used as test fixtures are source files.
+!tests/test_data/*.traj.json
 .env
 traj.json
 .claude/**

@@ -1,47 +1,33 @@
 $ErrorActionPreference = 'Stop'
+# Runs every repository check in CI order. Does not install dependencies or call model APIs.
 $root = Split-Path -Parent $PSScriptRoot
-$python = Join-Path $root 'vera-agent\.venv\Scripts\python.exe'
 $scripts = Join-Path $root 'vera-agent\.venv\Scripts'
+$python = Join-Path $scripts 'python.exe'
+$ruff = Join-Path $scripts 'ruff.exe'
 $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
 
-if (-not (Test-Path $python)) { throw "Python test environment missing: $python. See docs/DEVELOPMENT.md." }
+if (-not (Test-Path $python)) { throw "Python environment missing: $python. See docs/DEVELOPMENT.md." }
+if (-not (Test-Path $ruff)) { throw "ruff missing. Install dev dependencies: uv sync --locked --extra desktop --extra dev" }
 if (-not $npm) { throw 'npm was not found. Install Node.js 20+ before running frontend checks.' }
 $env:PATH = "$scripts;$env:PATH"
 
-Write-Host '== Backend pytest ==' -ForegroundColor Cyan
-Push-Location (Join-Path $root 'vera-agent')
-try {
-    Write-Host '== Python naming conventions ==' -ForegroundColor Cyan
-    & $scripts\ruff.exe check src tests --select N
-    if ($LASTEXITCODE -ne 0) { throw "Python naming checks failed with exit code $LASTEXITCODE." }
+function Invoke-Step([string]$Title, [string]$Directory, [scriptblock]$Command) {
+    Write-Host "== $Title ==" -ForegroundColor Cyan
+    Push-Location (Join-Path $root $Directory)
+    try {
+        & $Command
+        if ($LASTEXITCODE -ne 0) { throw "$Title failed with exit code $LASTEXITCODE." }
+    } finally { Pop-Location }
+}
 
-    & $python -m pytest tests
-    if ($LASTEXITCODE -ne 0) { throw "Backend tests failed with exit code $LASTEXITCODE." }
-} finally { Pop-Location }
+Invoke-Step 'Backend lint and format' 'vera-agent' { & $ruff check src tests; if ($LASTEXITCODE -eq 0) { & $ruff format --check src tests } }
+Invoke-Step 'Backend tests' 'vera-agent' { & $python -m pytest tests }
+Invoke-Step 'Repository lint and format' '.' { & $ruff check .; if ($LASTEXITCODE -eq 0) { & $ruff format --check . } }
+Invoke-Step 'Repository tests (examples, docs, hygiene)' '.' { & $python -m pytest tests }
+Invoke-Step 'MCP example stdio smoke check' '.' { & $python examples\mcp-server\test_client.py }
+Invoke-Step 'Static website links and assets' '.' { & $python website\check_site.py }
+Invoke-Step 'Frontend lint' 'frontend' { & $npm.Source run lint }
+Invoke-Step 'Frontend unit tests' 'frontend' { & $npm.Source test }
+Invoke-Step 'Frontend production build' 'frontend' { & $npm.Source run build }
 
-Write-Host '== MCP example stdio smoke check ==' -ForegroundColor Cyan
-Push-Location $root
-try {
-    & $python examples\mcp-server\test_client.py
-    if ($LASTEXITCODE -ne 0) { throw "MCP example check failed with exit code $LASTEXITCODE." }
-} finally { Pop-Location }
-
-Write-Host '== Static website links and assets ==' -ForegroundColor Cyan
-Push-Location $root
-try {
-    & $python website\check_site.py
-    if ($LASTEXITCODE -ne 0) { throw "Static website validation failed with exit code $LASTEXITCODE." }
-} finally { Pop-Location }
-
-Write-Host '== Frontend lint ==' -ForegroundColor Cyan
-Push-Location (Join-Path $root 'frontend')
-try {
-    & $npm.Source run lint
-    if ($LASTEXITCODE -ne 0) { throw "Frontend lint failed with exit code $LASTEXITCODE." }
-
-    Write-Host '== Frontend production build ==' -ForegroundColor Cyan
-    & $npm.Source run build
-    if ($LASTEXITCODE -ne 0) { throw "Frontend build failed with exit code $LASTEXITCODE." }
-} finally { Pop-Location }
-
-Write-Host 'All configured repository checks passed.' -ForegroundColor Green
+Write-Host 'All repository checks passed.' -ForegroundColor Green

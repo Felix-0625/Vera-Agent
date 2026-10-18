@@ -2,7 +2,7 @@
 
 ## Desktop application
 
-The supported current shape is a local Windows desktop process: pywebview hosts the built Vite assets and a local Uvicorn API listens on loopback. See [Windows source installation](INSTALL_WINDOWS.md). The project currently distributes source instructions, not a production-grade signed Windows installer. Do not expose port 8000 on a public interface without a designed authentication boundary.
+VeraAgent is distributed as source on GitHub; there is no npm, PyPI, or installer release. The supported shape is a local Windows desktop process: pywebview hosts the built Vite assets and a local Uvicorn API listens on loopback. See [Windows source installation](INSTALL_WINDOWS.md). Do not expose port 8000 on a public interface without a designed authentication boundary.
 
 ## Product introduction page
 

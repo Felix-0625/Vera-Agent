@@ -21,7 +21,7 @@ Remove-Item Env:UV_PROJECT_ENVIRONMENT
 python scripts/generate_license_inventory.py --python (Join-Path $python310 'Scripts/python.exe') (Join-Path $python312 'Scripts/python.exe')
 ```
 
-Python package rows across supported runtimes: 200; frontend lockfile packages: 92.
+Python package rows across supported runtimes: 200; frontend lockfile packages: 121.
 
 ## Python 3.10 Windows desktop runtime
 
@@ -237,6 +237,7 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 
 | Package | Version | License metadata | Scope |
 | --- | --- | --- | --- |
+| `@jridgewell/sourcemap-codec` | `1.6.0` | MIT | development |
 | `@oxc-project/types` | `0.153.0` | MIT | development |
 | `@oxlint/binding-android-arm-eabi` | `1.87.0` | MIT | development |
 | `@oxlint/binding-android-arm64` | `1.87.0` | MIT | development |
@@ -273,20 +274,34 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `@rolldown/binding-win32-arm64-msvc` | `1.2.13` | MIT | development |
 | `@rolldown/binding-win32-x64-msvc` | `1.2.13` | MIT | development |
 | `@rolldown/pluginutils` | `1.0.1` | MIT | development |
+| `@standard-schema/spec` | `1.1.0` | MIT | development |
+| `@types/chai` | `5.2.3` | MIT | development |
 | `@types/d3-color` | `3.1.3` | MIT | runtime |
 | `@types/d3-drag` | `3.0.7` | MIT | runtime |
 | `@types/d3-interpolate` | `3.0.4` | MIT | runtime |
 | `@types/d3-selection` | `3.0.12` | MIT | runtime |
 | `@types/d3-transition` | `3.0.9` | MIT | runtime |
 | `@types/d3-zoom` | `3.0.9` | MIT | runtime |
+| `@types/deep-eql` | `4.0.2` | MIT | development |
+| `@types/estree` | `1.0.9` | MIT | development |
 | `@types/node` | `24.19.1` | MIT | development |
 | `@types/react` | `19.3.0` | MIT | runtime |
 | `@types/react-dom` | `19.3.0` | MIT | runtime |
 | `@vitejs/plugin-react` | `6.1.2` | MIT | development |
+| `@vitest/expect` | `4.1.12` | MIT | development |
+| `@vitest/mocker` | `4.1.12` | MIT | development |
+| `@vitest/pretty-format` | `4.1.12` | MIT | development |
+| `@vitest/runner` | `4.1.12` | MIT | development |
+| `@vitest/snapshot` | `4.1.12` | MIT | development |
+| `@vitest/spy` | `4.1.12` | MIT | development |
+| `@vitest/utils` | `4.1.12` | MIT | development |
 | `@xyflow/react` | `12.12.0` | MIT | runtime |
 | `@xyflow/react/node_modules/zustand` | `4.5.7` | MIT | runtime |
 | `@xyflow/system` | `0.0.83` | MIT | runtime |
+| `assertion-error` | `2.0.1` | MIT | development |
+| `chai` | `6.3.0` | MIT | development |
 | `classcat` | `5.0.5` | MIT | runtime |
+| `convert-source-map` | `2.0.0` | MIT | development |
 | `csstype` | `3.2.3` | MIT | runtime |
 | `d3-color` | `3.1.0` | ISC | runtime |
 | `d3-dispatch` | `3.0.1` | ISC | runtime |
@@ -298,6 +313,9 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `d3-transition` | `3.0.1` | ISC | runtime |
 | `d3-zoom` | `3.0.0` | ISC | runtime |
 | `detect-libc` | `2.1.2` | Apache-2.0 | development |
+| `es-module-lexer` | `2.3.2` | MIT | development |
+| `estree-walker` | `3.0.3` | MIT | development |
+| `expect-type` | `1.4.0` | Apache-2.0 | development |
 | `fdir` | `6.5.0` | MIT | development |
 | `fsevents` | `2.3.3` | MIT | development |
 | `lightningcss` | `1.33.0` | MPL-2.0 | development |
@@ -313,8 +331,11 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `lightningcss-win32-arm64-msvc` | `1.33.0` | MPL-2.0 | development |
 | `lightningcss-win32-x64-msvc` | `1.33.0` | MPL-2.0 | development |
 | `lucide-react` | `1.53.0` | ISC | runtime |
+| `magic-string` | `0.30.21` | MIT | development |
 | `nanoid` | `3.3.20` | MIT | development |
+| `obug` | `2.2.1` | MIT | development |
 | `oxlint` | `1.87.0` | MIT | development |
+| `pathe` | `2.0.3` | MIT | development |
 | `picocolors` | `1.1.1` | ISC | development |
 | `picomatch` | `4.0.7` | MIT | development |
 | `postcss` | `8.5.29` | MIT | development |
@@ -322,10 +343,18 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `react-dom` | `19.3.0` | MIT | runtime |
 | `rolldown` | `1.2.13` | MIT | development |
 | `scheduler` | `0.28.0` | MIT | runtime |
+| `siginfo` | `2.0.0` | ISC | development |
 | `source-map-js` | `1.2.2` | BSD-3-Clause | development |
+| `stackback` | `0.0.2` | MIT | development |
+| `std-env` | `4.3.0` | MIT | development |
+| `tinybench` | `2.9.0` | MIT | development |
+| `tinyexec` | `1.3.1` | MIT | development |
 | `tinyglobby` | `0.2.17` | MIT | development |
+| `tinyrainbow` | `3.2.0` | MIT | development |
 | `typescript` | `6.0.3` | Apache-2.0 | development |
 | `undici-types` | `7.24.6` | MIT | development |
 | `use-sync-external-store` | `1.7.0` | MIT | runtime |
 | `vite` | `8.3.3` | MIT | development |
+| `vitest` | `4.1.12` | MIT | development |
+| `why-is-node-running` | `2.3.0` | MIT | development |
 | `zustand` | `5.0.15` | MIT | runtime |

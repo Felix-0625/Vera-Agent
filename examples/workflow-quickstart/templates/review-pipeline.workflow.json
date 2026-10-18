@@ -1,0 +1,66 @@
+{
+  "template_id": "example_review_pipeline",
+  "name": "示例：需求评审工作流",
+  "description": "Example workflow from examples/workflow-quickstart: analyst -> reviewer -> YES/NO check -> writer.",
+  "topology_type": "workflow",
+  "nodes": [
+    {
+      "id": "analyst",
+      "type": "agent",
+      "title": "需求分析",
+      "role": "Analyst",
+      "responsibilities": ["阅读项目中的需求文件", "列出验收标准和风险"],
+      "output_spec": "Markdown 列表：验收标准、风险、待确认问题",
+      "allowed_tools": ["read"],
+      "prompt_template": "你是需求分析员。\n你的任务：\n{{input}}\n\n请只读取项目文件，不要修改任何内容。",
+      "position": { "x": 80, "y": 140 }
+    },
+    {
+      "id": "reviewer",
+      "type": "agent",
+      "title": "方案评审",
+      "role": "Reviewer",
+      "responsibilities": ["检查分析结果是否覆盖需求", "指出遗漏"],
+      "output_spec": "结论（通过/需补充）及理由",
+      "allowed_tools": ["read"],
+      "prompt_template": "你是评审员。\n你的任务：\n{{input}}\n\n上游信息：\n{{upstream}}",
+      "position": { "x": 340, "y": 140 }
+    },
+    {
+      "id": "check",
+      "type": "condition",
+      "title": "评审是否通过",
+      "prompt_template": "",
+      "config": { "expression": "评审结论为通过，且没有必须补充的验收标准" },
+      "position": { "x": 600, "y": 140 }
+    },
+    {
+      "id": "writer",
+      "type": "agent",
+      "title": "整理结论",
+      "role": "Writer",
+      "responsibilities": ["汇总分析与评审结果"],
+      "output_spec": "不超过 200 字的中文结论",
+      "allowed_tools": [],
+      "prompt_template": "你负责整理最终结论。\n你的任务：\n{{input}}\n\n上游信息：\n{{upstream}}",
+      "position": { "x": 860, "y": 60 }
+    },
+    {
+      "id": "followup",
+      "type": "agent",
+      "title": "列出补充项",
+      "role": "Analyst",
+      "responsibilities": ["列出评审要求补充的内容"],
+      "output_spec": "待补充事项列表",
+      "allowed_tools": [],
+      "prompt_template": "评审未通过。请根据上游信息列出需要补充的事项。\n上游信息：\n{{upstream}}",
+      "position": { "x": 860, "y": 240 }
+    }
+  ],
+  "edges": [
+    { "id": "analyst-reviewer", "source": "analyst", "target": "reviewer", "relation": "handoff" },
+    { "id": "reviewer-check", "source": "reviewer", "target": "check", "relation": "handoff" },
+    { "id": "check-yes", "source": "check", "target": "writer", "relation": "branch", "label": "YES", "config": { "sourceHandle": "true" } },
+    { "id": "check-no", "source": "check", "target": "followup", "relation": "branch", "label": "NO", "config": { "sourceHandle": "false" } }
+  ]
+}

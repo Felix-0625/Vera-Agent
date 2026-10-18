@@ -1,12 +1,16 @@
 # Testing and verification
 
-## Existing test layers
+## Test layers
 
-The backend suite lives in `vera-agent/tests/` and is organized around API/server, agents, configuration, environments, models, sessions, tools, and integration behavior. Tests for optional ConTree and Modal adapters are skipped when their extras are not installed.
+| Layer | Location | What it covers |
+| --- | --- | --- |
+| Backend | `vera-agent/tests/` | API routes (`server/`), agents, configuration, environments, models, sessions, tools, multi-agent flows. Optional ConTree/Modal adapter tests are skipped without their extras. |
+| Frontend | `frontend/src/**/*.test.ts` (Vitest) | Pure logic and frontend/backend contracts. There are no React component/DOM tests yet; the TypeScript build checks compilation, not screen behavior. |
+| Repository | `tests/` | Workflow quickstart dry run through the real API, template validity, Markdown links, API index freshness, env-var documentation, secrets/residue, tracked lockfiles, English comments, LF storage. |
+| MCP example | `examples/mcp-server/test_client.py` | Real stdio handshake, tool discovery, and the read-only fixture. It does not test the MCP settings UI or third-party servers. |
+| Website | `website/check_site.py` | Page entry points, local links, anchors, assets. |
 
-The frontend currently has TypeScript/Vite build and Oxlint checks, but no dedicated React component test runner in `frontend/package.json`. A successful production build checks compilation and bundling; it does not prove that every screen or backend interaction behaves correctly.
-
-The sample MCP server has an official-SDK stdio client smoke check under `examples/mcp-server/test_client.py`. It performs a real local handshake, checks tool discovery, and exercises the fixed read-only fixture. It is separate from the backend pytest suite and does not test VeraAgent's MCP settings UI or arbitrary external servers.
+See [tests/README.md](../tests/README.md) for conventions.
 
 ## Run checks
 
@@ -20,15 +24,18 @@ Individual commands:
 
 ```powershell
 cd vera-agent
-python -m pytest tests
-cd ..\frontend
-npm run lint
-npm run build
+.\.venv\Scripts\ruff.exe check src tests
+.\.venv\Scripts\python.exe -m pytest tests
 cd ..
+.\vera-agent\.venv\Scripts\python.exe -m pytest tests
 .\vera-agent\.venv\Scripts\python.exe examples\mcp-server\test_client.py
+cd frontend
+npm run lint
+npm test
+npm run build
 ```
 
-The top-level script stops on the first failing command and prints each stage. It does not call model APIs or install dependencies. The web-search/fetch integration test is skipped unless `VERA_RUN_NETWORK_TESTS=1` is set; that opt-in test makes real requests to public services.
+The top-level script stops on the first failing command. It does not call model APIs or install dependencies. Web-search/fetch integration tests are skipped unless `VERA_RUN_NETWORK_TESTS=1`; real-provider tests require `--run-fire`.
 
 ## What these checks do not prove
 
@@ -84,3 +91,49 @@ These checks do not prove a clean-machine Windows desktop launch or a public Git
 | Desktop startup with port collision | Ran `start-desktop.ps1` while 8000–8002 were occupied by unrelated services; inspected the VeraAgent WebView and its API traffic | Passed; launcher selected port 8003, built the desktop bundle with that API URL, and loaded projects, model settings, groups, conversations, and context status |
 
 The temporary verification environment and frontend copy are local build artifacts, not tracked repository content. These results verify reproducible dependency installation and frontend compilation; they do not replace a clean-machine desktop launch or an actual GitHub Pages deployment.
+
+## Open-source preparation (2026-10-18)
+
+| Area | Verification | Result |
+| --- | --- | --- |
+| Repository checks | `./tests/check-all.ps1` on Windows | Passed: backend ruff lint/format; 656 passed, 81 skipped; repository tests 29 passed; MCP stdio smoke; website checker; Oxlint; Vitest 25 passed; production build |
+| Workflow quickstart | `examples/workflow-quickstart/setup_demo.py --dry-run` against an in-process app | Passed: project bind, two templates, workflow instance, task board item, and a `ready` run with 5 nodes created through public routes; no model call |
+| Lockfile | `uv lock --check` with `vera-agent/uv.lock` no longer Git-ignored | Passed (181 packages) |
+
+Not verified in this round: a live model conversation, an executed workflow run in the desktop UI, a clean-machine install from a fresh clone, and hosted GitHub Actions runs. `docs/THIRD_PARTY_LICENSES.md` was not regenerated after adding Vitest as a frontend dev dependency.
+
+## Live end-to-end acceptance (2026-10-18)
+
+Run against a separate API instance (`create_app(repo_root=<temporary data root>)`) with a real DeepSeek model profile, temporary Git projects, and the Vite dev UI in a browser. Each row used real model calls unless marked otherwise.
+
+| Area | Verification | Result |
+| --- | --- | --- |
+| Projects and history | Bind two folders, rename/pin, unbind (folder kept on disk), reject a missing path; thread search, pin, replay, delete | Passed |
+| Settings | Legacy permissions normalized; invalid mode/provider rejected; model connection test; user rules, `AGENTS.md`, and user memory reflected in answers | Passed |
+| Tools and approvals | `read` tool; `edit` asked for approval, rejection left the file unchanged, approval applied it; multi-turn recall of the change | Passed |
+| Subagents | Explicit reviewer and researcher requests dispatched to the right role; main agent summarized both reports; progress events coalesced (5 instead of 84) | Passed |
+| Side chat | Answered from supplied main-conversation context; not persisted | Passed |
+| Context compaction | 14 turns on a 12k-token window: 4 compactions, all 8 planted facts recalled, full transcript kept | Passed |
+| Subagent rebirth | Session at 118% of the window after 3 prior compactions: rebirth to 23%, key facts kept in the checkpoint, transcript kept (model call real; earlier compactions simulated) | Passed |
+| Workflow (UI) | Invoked from chat → analyst → reviewer → YES/NO condition → only the NO branch ran, YES branch skipped → Supervisor → answer delivered to the originating chat | Passed |
+| Loop control | Loop decision returned NO with feedback for a failing draft and YES for a passing one; control decision on a non-control node rejected (409) | Passed |
+| Organization | Lead → implementer and tester (each received the lead output) → Supervisor → delivered; via API and via the UI | Passed |
+| Task board | Create, link conversation, stale `version` rejected (409), invalid status rejected, project isolation, archive | Passed |
+| Scheduled task | One-time task fired by the scheduler, replied, `last_status=success`; past time rejected; toggle and delete | Passed |
+| MCP | `examples/mcp-server` registered, attached to a chat, `list_tasks` called, answer used the result | Passed |
+| Skill | Install, attach (instruction applied), disabled Skill rejected when attached (409) | Passed |
+| UI panels | Right sidebar: files, diff, terminal, GitFlow, metrics, subagents, side chat, workflow; settings: models, permissions, MCP, Skills, rules/memory | All loaded with live data |
+
+Defects found and fixed during this run, each with a regression test: template syntax in goals/rules/Skills broke the turn (`'goal' is undefined`); scheduled tasks read model settings from the project instead of the application root; MCP results were lost after the chat-route refactor; the Supervisor review overwrote the last node's run record; run events ended with a node event after `completed`; "审查子智能体" was routed to the researcher; bash actions had an empty tool name; subagent progress flooded the stream; the rebirth message over-counted compactions; threads streamed without creation kept a `Thread th_…` title.
+
+Follow-up checks in the same round:
+
+| Area | Verification | Result |
+| --- | --- | --- |
+| Fresh checkout | Copied exactly the files Git would commit into an empty folder, ran `npm ci`, `uv sync --locked --extra desktop --extra dev`, and `./tests/check-all.ps1` | Passed after tracking the `tests/test_data/*.traj.json` fixtures, which an ignore rule had excluded (677 passed, 81 skipped; repository 36; Vitest 33; build) |
+| CI commands | The `ci.yml` backend steps (`uv run --locked` ruff, pytest, repository tests, MCP example) in that folder; `actionlint` 1.7.12 on both workflows | Passed; no workflow findings |
+| Desktop shell | `start-desktop.ps1` on the refactored code: frontend build, backend on port 8000, pywebview window titled VeraAgent, real project list served, API keys not exposed; window closed and backend stopped by the launcher | Passed |
+| New conversation in project | Trusted (OS-level) click on the sidebar "+" in Chromium | Passed: draft bound to the project and the composer shows it; the earlier failure came from the preview tool's synthetic click |
+| Startup directory | API started without `repo_root` no longer adds its working directory to project history | Fixed with a regression test; existing history entries are unchanged and can be removed in the UI |
+
+Not verified: hosted GitHub Actions runs and an install on a separate machine. Model compliance with Skill instructions and the memory policy is not guaranteed.

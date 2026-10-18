@@ -30,13 +30,9 @@ async def main() -> None:
             assert not listed.isError
             assert len(listed.structuredContent["result"]) == 3
 
-            filtered = await session.call_tool(
-                "list_tasks", {"status": "in_progress"}
-            )
+            filtered = await session.call_tool("list_tasks", {"status": "in_progress"})
             assert not filtered.isError
-            assert [task["id"] for task in filtered.structuredContent["result"]] == [
-                "VA-101"
-            ]
+            assert [task["id"] for task in filtered.structuredContent["result"]] == ["VA-101"]
 
             found = await session.call_tool("get_task", {"task_id": "VA-102"})
             assert not found.isError

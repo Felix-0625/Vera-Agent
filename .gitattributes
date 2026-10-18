@@ -1,0 +1,18 @@
+# Normalize text files to LF in the repository; Git converts per platform on checkout.
+* text=auto eol=lf
+
+# Windows scripts keep CRLF in the working tree so PowerShell and cmd parse them reliably.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets
+*.png binary
+*.ico binary
+*.jpg binary
+*.webm binary
+*.sqlite binary
+
+# Generated lockfiles: keep them out of diffs and language statistics.
+frontend/package-lock.json linguist-generated=true -diff
+vera-agent/uv.lock linguist-generated=true -diff

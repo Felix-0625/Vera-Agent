@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import argparse
-from datetime import date
 import json
 import subprocess
+from datetime import date
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "docs" / "THIRD_PARTY_LICENSES.md"
@@ -72,9 +71,7 @@ print(json.dumps({
     )
     result = json.loads(completed.stdout)
     rows = result["packages"]
-    return str(result["python"]), [
-        (str(name), str(version), str(license_name)) for name, version, license_name in rows
-    ]
+    return str(result["python"]), [(str(name), str(version), str(license_name)) for name, version, license_name in rows]
 
 
 def frontend_inventory() -> list[tuple[str, str, str, str]]:
@@ -168,9 +165,7 @@ def main() -> None:
     )
     lines.append("")
     REPORT_PATH.write_text("\n".join(lines), encoding="utf-8", newline="\n")
-    unknown_python = [
-        row for _, rows in python_inventories for row in rows if "UNKNOWN" in row[2]
-    ]
+    unknown_python = [row for _, rows in python_inventories for row in rows if "UNKNOWN" in row[2]]
     unknown_npm = [row for row in npm_rows if "UNKNOWN" in row[2]]
     print(
         f"Wrote {REPORT_PATH.relative_to(ROOT)} "

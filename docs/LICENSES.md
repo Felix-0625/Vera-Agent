@@ -2,7 +2,7 @@
 
 ## Project code
 
-The repository-root `LICENSE` applies to VeraAgent-authored code unless a file or directory carries a separate notice. `vera-agent/LICENSE.md` preserves the MIT attribution for code derived from mini-swe-agent alongside the VeraAgent contributor notice. The `examples/mcp-server/` sample was written for this repository and is covered by the root MIT license; the MCP Python SDK is a separate dependency with its own license.
+The repository-root `LICENSE` applies to VeraAgent-authored code unless a file or directory carries a separate notice. `vera-agent/LICENSE.md` preserves the MIT attribution for code derived from mini-swe-agent alongside the VeraAgent contributor notice. The `examples/` samples were written for this repository and are covered by the root MIT license; the MCP Python SDK is a separate dependency with its own license.
 
 ## Known third-party components
 

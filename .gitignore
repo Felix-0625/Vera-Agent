@@ -50,6 +50,7 @@ node_modules/
 
 # Agent trajectories, benchmark output, logs, and local databases
 *.traj.json
+!vera-agent/tests/test_data/*.traj.json
 last_mini_run.traj.json
 interactive_history.txt
 *.log

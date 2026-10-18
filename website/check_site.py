@@ -47,7 +47,7 @@ def main() -> int:
         pages[file_path] = inspector
 
     for file_path, inspector in list(pages.items()):
-        for tag, raw_url in inspector.links:
+        for _tag, raw_url in inspector.links:
             parsed = urlsplit(raw_url)
             if parsed.scheme or parsed.netloc or raw_url.startswith("#"):
                 if raw_url.startswith("#") and unquote(parsed.fragment) not in inspector.ids:

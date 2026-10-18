@@ -1,0 +1,42 @@
+{
+  "template_id": "example_small_team",
+  "name": "示例：小型研发组织",
+  "description": "Example organization from examples/workflow-quickstart: one lead with an implementer and a tester.",
+  "topology_type": "architecture",
+  "nodes": [
+    {
+      "id": "lead",
+      "type": "agent",
+      "title": "技术负责人",
+      "role": "Lead",
+      "responsibilities": ["拆解任务", "汇总下级结果并给出结论"],
+      "allowed_tools": ["read"],
+      "prompt_template": "你是技术负责人。项目目标：{{goal}}\n你的任务：\n{{input}}",
+      "position": { "x": 320, "y": 40 }
+    },
+    {
+      "id": "implementer",
+      "type": "agent",
+      "title": "实现工程师",
+      "role": "Implementer",
+      "responsibilities": ["给出实现方案或修改建议"],
+      "allowed_tools": ["read"],
+      "prompt_template": "你是实现工程师。\n你的任务：\n{{input}}\n\n上级信息：\n{{upstream}}",
+      "position": { "x": 160, "y": 220 }
+    },
+    {
+      "id": "tester",
+      "type": "agent",
+      "title": "测试工程师",
+      "role": "Tester",
+      "responsibilities": ["设计验证步骤", "说明哪些检查尚未执行"],
+      "allowed_tools": ["read"],
+      "prompt_template": "你是测试工程师。\n你的任务：\n{{input}}\n\n上级信息：\n{{upstream}}",
+      "position": { "x": 480, "y": 220 }
+    }
+  ],
+  "edges": [
+    { "id": "lead-implementer", "source": "lead", "target": "implementer", "relation": "manages" },
+    { "id": "lead-tester", "source": "lead", "target": "tester", "relation": "manages" }
+  ]
+}
