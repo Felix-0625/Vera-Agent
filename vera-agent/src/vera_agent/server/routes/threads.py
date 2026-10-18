@@ -257,7 +257,7 @@ async def delete_thread(request: Request) -> JSONResponse:
 
 
 async def probe_thread_context(request: Request) -> JSONResponse:
-    """Lightweight context probe for SideChatTab ('探查主对话上下文并挂载')."""
+    """Provide a lightweight context probe for the side chat and attach it."""
     state = _get_state(request)
     thread_id = request.path_params["thread_id"]
     session = state.get_or_create_session(thread_id)
