@@ -51,7 +51,7 @@ website/               静态产品介绍页与 GitHub Pages 部署配置
 ./tests/check-all.ps1
 ```
 
-脚本执行后端 pytest、前端 lint、TypeScript/Vite 构建。当前测试覆盖范围、分类和需要外部服务的边界请看 [测试指南](docs/TESTING.md)。除非本仓库的 CI 实际运行并保留结果，本文不宣称某个测试数量“全部通过”。
+脚本执行后端 pytest、MCP 示例握手、静态网站链接检查、前端 lint 和 TypeScript/Vite 生产构建。测试覆盖、跳过项和外部服务边界记录在[测试指南](docs/TESTING.md)。脚本不安装依赖，也不调用在线模型服务。
 
 ## 环境变量
 
