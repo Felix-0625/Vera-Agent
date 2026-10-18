@@ -22,6 +22,8 @@ jobs:
           version: '0.11.15'
       - name: Install locked backend and test dependencies
         run: uv sync --locked --extra dev
+      - name: Check Python naming conventions
+        run: uv run --locked ruff check src tests --select N
       - name: Run backend suite
         run: uv run --locked pytest tests
       - name: Exercise the MCP stdio example

@@ -76,7 +76,7 @@ These checks do not prove a clean-machine Windows install, a public GitHub Pages
 
 | Area | Verification | Result |
 | --- | --- | --- |
-| Repository checks | `./tests/check-all.ps1` | Passed: 656 passed, 81 skipped, 3 warnings; MCP stdio smoke, website checker, frontend lint, and production build passed |
+| Repository checks | `./tests/check-all.ps1` | Passed: 681 passed, 56 skipped, 3 warnings; Python naming lint, MCP stdio smoke, website checker, frontend lint, and production build passed |
 | Clean Windows desktop dependencies | `uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.12` into a fresh temporary environment, followed by importing VeraAgent, pywebview, and uvicorn | Passed; 99 locked packages resolved, 98 runtime distributions inventoried |
 | Minimum Python runtime | Fresh `uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.10` environment and imports for VeraAgent, pywebview, and uvicorn | Passed on CPython 3.10.20; 103 locked packages installed |
 | Frontend clean install | Copied tracked frontend sources without `node_modules` or `dist` into a new temporary directory and ran `npm ci` | Passed; 49 packages installed, npm audit reported 0 vulnerabilities |

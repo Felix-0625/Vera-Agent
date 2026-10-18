@@ -24,7 +24,7 @@ from vera_agent.models.utils.retry import retry
 logger = logging.getLogger("litellm_model")
 
 
-class _StreamFailedAfterOutput(Exception):
+class _StreamFailedAfterOutputError(Exception):
     def __init__(self, original: Exception):
         super().__init__(str(original))
         self.original = original
@@ -165,7 +165,7 @@ class LitellmModel:
         try:
             for attempt in retry(
                 logger=logger,
-                abort_exceptions=[*self.abort_exceptions, _StreamFailedAfterOutput],
+                abort_exceptions=[*self.abort_exceptions, _StreamFailedAfterOutputError],
             ):
                 with attempt:
                     chunks = self._query(
@@ -215,9 +215,9 @@ class LitellmModel:
                                         current["function"]["arguments"] += function.arguments
                     except Exception as error:
                         if streamed_text:
-                            raise _StreamFailedAfterOutput(error) from error
+                            raise _StreamFailedAfterOutputError(error) from error
                         raise
-        except _StreamFailedAfterOutput as error:
+        except _StreamFailedAfterOutputError as error:
             raise error.original from error
 
         response = litellm.ModelResponse(

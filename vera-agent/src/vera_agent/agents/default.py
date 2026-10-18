@@ -13,7 +13,7 @@ from jinja2 import StrictUndefined, Template
 from pydantic import BaseModel
 
 from vera_agent import Environment, Model, __version__
-from vera_agent.exceptions import FormatError, InterruptAgentFlow, LimitsExceeded, Submitted, TimeExceeded
+from vera_agent.exceptions import FormatError, InterruptAgentFlowError, LimitsExceeded, Submitted, TimeExceeded
 from vera_agent.session import ThreadSession
 from vera_agent.utils.serialize import recursive_merge
 
@@ -175,7 +175,7 @@ class DefaultAgent:
                     )
                 else:
                     self.add_messages(*e.messages)
-            except InterruptAgentFlow as e:
+            except InterruptAgentFlowError as e:
                 self.add_messages(*e.messages)
             except Exception as e:
                 self.handle_uncaught_exception(e)

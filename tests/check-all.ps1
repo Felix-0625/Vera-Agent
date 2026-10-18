@@ -11,6 +11,10 @@ $env:PATH = "$scripts;$env:PATH"
 Write-Host '== Backend pytest ==' -ForegroundColor Cyan
 Push-Location (Join-Path $root 'vera-agent')
 try {
+    Write-Host '== Python naming conventions ==' -ForegroundColor Cyan
+    & $scripts\ruff.exe check src tests --select N
+    if ($LASTEXITCODE -ne 0) { throw "Python naming checks failed with exit code $LASTEXITCODE." }
+
     & $python -m pytest tests
     if ($LASTEXITCODE -ne 0) { throw "Backend tests failed with exit code $LASTEXITCODE." }
 } finally { Pop-Location }

@@ -1,4 +1,4 @@
-class InterruptAgentFlow(Exception):
+class InterruptAgentFlowError(Exception):
     """Raised to interrupt the agent flow and add messages."""
 
     def __init__(self, *messages: dict):
@@ -6,11 +6,15 @@ class InterruptAgentFlow(Exception):
         super().__init__()
 
 
-class Submitted(InterruptAgentFlow):
+# Keep the original name as a compatibility alias for existing integrations.
+InterruptAgentFlow = InterruptAgentFlowError
+
+
+class Submitted(InterruptAgentFlowError):  # noqa: N818 - Persisted as the public exit-status value.
     """Raised when the agent has completed its task."""
 
 
-class LimitsExceeded(InterruptAgentFlow):
+class LimitsExceeded(InterruptAgentFlowError):  # noqa: N818 - Persisted as the public exit-status value.
     """Raised when the agent has exceeded its cost or step limit."""
 
 
@@ -18,9 +22,9 @@ class TimeExceeded(LimitsExceeded):
     """Raised when the agent has exceeded its wall-clock time limit."""
 
 
-class UserInterruption(InterruptAgentFlow):
+class UserInterruption(InterruptAgentFlowError):  # noqa: N818 - Persisted as the public exit-status value.
     """Raised when the user interrupts the agent."""
 
 
-class FormatError(InterruptAgentFlow):
+class FormatError(InterruptAgentFlowError):
     """Raised when the LM's output is not in the expected format."""
