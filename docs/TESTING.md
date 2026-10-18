@@ -81,6 +81,7 @@ These checks do not prove a clean-machine Windows install, a public GitHub Pages
 | Minimum Python runtime | Fresh `uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.10` environment and imports for VeraAgent, pywebview, and uvicorn | Passed on CPython 3.10.20; 103 locked packages installed |
 | Frontend clean install | Copied tracked frontend sources without `node_modules` or `dist` into a new temporary directory and ran `npm ci` | Passed; 49 packages installed, npm audit reported 0 vulnerabilities |
 | Frontend clean build | `npm run lint` and `npm run build` in that clean directory | Passed; Oxlint exited 0 and TypeScript/Vite production build completed |
+| GitHub npx package resolution | `npm pack 'github:Felix-0625/Agents#main' --dry-run --ignore-scripts --json` against the pushed branch | Passed; resolved `vera-agent-bootstrap-github@0.1.0` and the five expected package files without running installer scripts |
 | License inventory | Regenerated from clean Python 3.10 and 3.12 Windows desktop environments plus `frontend/package-lock.json` | Passed; 200 Python rows across both runtime versions and 92 npm package rows, no unknown license metadata |
 
 The temporary verification environment and frontend copy are local build artifacts, not tracked repository content. These results verify reproducible dependency installation and frontend compilation; they do not replace a clean-machine desktop launch or external GitHub/npm account setup.
