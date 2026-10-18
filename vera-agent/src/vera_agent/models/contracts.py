@@ -1,4 +1,4 @@
-"""Typed contracts and dependency containers for Phase 4 multi-agent architecture.
+"""Typed contracts and dependency containers shared by the multi-agent session layer.
 
 Adheres to Pi-agent minimalism and Pydantic validation:
 - AgentDeps: Dependency container for execution contexts
@@ -13,6 +13,7 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
+
 from pydantic import BaseModel, Field
 
 

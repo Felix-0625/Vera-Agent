@@ -1,3 +1,9 @@
+/**
+ * Projects, groups, topology templates, workflow instances, and runs.
+ *
+ * Backend: `server/routes/projects.py` (`/api/projects*`) and `server/routes/groups.py`
+ * (`/api/groups*`, `/api/templates/topology`).
+ */
 import { request } from './client';
 import { Project, Group, TopologyTemplate } from '../types/project';
 

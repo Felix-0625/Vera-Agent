@@ -1,6 +1,5 @@
-import subprocess
-import sys
 import shlex
+import sys
 from pathlib import Path
 
 import pytest
@@ -27,6 +26,7 @@ def python_command(code: str) -> str:
         drive, tail = executable[0].lower(), executable[2:].replace("\\", "/")
         executable = f"/{drive}{tail}"
     return shlex.join([executable, "-c", code])
+
 
 # --- Helper functions to abstract message format differences ---
 

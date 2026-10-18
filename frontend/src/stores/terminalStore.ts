@@ -1,3 +1,6 @@
+/**
+ * Interactive terminal state backed by the `/api/terminal/session` WebSocket (one socket at a time).
+ */
 import { create } from 'zustand';
 
 interface TerminalState {

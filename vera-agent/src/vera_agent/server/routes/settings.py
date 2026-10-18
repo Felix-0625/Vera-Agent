@@ -1,4 +1,12 @@
-"""Settings management: LLM model configs & testing, permission approvals, and AGENTS.md rules."""
+"""Application settings routes.
+
+Routes under /api/settings: models (GET/POST, PATCH/DELETE /models/{id},
+POST /models/test), permissions (GET/POST), rules (GET/POST), context (GET/POST),
+user-memories (GET/POST, PATCH/DELETE /user-memories/{id}).
+
+Model profiles, including API keys, are stored as plain JSON in
+`<projects_config_root>/.agents/models_config.json`.
+"""
 
 from __future__ import annotations
 
@@ -37,7 +45,22 @@ def _validate_model(model: object) -> str | None:
             return f"{field} must be a string."
     if not str(model.get("id", "")).strip() or not str(model.get("name", "")).strip():
         return "Model ID and name are required."
-    if model.get("provider", "deepseek") not in {"openai", "anthropic", "google", "deepseek", "openrouter", "ollama", "qwen", "zhipu", "moonshot", "siliconflow", "volcengine", "xai", "mistral", "custom"}:
+    if model.get("provider", "deepseek") not in {
+        "openai",
+        "anthropic",
+        "google",
+        "deepseek",
+        "openrouter",
+        "ollama",
+        "qwen",
+        "zhipu",
+        "moonshot",
+        "siliconflow",
+        "volcengine",
+        "xai",
+        "mistral",
+        "custom",
+    }:
         return "Unsupported model provider."
     if model.get("thinking_mode", "auto") not in {"auto", "enabled", "disabled"}:
         return "Invalid thinking_mode."
@@ -58,7 +81,9 @@ def _validate_model(model: object) -> str | None:
             continue
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not minimum <= value <= maximum:
             return f"{field} must be between {minimum} and {maximum}."
-        if field in {"context_window", "output_tokens", "max_tokens", "max_tool_calls", "top_k"} and not isinstance(value, int):
+        if field in {"context_window", "output_tokens", "max_tokens", "max_tool_calls", "top_k"} and not isinstance(
+            value, int
+        ):
             return f"{field} must be an integer."
     context_window = model.get("context_window")
     output_tokens = model.get("output_tokens") or model.get("max_tokens")
@@ -134,7 +159,9 @@ async def save_models(request: Request) -> JSONResponse:
     if error:
         return JSONResponse({"error": error}, status_code=400)
     state.save_json_config("models_config.json", body)
-    return JSONResponse({"status": "ok", "config": {**body, "models": [_public_model(model) for model in body["models"]]}})
+    return JSONResponse(
+        {"status": "ok", "config": {**body, "models": [_public_model(model) for model in body["models"]]}}
+    )
 
 
 async def update_single_model(request: Request) -> JSONResponse:
@@ -289,7 +316,9 @@ async def save_context_settings_route(request: Request) -> JSONResponse:
         return JSONResponse({"error": "Settings must be a non-empty object."}, status_code=400)
     allowed = {"include_agents_md", "memory_enabled"}
     if set(body) - allowed or any(not isinstance(value, bool) for value in body.values()):
-        return JSONResponse({"error": "Only include_agents_md and memory_enabled boolean settings are accepted."}, status_code=400)
+        return JSONResponse(
+            {"error": "Only include_agents_md and memory_enabled boolean settings are accepted."}, status_code=400
+        )
     return JSONResponse(save_context_settings(_get_state(request), body))
 
 
@@ -302,7 +331,11 @@ async def create_user_memory(request: Request) -> JSONResponse:
         body = await request.json()
     except Exception:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-    if not isinstance(body, dict) or not isinstance(body.get("category"), str) or not isinstance(body.get("content"), str):
+    if (
+        not isinstance(body, dict)
+        or not isinstance(body.get("category"), str)
+        or not isinstance(body.get("content"), str)
+    ):
         return JSONResponse({"error": "category and content are required."}, status_code=400)
     try:
         memory = upsert_user_memory(_get_state(request), body["category"], body["content"], source="user")
@@ -316,10 +349,21 @@ async def update_user_memory(request: Request) -> JSONResponse:
         body = await request.json()
     except Exception:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-    if not isinstance(body, dict) or not isinstance(body.get("category"), str) or not isinstance(body.get("content"), str):
+    if (
+        not isinstance(body, dict)
+        or not isinstance(body.get("category"), str)
+        or not isinstance(body.get("content"), str)
+    ):
         return JSONResponse({"error": "category and content are required."}, status_code=400)
     try:
-        memory = upsert_user_memory(_get_state(request), body["category"], body["content"], memory_id=request.path_params["memory_id"], source="user", require_existing=True)
+        memory = upsert_user_memory(
+            _get_state(request),
+            body["category"],
+            body["content"],
+            memory_id=request.path_params["memory_id"],
+            source="user",
+            require_existing=True,
+        )
     except LookupError as error:
         return JSONResponse({"error": str(error)}, status_code=404)
     except ValueError as error:

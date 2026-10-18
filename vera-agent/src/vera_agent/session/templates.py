@@ -1,15 +1,15 @@
-"""Declarative Multi-Agent Coordination Topology Templates.
+"""Built-in multi-agent topology templates.
 
-Aligns with CrewAI, LangGraph, and AutoGen industry-standard paradigms:
-- Supervisor Pattern (Star topology with centralized dispatch)
-- Sequential Workflow (Pipeline DAG with clean handoffs)
-- Adversarial / Critic-Actor Pattern (Dual-loop review and quality gate)
-- Swarm / Peer-to-Peer Mesh (Fully connected collaborative bus)
+Templates: supervisor (one coordinator dispatching to workers), sequential
+pipeline, critic/actor review loop, and peer mesh. Node prompts are product
+content in Chinese and use `{{goal}}` as the placeholder for the project goal.
+Custom templates saved by users are plain JSON (see server/routes/groups.py).
 """
 
 from __future__ import annotations
 
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 

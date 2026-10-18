@@ -1,3 +1,6 @@
+/**
+ * Tool panel types: tab IDs, file tree/preview, diff, Git, task board, scheduled tasks, analytics.
+ */
 export type ToolTabId =
   | 'launcher'
   | 'diff'
@@ -7,8 +10,6 @@ export type ToolTabId =
   | 'sidechat'
   | 'subagents'
   | 'metrics'
-  | 'mcp'
-  | 'skills'
   | 'gitflow'
   | 'workflow';
 

@@ -1,3 +1,7 @@
+/**
+ * UI layout and modal visibility (zustand): theme, sidebar sizes, per-conversation right sidebar
+ * layout, bottom drawer, and which dialogs are open.
+ */
 import { create } from 'zustand';
 import { ModelConfig, McpServerConfig } from '../types/settings';
 import type { Project } from '../types/project';

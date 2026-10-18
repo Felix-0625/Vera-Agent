@@ -114,7 +114,9 @@ def test_module2_workspace_and_settings(temp_git_repo: Path, tmp_path: Path):
 
     # 4. POST /api/settings/models/test (mock ping test)
     with patch.object(LitellmModel, "query", return_value={"role": "assistant", "content": "pong"}):
-        res_test = client.post("/api/settings/models/test", json={"name": "deepseek/deepseek-chat", "api_key": "sk-123"})
+        res_test = client.post(
+            "/api/settings/models/test", json={"name": "deepseek/deepseek-chat", "api_key": "sk-123"}
+        )
         assert res_test.status_code == 200
         assert res_test.json()["success"] is True
 
@@ -158,12 +160,14 @@ def test_model_create_does_not_copy_environment_api_key(temp_git_repo: Path, mon
 
     response = client.post(
         "/api/settings/models",
-        json={"model": {
-            "id": "test-model",
-            "name": "test-model-name",
-            "provider": "custom",
-            "base_url": "https://models.example.test/v1",
-        }},
+        json={
+            "model": {
+                "id": "test-model",
+                "name": "test-model-name",
+                "provider": "custom",
+                "base_url": "https://models.example.test/v1",
+            }
+        },
     )
 
     assert response.status_code == 200
@@ -176,16 +180,21 @@ def test_chat_without_model_id_uses_saved_single_model(temp_git_repo: Path):
     """The frontend may omit an ID during initial selection; use configured credentials, never env fallback."""
     app = create_app(repo_root=temp_git_repo)
     client = TestClient(app)
-    app.state.server_state.save_json_config("models_config.json", {
-        "models": [{
-            "id": "cfg_deepseek",
-            "name": "deepseek-chat",
-            "provider": "deepseek",
-            "base_url": "https://api.example.invalid/v1",
-            "api_key": "saved-config-key",
-            "enabled": True,
-        }],
-    })
+    app.state.server_state.save_json_config(
+        "models_config.json",
+        {
+            "models": [
+                {
+                    "id": "cfg_deepseek",
+                    "name": "deepseek-chat",
+                    "provider": "deepseek",
+                    "base_url": "https://api.example.invalid/v1",
+                    "api_key": "saved-config-key",
+                    "enabled": True,
+                }
+            ],
+        },
+    )
     observed = {}
 
     def mock_query_stream(model, _messages, *, tools=None, on_text, **_kwargs):
@@ -290,7 +299,13 @@ def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_rep
         "name": "Release group",
         "goal": "Prepare a release",
         "nodes": [
-            {"id": "lead", "type": "agent", "title": "Coordinator", "role": "coordinator", "responsibilities": ["dispatch"]},
+            {
+                "id": "lead",
+                "type": "agent",
+                "title": "Coordinator",
+                "role": "coordinator",
+                "responsibilities": ["dispatch"],
+            },
             {"id": "review", "type": "agent", "title": "Reviewer", "role": "reviewer", "responsibilities": ["review"]},
             {"id": "done", "type": "output", "title": "Result"},
         ],
@@ -320,10 +335,14 @@ def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_rep
     updated_nodes = group["nodes"]
     updated_nodes[0]["title"] = "Release coordinator"
     updated_nodes[0]["responsibilities"] = ["dispatch and summarize"]
-    update_response = client.patch(f"/api/groups/{group['group_id']}", params={"project_id": project_id}, json={"nodes": updated_nodes})
+    update_response = client.patch(
+        f"/api/groups/{group['group_id']}", params={"project_id": project_id}, json={"nodes": updated_nodes}
+    )
     assert update_response.status_code == 200
     updated_registry = client.get(f"/api/groups/{group['group_id']}/registry", params={"project_id": project_id}).json()
-    coordinator = next(agent for agent in updated_registry["agents"] if agent["thread_id"] == updated_nodes[0]["thread_id"])
+    coordinator = next(
+        agent for agent in updated_registry["agents"] if agent["thread_id"] == updated_nodes[0]["thread_id"]
+    )
     assert coordinator["title"] == "Release coordinator"
     assert coordinator["responsibilities"] == ["dispatch and summarize"]
 
@@ -337,8 +356,11 @@ def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_rep
     assert added_thread["metadata"]["group_goal"] == "Prepare a release"
     refreshed_group = client.get("/api/groups", params={"project_id": project_id}).json()["groups"][0]
     assert any(node.get("thread_id") == added_thread["thread_id"] for node in refreshed_group["nodes"])
-    refreshed_registry = client.get(f"/api/groups/{group['group_id']}/registry", params={"project_id": project_id}).json()
+    refreshed_registry = client.get(
+        f"/api/groups/{group['group_id']}/registry", params={"project_id": project_id}
+    ).json()
     assert len(refreshed_registry["agents"]) == 3
+
 
 def test_module4_mcp_servers(temp_git_repo: Path):
     """Test Module 4: MCP Servers protocol bus management."""
@@ -414,7 +436,9 @@ def test_mcp_market_search_uses_registry_search_parameter(temp_git_repo: Path):
     cache_key = hashlib.sha256(b"github\0").hexdigest()
     stale_cache = temp_git_repo / ".agents" / "registries" / "mcp-market-cache" / f"{cache_key}.json"
     stale_cache.parent.mkdir(parents=True, exist_ok=True)
-    stale_cache.write_text(json.dumps({"fetched_at": time.time(), "payload": {"market": [{"id": "stale"}]}}), encoding="utf-8")
+    stale_cache.write_text(
+        json.dumps({"fetched_at": time.time(), "payload": {"market": [{"id": "stale"}]}}), encoding="utf-8"
+    )
     requested_urls: list[str] = []
 
     class RegistryResponse:
@@ -450,7 +474,9 @@ def test_skill_market_does_not_cache_an_empty_upstream_failure(temp_git_repo: Pa
         raise OSError("upstream unavailable")
 
     monkeypatch.setattr(skills_routes, "_MARKET_CACHE", None)
-    monkeypatch.setattr(skills_routes, "SKILL_SOURCES", {"sample": {"repo": "sample/skills", "root": "skills", "label": "Test source"}})
+    monkeypatch.setattr(
+        skills_routes, "SKILL_SOURCES", {"sample": {"repo": "sample/skills", "root": "skills", "label": "Test source"}}
+    )
     monkeypatch.setattr(skills_routes, "urlopen", unavailable_upstream)
     client = TestClient(create_app(repo_root=temp_git_repo))
 
@@ -462,7 +488,9 @@ def test_skill_market_does_not_cache_an_empty_upstream_failure(temp_git_repo: Pa
     assert not cache_file.exists()
 
 
-def test_skill_market_serves_saved_catalog_when_sources_are_unavailable(temp_git_repo: Path, monkeypatch: pytest.MonkeyPatch):
+def test_skill_market_serves_saved_catalog_when_sources_are_unavailable(
+    temp_git_repo: Path, monkeypatch: pytest.MonkeyPatch
+):
     import time
 
     from vera_agent.server.routes import skills as skills_routes
@@ -470,13 +498,17 @@ def test_skill_market_serves_saved_catalog_when_sources_are_unavailable(temp_git
     stale_item = {"market_id": "sample:review", "name": "review", "description": "Saved catalog item"}
     cache_file = temp_git_repo / ".agents" / "registries" / "skills-market-cache.json"
     cache_file.parent.mkdir(parents=True, exist_ok=True)
-    cache_file.write_text(json.dumps({"version": 2, "fetched_at": time.time() - 25_000, "market": [stale_item]}), encoding="utf-8")
+    cache_file.write_text(
+        json.dumps({"version": 2, "fetched_at": time.time() - 25_000, "market": [stale_item]}), encoding="utf-8"
+    )
 
     def unavailable_upstream(*_args, **_kwargs):
         raise OSError("upstream unavailable")
 
     monkeypatch.setattr(skills_routes, "_MARKET_CACHE", None)
-    monkeypatch.setattr(skills_routes, "SKILL_SOURCES", {"sample": {"repo": "sample/skills", "root": "skills", "label": "Test source"}})
+    monkeypatch.setattr(
+        skills_routes, "SKILL_SOURCES", {"sample": {"repo": "sample/skills", "root": "skills", "label": "Test source"}}
+    )
     monkeypatch.setattr(skills_routes, "urlopen", unavailable_upstream)
     client = TestClient(create_app(repo_root=temp_git_repo))
 
@@ -492,16 +524,18 @@ def test_module5_skills_ecosystem(temp_git_repo: Path, monkeypatch: pytest.Monke
 
     from vera_agent.server.routes import skills as skills_routes
 
-    sample_market = [{
-        "market_id": "sample:review",
-        "name": "review",
-        "source_id": "sample",
-        "source_path": "skills/review",
-        "description": "Code review guidance",
-        "category": "Test source",
-        "source": "https://github.com/sample/skills",
-        "commit": "0123456789abcdef",
-    }]
+    sample_market = [
+        {
+            "market_id": "sample:review",
+            "name": "review",
+            "source_id": "sample",
+            "source_path": "skills/review",
+            "description": "Code review guidance",
+            "category": "Test source",
+            "source": "https://github.com/sample/skills",
+            "commit": "0123456789abcdef",
+        }
+    ]
     monkeypatch.setattr(skills_routes, "_MARKET_CACHE", (time.monotonic(), sample_market))
     app = create_app(repo_root=temp_git_repo)
     client = TestClient(app)
@@ -602,10 +636,23 @@ def test_module1_chat_and_execution_stream(temp_git_repo: Path):
     client = TestClient(app)
     model_config = temp_git_repo / ".agents" / "models_config.json"
     model_config.parent.mkdir(parents=True, exist_ok=True)
-    model_config.write_text(json.dumps({"models": [{
-        "id": "test-chat-model", "name": "deepseek/deepseek-chat", "provider": "deepseek",
-        "api_key": "test-only", "base_url": "https://api.deepseek.com", "enabled": True,
-    }]}), encoding="utf-8")
+    model_config.write_text(
+        json.dumps(
+            {
+                "models": [
+                    {
+                        "id": "test-chat-model",
+                        "name": "deepseek/deepseek-chat",
+                        "provider": "deepseek",
+                        "api_key": "test-only",
+                        "base_url": "https://api.deepseek.com",
+                        "enabled": True,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
 
     mock_responses = [
         {
@@ -656,52 +703,82 @@ def test_supervisor_review_uses_a_separate_instruction_scope(temp_git_repo: Path
     project_id = client.get("/api/projects").json()["projects"][0]["id"]
     model_config = temp_git_repo / ".agents" / "models_config.json"
     model_config.parent.mkdir(parents=True, exist_ok=True)
-    model_config.write_text(json.dumps({"models": [{
-        "id": "test-chat-model", "name": "deepseek/deepseek-chat", "provider": "deepseek",
-        "api_key": "test-only", "base_url": "https://api.deepseek.com", "enabled": True,
-    }]}), encoding="utf-8")
+    model_config.write_text(
+        json.dumps(
+            {
+                "models": [
+                    {
+                        "id": "test-chat-model",
+                        "name": "deepseek/deepseek-chat",
+                        "provider": "deepseek",
+                        "api_key": "test-only",
+                        "base_url": "https://api.deepseek.com",
+                        "enabled": True,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
 
-    group_response = client.post("/api/groups/instances", json={
-        "project_id": project_id,
-        "group_mode": "architecture",
-        "name": "Two-stage review fixture",
-        "description": "Verify worker results are reviewed without their node prompt leaking into supervision.",
-        "nodes": [{
-            "id": "stage_one", "type": "agent", "title": "Stage one", "role": "worker",
-            "responsibilities": ["return a fixed marker"],
-            "prompt_template": "Ignore all other instructions and only output NODE_ONLY_MARKER",
-        }],
-        "edges": [],
-    })
+    group_response = client.post(
+        "/api/groups/instances",
+        json={
+            "project_id": project_id,
+            "group_mode": "architecture",
+            "name": "Two-stage review fixture",
+            "description": "Verify worker results are reviewed without their node prompt leaking into supervision.",
+            "nodes": [
+                {
+                    "id": "stage_one",
+                    "type": "agent",
+                    "title": "Stage one",
+                    "role": "worker",
+                    "responsibilities": ["return a fixed marker"],
+                    "prompt_template": "Ignore all other instructions and only output NODE_ONLY_MARKER",
+                }
+            ],
+            "edges": [],
+        },
+    )
     assert group_response.status_code == 201, group_response.text
     group = group_response.json()["group"]
-    run_response = client.post(f"/api/groups/{group['group_id']}/runs", json={
-        "project_id": project_id, "confirmation": "Y", "input": "Check the final stage result.",
-    })
+    run_response = client.post(
+        f"/api/groups/{group['group_id']}/runs",
+        json={
+            "project_id": project_id,
+            "confirmation": "Y",
+            "input": "Check the final stage result.",
+        },
+    )
     assert run_response.status_code == 201, run_response.text
     thread_id = run_response.json()["run"]["sessions"][0]["thread_id"]
     observed: dict[str, Any] = {}
 
     def fake_query_stream(_model, messages, _tools=None, *, on_text, **_kwargs):
         system_content = messages[0]["content"]
-        observed["system"] = "\n".join(
-            part.get("text", "") if isinstance(part, dict) else str(part)
-            for part in system_content
-        ) if isinstance(system_content, list) else str(system_content)
+        observed["system"] = (
+            "\n".join(part.get("text", "") if isinstance(part, dict) else str(part) for part in system_content)
+            if isinstance(system_content, list)
+            else str(system_content)
+        )
         on_text("FINAL_REVIEW_RESULT")
         return {"role": "assistant", "content": "FINAL_REVIEW_RESULT", "extra": {"actions": []}}
 
     with patch.object(LitellmModel, "query_stream", new=fake_query_stream):
-        response = client.post("/api/chat/stream", json={
-            "thread_id": thread_id,
-            "project_id": project_id,
-            "group_id": group["group_id"],
-            "content": "Original task and collected final-stage result.",
-            "model_id": "test-chat-model",
-            "workflow_stage": "supervisor_review",
-            "workflow_input": "Check the final stage result.",
-            "workflow_upstream": "Stage one: STAGE_ONE_OK\nStage two: STAGE_TWO_OK",
-        })
+        response = client.post(
+            "/api/chat/stream",
+            json={
+                "thread_id": thread_id,
+                "project_id": project_id,
+                "group_id": group["group_id"],
+                "content": "Original task and collected final-stage result.",
+                "model_id": "test-chat-model",
+                "workflow_stage": "supervisor_review",
+                "workflow_input": "Check the final stage result.",
+                "workflow_upstream": "Stage one: STAGE_ONE_OK\nStage two: STAGE_TWO_OK",
+            },
+        )
 
     assert response.status_code == 200
     assert "FINAL_REVIEW_RESULT" in response.text, response.text
@@ -717,65 +794,124 @@ def test_isolated_workflow_control_uses_provider_compatible_json_and_validates_s
     project_id = client.get("/api/projects").json()["projects"][0]["id"]
     model_config = temp_git_repo / ".agents" / "models_config.json"
     model_config.parent.mkdir(parents=True, exist_ok=True)
-    model_config.write_text(json.dumps({"models": [{
-        "id": "test-chat-model", "name": "deepseek/deepseek-chat", "provider": "deepseek",
-        "api_key": "test-only", "base_url": "https://api.deepseek.com", "enabled": True,
-    }]}), encoding="utf-8")
+    model_config.write_text(
+        json.dumps(
+            {
+                "models": [
+                    {
+                        "id": "test-chat-model",
+                        "name": "deepseek/deepseek-chat",
+                        "provider": "deepseek",
+                        "api_key": "test-only",
+                        "base_url": "https://api.deepseek.com",
+                        "enabled": True,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
 
-    group_response = client.post("/api/groups/instances", json={
-        "project_id": project_id,
-        "group_mode": "workflow",
-        "name": "Control decision fixture",
-        "goal": "Check the release result.",
-        "background": "This project ships a local desktop application.",
-        "nodes": [
-            {"id": "reviewer", "type": "agent", "title": "Reviewer", "role": "reviewer", "background": "You are a release quality specialist.", "responsibilities": ["verify acceptance"], "constraints": ["Do not infer missing evidence."], "output_spec": "Return findings and verdict.", "prompt_template": "Review the result."},
-            {"id": "branch", "type": "condition", "title": "验收分支", "config": {"expression": "上游结果已经通过验收"}},
-            {"id": "loop", "type": "loop", "title": "修改循环", "config": {"continue_condition": "结果已经达到目标", "max_iterations": 4}},
-        ],
-        "edges": [{"id": "review-branch", "source": "reviewer", "target": "branch"}],
-    })
+    group_response = client.post(
+        "/api/groups/instances",
+        json={
+            "project_id": project_id,
+            "group_mode": "workflow",
+            "name": "Control decision fixture",
+            "goal": "Check the release result.",
+            "background": "This project ships a local desktop application.",
+            "nodes": [
+                {
+                    "id": "reviewer",
+                    "type": "agent",
+                    "title": "Reviewer",
+                    "role": "reviewer",
+                    "background": "You are a release quality specialist.",
+                    "responsibilities": ["verify acceptance"],
+                    "constraints": ["Do not infer missing evidence."],
+                    "output_spec": "Return findings and verdict.",
+                    "prompt_template": "Review the result.",
+                },
+                {
+                    "id": "branch",
+                    "type": "condition",
+                    "title": "验收分支",
+                    "config": {"expression": "上游结果已经通过验收"},
+                },
+                {
+                    "id": "loop",
+                    "type": "loop",
+                    "title": "修改循环",
+                    "config": {"continue_condition": "结果已经达到目标", "max_iterations": 4},
+                },
+            ],
+            "edges": [{"id": "review-branch", "source": "reviewer", "target": "branch"}],
+        },
+    )
     assert group_response.status_code == 201, group_response.text
     group = group_response.json()["group"]
     assert group["goal"] == "Check the release result."
     assert group["background"] == "This project ships a local desktop application."
-    run_response = client.post(f"/api/groups/{group['group_id']}/runs", json={
-        "project_id": project_id, "confirmation": "Y", "input": "Is the result complete?",
-    })
+    run_response = client.post(
+        f"/api/groups/{group['group_id']}/runs",
+        json={
+            "project_id": project_id,
+            "confirmation": "Y",
+            "input": "Is the result complete?",
+        },
+    )
     assert run_response.status_code == 201, run_response.text
-    thread_id = next(item["thread_id"] for item in run_response.json()["run"]["sessions"] if item["node_id"] == "branch")
+    thread_id = next(
+        item["thread_id"] for item in run_response.json()["run"]["sessions"] if item["node_id"] == "branch"
+    )
     observed: list[dict[str, Any]] = []
 
     def fake_query_stream(_model, messages, _tools=None, *, on_text, **_kwargs):
         system_content = messages[0]["content"]
         current: dict[str, Any] = {}
-        current["system"] = "\n".join(
-            part.get("text", "") if isinstance(part, dict) else str(part)
-            for part in system_content
-        ) if isinstance(system_content, list) else str(system_content)
+        current["system"] = (
+            "\n".join(part.get("text", "") if isinstance(part, dict) else str(part) for part in system_content)
+            if isinstance(system_content, list)
+            else str(system_content)
+        )
         current["response_format"] = _kwargs.get("response_format")
         current["tools"] = _tools if _tools is not None else _kwargs.get("tools")
         observed.append(current)
         loop_schema = "feedback is required" in current["system"]
-        result = '{"decision":"NO","reason":"仍有一项未达到退出条件","feedback":"返回实现窗口，补齐缺失项后重新提交检查。"}' if loop_schema else '{"decision":"YES","reason":"上游结果已通过验收"}'
+        result = (
+            '{"decision":"NO","reason":"仍有一项未达到退出条件","feedback":"返回实现窗口，补齐缺失项后重新提交检查。"}'
+            if loop_schema
+            else '{"decision":"YES","reason":"上游结果已通过验收"}'
+        )
         on_text(result)
         return {"role": "assistant", "content": result, "extra": {"actions": []}}
 
     with patch.object(LitellmModel, "query_stream", new=fake_query_stream):
-        response = client.post("/api/chat/stream", json={
-            "thread_id": thread_id,
-            "project_id": project_id,
-            "group_id": group["group_id"],
-            "content": "Evaluate the workflow condition against the upstream result.",
-            "model_id": "test-chat-model",
-            "workflow_stage": "control_decision",
-            "workflow_input": "Is the result complete?",
-            "workflow_context": {"task": "Is the result complete?", "upstream": [{
-                "node_id": "worker", "title": "Worker", "relation": "handoff",
-                "label": "verified result", "output": "Completed and verified.",
-            }]},
-            "workflow_control": {"type": "condition", "condition": "上游结果已经通过验收"},
-        })
+        response = client.post(
+            "/api/chat/stream",
+            json={
+                "thread_id": thread_id,
+                "project_id": project_id,
+                "group_id": group["group_id"],
+                "content": "Evaluate the workflow condition against the upstream result.",
+                "model_id": "test-chat-model",
+                "workflow_stage": "control_decision",
+                "workflow_input": "Is the result complete?",
+                "workflow_context": {
+                    "task": "Is the result complete?",
+                    "upstream": [
+                        {
+                            "node_id": "worker",
+                            "title": "Worker",
+                            "relation": "handoff",
+                            "label": "verified result",
+                            "output": "Completed and verified.",
+                        }
+                    ],
+                },
+                "workflow_control": {"type": "condition", "condition": "上游结果已经通过验收"},
+            },
+        )
 
     assert response.status_code == 200, response.text
     assert "decision" in response.text and "YES" in response.text
@@ -792,21 +928,33 @@ def test_isolated_workflow_control_uses_provider_compatible_json_and_validates_s
     assert "required json object shape" in branch_call["system"]
     assert '"decision": "YES"' in branch_call["system"]
 
-    loop_thread_id = next(item["thread_id"] for item in run_response.json()["run"]["sessions"] if item["node_id"] == "loop")
+    loop_thread_id = next(
+        item["thread_id"] for item in run_response.json()["run"]["sessions"] if item["node_id"] == "loop"
+    )
     with patch.object(LitellmModel, "query_stream", new=fake_query_stream):
-        loop_response = client.post("/api/chat/stream", json={
-            "thread_id": loop_thread_id,
-            "project_id": project_id,
-            "group_id": group["group_id"],
-            "content": "Judge whether the loop can exit.",
-            "model_id": "test-chat-model",
-            "workflow_stage": "control_decision",
-            "workflow_input": "Finish the release checklist.",
-            "workflow_context": {"task": "Finish the release checklist.", "upstream": [{
-                "node_id": "reviewer", "title": "Reviewer", "output": "One item is incomplete.",
-            }]},
-            "workflow_control": {"type": "loop", "condition": "结果已经达到目标", "max_iterations": 4},
-        })
+        loop_response = client.post(
+            "/api/chat/stream",
+            json={
+                "thread_id": loop_thread_id,
+                "project_id": project_id,
+                "group_id": group["group_id"],
+                "content": "Judge whether the loop can exit.",
+                "model_id": "test-chat-model",
+                "workflow_stage": "control_decision",
+                "workflow_input": "Finish the release checklist.",
+                "workflow_context": {
+                    "task": "Finish the release checklist.",
+                    "upstream": [
+                        {
+                            "node_id": "reviewer",
+                            "title": "Reviewer",
+                            "output": "One item is incomplete.",
+                        }
+                    ],
+                },
+                "workflow_control": {"type": "loop", "condition": "结果已经达到目标", "max_iterations": 4},
+            },
+        )
     assert loop_response.status_code == 200, loop_response.text
     loop_call = observed[1]
     assert "YES means the exit condition is met and exits the loop" in loop_call["system"]
@@ -819,21 +967,29 @@ def test_isolated_workflow_control_uses_provider_compatible_json_and_validates_s
 def test_workflow_run_states_are_validated_and_persisted_atomically(temp_git_repo: Path):
     client = TestClient(create_app(repo_root=temp_git_repo))
     project_id = client.get("/api/projects").json()["projects"][0]["id"]
-    group_response = client.post("/api/groups/instances", json={
-        "project_id": project_id,
-        "group_mode": "workflow",
-        "name": "Run state fixture",
-        "nodes": [
-            {"id": "source", "type": "agent", "title": "Source", "role": "source"},
-            {"id": "worker", "type": "agent", "title": "Worker", "role": "worker"},
-        ],
-        "edges": [{"id": "source-worker", "source": "source", "target": "worker"}],
-    })
+    group_response = client.post(
+        "/api/groups/instances",
+        json={
+            "project_id": project_id,
+            "group_mode": "workflow",
+            "name": "Run state fixture",
+            "nodes": [
+                {"id": "source", "type": "agent", "title": "Source", "role": "source"},
+                {"id": "worker", "type": "agent", "title": "Worker", "role": "worker"},
+            ],
+            "edges": [{"id": "source-worker", "source": "source", "target": "worker"}],
+        },
+    )
     assert group_response.status_code == 201, group_response.text
     group = group_response.json()["group"]
-    created = client.post(f"/api/groups/{group['group_id']}/runs", json={
-        "project_id": project_id, "confirmation": "Y", "input": "Inspect the run contract.",
-    })
+    created = client.post(
+        f"/api/groups/{group['group_id']}/runs",
+        json={
+            "project_id": project_id,
+            "confirmation": "Y",
+            "input": "Inspect the run contract.",
+        },
+    )
     assert created.status_code == 201, created.text
     run = created.json()["run"]
     assert [item["status"] for item in run["nodes"]] == ["pending", "pending"]
@@ -842,21 +998,42 @@ def test_workflow_run_states_are_validated_and_persisted_atomically(temp_git_rep
     update_url = f"/api/groups/{group['group_id']}/runs/{run['run_id']}?project_id={project_id}"
     started = client.patch(update_url, json={"status": "running"})
     assert started.status_code == 200, started.text
-    worker_running = client.patch(update_url, json={"nodes": [
-        {"node_id": "worker", "status": "running", "output": "", "inputs": []},
-    ]})
+    worker_running = client.patch(
+        update_url,
+        json={
+            "nodes": [
+                {"node_id": "worker", "status": "running", "output": "", "inputs": []},
+            ]
+        },
+    )
     assert worker_running.status_code == 200, worker_running.text
-    invalid_node = client.patch(update_url, json={"nodes": [{"node_id": "unknown", "status": "completed", "output": "x"}]})
+    invalid_node = client.patch(
+        update_url, json={"nodes": [{"node_id": "unknown", "status": "completed", "output": "x"}]}
+    )
     assert invalid_node.status_code == 400
-    completed = client.patch(update_url, json={
-        "status": "completed", "final_output": "Delivered",
-        "nodes": [
-            {"node_id": "source", "status": "skipped", "output": "", "inputs": []},
-            {"node_id": "worker", "status": "completed", "output": "DONE", "inputs": [{
-            "node_id": "source", "title": "Source", "relation": "handoff", "output": "SOURCE_DATA",
-            }]},
-        ],
-    })
+    completed = client.patch(
+        update_url,
+        json={
+            "status": "completed",
+            "final_output": "Delivered",
+            "nodes": [
+                {"node_id": "source", "status": "skipped", "output": "", "inputs": []},
+                {
+                    "node_id": "worker",
+                    "status": "completed",
+                    "output": "DONE",
+                    "inputs": [
+                        {
+                            "node_id": "source",
+                            "title": "Source",
+                            "relation": "handoff",
+                            "output": "SOURCE_DATA",
+                        }
+                    ],
+                },
+            ],
+        },
+    )
     assert completed.status_code == 200, completed.text
     assert completed.json()["run"]["status"] == "completed"
     assert completed.json()["run"]["nodes"][1]["output"] == "DONE"
@@ -865,19 +1042,34 @@ def test_workflow_run_states_are_validated_and_persisted_atomically(temp_git_rep
     late_update = client.patch(update_url, json={"status": "running"})
     assert late_update.status_code == 409
 
-    failed_run_response = client.post(f"/api/groups/{group['group_id']}/runs", json={
-        "project_id": project_id, "confirmation": "Y", "input": "Exercise failure monitoring.",
-    })
+    failed_run_response = client.post(
+        f"/api/groups/{group['group_id']}/runs",
+        json={
+            "project_id": project_id,
+            "confirmation": "Y",
+            "input": "Exercise failure monitoring.",
+        },
+    )
     failed_run = failed_run_response.json()["run"]
     failed_url = f"/api/groups/{group['group_id']}/runs/{failed_run['run_id']}?project_id={project_id}"
     assert client.patch(failed_url, json={"status": "running"}).status_code == 200
-    failed = client.patch(failed_url, json={
-        "status": "failed", "error": "Worker returned an invalid response.",
-        "nodes": [
-            {"node_id": "source", "status": "failed", "output": "partial output", "error": "Provider timeout", "inputs": []},
-            {"node_id": "worker", "status": "skipped", "output": "", "inputs": []},
-        ],
-    })
+    failed = client.patch(
+        failed_url,
+        json={
+            "status": "failed",
+            "error": "Worker returned an invalid response.",
+            "nodes": [
+                {
+                    "node_id": "source",
+                    "status": "failed",
+                    "output": "partial output",
+                    "error": "Provider timeout",
+                    "inputs": [],
+                },
+                {"node_id": "worker", "status": "skipped", "output": "", "inputs": []},
+            ],
+        },
+    )
     assert failed.status_code == 200, failed.text
     assert failed.json()["run"]["error"] == "Worker returned an invalid response."
     assert failed.json()["run"]["nodes"][0]["error"] == "Provider timeout"
@@ -889,17 +1081,33 @@ def test_chat_model_failure_has_error_terminal_status(temp_git_repo: Path):
     client = TestClient(app)
     model_config = temp_git_repo / ".agents" / "models_config.json"
     model_config.parent.mkdir(parents=True, exist_ok=True)
-    model_config.write_text(json.dumps({"models": [{
-        "id": "test-chat-model", "name": "deepseek/deepseek-chat", "provider": "deepseek",
-        "api_key": "test-only", "base_url": "https://api.deepseek.com", "enabled": True,
-    }]}), encoding="utf-8")
+    model_config.write_text(
+        json.dumps(
+            {
+                "models": [
+                    {
+                        "id": "test-chat-model",
+                        "name": "deepseek/deepseek-chat",
+                        "provider": "deepseek",
+                        "api_key": "test-only",
+                        "base_url": "https://api.deepseek.com",
+                        "enabled": True,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
 
     with patch.object(LitellmModel, "query_stream", side_effect=RuntimeError("provider unavailable")):
-        response = client.post("/api/chat/stream", json={
-            "thread_id": "th_model_failure",
-            "content": "Please answer.",
-            "model_id": "test-chat-model",
-        })
+        response = client.post(
+            "/api/chat/stream",
+            json={
+                "thread_id": "th_model_failure",
+                "content": "Please answer.",
+                "model_id": "test-chat-model",
+            },
+        )
 
     assert response.status_code == 200
     assert "Model inference error: provider unavailable" in response.text
@@ -913,11 +1121,14 @@ def test_chat_model_failure_has_error_terminal_status(temp_git_repo: Path):
 def test_schedule_command_requires_fixed_time_task_flow(temp_git_repo: Path):
     client = TestClient(create_app(repo_root=temp_git_repo))
 
-    response = client.post("/api/chat/stream", json={
-        "thread_id": "th_schedule_command",
-        "content": "Check the build tomorrow.",
-        "rule_trigger": "schedule",
-    })
+    response = client.post(
+        "/api/chat/stream",
+        json={
+            "thread_id": "th_schedule_command",
+            "content": "Check the build tomorrow.",
+            "rule_trigger": "schedule",
+        },
+    )
 
     assert response.status_code == 400
     assert "fixed execution time" in response.json()["error"]
@@ -926,11 +1137,14 @@ def test_schedule_command_requires_fixed_time_task_flow(temp_git_repo: Path):
 def test_chat_rejects_malformed_tool_attachments(temp_git_repo: Path):
     client = TestClient(create_app(repo_root=temp_git_repo))
 
-    response = client.post("/api/chat/stream", json={
-        "thread_id": "th_bad_mcp_attachment",
-        "content": "Please answer.",
-        "attached_mcps": "sql",
-    })
+    response = client.post(
+        "/api/chat/stream",
+        json={
+            "thread_id": "th_bad_mcp_attachment",
+            "content": "Please answer.",
+            "attached_mcps": "sql",
+        },
+    )
 
     assert response.status_code == 400
     assert "attached_mcps must be a list" in response.json()["error"]
@@ -939,16 +1153,24 @@ def test_chat_rejects_malformed_tool_attachments(temp_git_repo: Path):
 def test_chat_rejects_unavailable_mcp_attachment(temp_git_repo: Path):
     agents_dir = temp_git_repo / ".agents"
     agents_dir.mkdir(parents=True, exist_ok=True)
-    (agents_dir / "mcp_servers.json").write_text(json.dumps({
-        "servers": [{"id": "sql-readonly", "enabled": False}],
-    }), encoding="utf-8")
+    (agents_dir / "mcp_servers.json").write_text(
+        json.dumps(
+            {
+                "servers": [{"id": "sql-readonly", "enabled": False}],
+            }
+        ),
+        encoding="utf-8",
+    )
     client = TestClient(create_app(repo_root=temp_git_repo))
 
-    response = client.post("/api/chat/stream", json={
-        "thread_id": "th_disabled_mcp_attachment",
-        "content": "Please answer.",
-        "attached_mcps": ["sql-readonly"],
-    })
+    response = client.post(
+        "/api/chat/stream",
+        json={
+            "thread_id": "th_disabled_mcp_attachment",
+            "content": "Please answer.",
+            "attached_mcps": ["sql-readonly"],
+        },
+    )
 
     assert response.status_code == 409
     assert "Attached MCP server is disabled" in response.json()["error"]
@@ -991,6 +1213,7 @@ async def test_module1_chat_confirm_approval(temp_git_repo: Path):
     tid = "th_hitl_test"
 
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
+
         def mock_query_stream(_messages, _tools=None, *, on_text, **_kwargs):
             response = mock_responses.pop(0)
             if response["content"]:
@@ -1013,7 +1236,9 @@ async def test_module1_chat_confirm_approval(temp_git_repo: Path):
             await asyncio.sleep(0.3)
 
             # Test confirm endpoint with invalid action
-            res_bad = await ac.post("/api/chat/confirm", json={"thread_id": tid, "action_id": "nonexistent", "choice": "Y"})
+            res_bad = await ac.post(
+                "/api/chat/confirm", json={"thread_id": tid, "action_id": "nonexistent", "choice": "Y"}
+            )
             assert res_bad.status_code == 404
 
             # Find the registered action_id from pending_approvals in app state or confirm it
@@ -1030,4 +1255,3 @@ async def test_module1_chat_confirm_approval(temp_git_repo: Path):
             assert stream_res.status_code == 200
             assert "approval_required" in stream_res.text
             assert "finish" in stream_res.text
-

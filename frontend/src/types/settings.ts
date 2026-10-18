@@ -1,3 +1,8 @@
+/**
+ * Model profile, permission, MCP, and Skill settings types.
+ *
+ * `ModelProvider` must match the backend allow-list in `server/routes/settings.py` (checked by modelProviders.test.ts).
+ */
 export type ModelProvider = 'openai' | 'anthropic' | 'google' | 'deepseek' | 'openrouter' | 'ollama' | 'qwen' | 'zhipu' | 'moonshot' | 'siliconflow' | 'volcengine' | 'xai' | 'mistral' | 'custom';
 export type PermissionCategory = 'read' | 'create' | 'edit' | 'terminal' | 'search' | 'mcp' | 'delegation';
 

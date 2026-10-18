@@ -11,7 +11,6 @@ from vera_agent.exceptions import FormatError
 from vera_agent.models import GLOBAL_MODEL_STATS
 from vera_agent.models.utils.actions_toolcall import (
     ALL_TOOLS,
-    BASH_TOOL,
     format_toolcall_observation_messages,
     parse_toolcall_actions,
 )

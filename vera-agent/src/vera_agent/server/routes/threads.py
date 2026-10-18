@@ -1,4 +1,11 @@
-"""Global threads management, search, messages replay, and SideChat context probe."""
+"""Conversation (thread) routes.
+
+Routes: GET/POST /api/threads, PATCH/DELETE /api/threads/{id},
+GET /api/threads/{id}/messages, POST /api/threads/{id}/messages/deliver
+(deliver a workflow result to the originating chat), POST /api/threads/{id}/messages/truncate,
+GET /api/threads/{id}/context-probe, GET /api/threads/{id}/context-status,
+GET /api/context-status, POST /api/threads/{id}/context-rebirth.
+"""
 
 from __future__ import annotations
 
@@ -65,10 +72,7 @@ async def get_all_threads(request: Request) -> JSONResponse:
         if search_q:
             match_title = search_q in (s.title or "").lower()
             match_tid = search_q in s.thread_id.lower()
-            match_msgs = any(
-                search_q in str(m.get("content", "")).lower()
-                for m in s.messages
-            )
+            match_msgs = any(search_q in str(m.get("content", "")).lower() for m in s.messages)
             if not (match_title or match_tid or match_msgs):
                 continue
 
@@ -128,16 +132,18 @@ async def get_thread_messages(request: Request) -> JSONResponse:
     state = _get_state(request)
     thread_id = request.path_params["thread_id"]
     session = state.get_or_create_session(thread_id)
-    return JSONResponse({
-        "thread_id": session.thread_id,
-        "title": session.title,
-        "role": session.role,
-        "is_pinned": session.is_pinned,
-        "is_archived": session.is_archived,
-        "cost": round(session.cost, 4),
-        "n_calls": session.n_calls,
-        "messages": session.messages,
-    })
+    return JSONResponse(
+        {
+            "thread_id": session.thread_id,
+            "title": session.title,
+            "role": session.role,
+            "is_pinned": session.is_pinned,
+            "is_archived": session.is_archived,
+            "cost": round(session.cost, 4),
+            "n_calls": session.n_calls,
+            "messages": session.messages,
+        }
+    )
 
 
 async def deliver_orchestration_result(request: Request) -> JSONResponse:
@@ -164,22 +170,45 @@ async def deliver_orchestration_result(request: Request) -> JSONResponse:
         return JSONResponse({"error": "Caller conversation not found"}, status_code=404)
     if body.get("project_id") and session.project_id and session.project_id != str(body["project_id"]):
         return JSONResponse({"error": "Caller conversation belongs to a different project"}, status_code=409)
-    existing = next((message for message in session.messages if message.get("role") == "assistant" and (message.get("extra") or {}).get("orchestration_run_id") == run_id), None)
+    existing = next(
+        (
+            message
+            for message in session.messages
+            if message.get("role") == "assistant" and (message.get("extra") or {}).get("orchestration_run_id") == run_id
+        ),
+        None,
+    )
     if existing:
         return JSONResponse({"status": "already_delivered", "messages": [existing]})
     delivered = []
-    if task_input and not any(message.get("role") == "user" and (message.get("extra") or {}).get("orchestration_run_id") == run_id for message in session.messages):
-        delivered.extend(session.add_messages({
-            "role": "user", "content": task_input,
-            "extra": {"orchestration_run_id": run_id, "orchestration_group_id": group_id, "sender_id": "user"},
-            "timestamp": time.time(),
-        }))
-    delivered.extend(session.add_messages({
-        "role": "assistant",
-        "content": content,
-        "extra": {"orchestration_run_id": run_id, "orchestration_group_id": group_id, "sender_id": "supervisor"},
-        "timestamp": time.time(),
-    }))
+    if task_input and not any(
+        message.get("role") == "user" and (message.get("extra") or {}).get("orchestration_run_id") == run_id
+        for message in session.messages
+    ):
+        delivered.extend(
+            session.add_messages(
+                {
+                    "role": "user",
+                    "content": task_input,
+                    "extra": {"orchestration_run_id": run_id, "orchestration_group_id": group_id, "sender_id": "user"},
+                    "timestamp": time.time(),
+                }
+            )
+        )
+    delivered.extend(
+        session.add_messages(
+            {
+                "role": "assistant",
+                "content": content,
+                "extra": {
+                    "orchestration_run_id": run_id,
+                    "orchestration_group_id": group_id,
+                    "sender_id": "supervisor",
+                },
+                "timestamp": time.time(),
+            }
+        )
+    )
     session.save(state.get_session_file(session))
     return JSONResponse({"status": "delivered", "messages": delivered})
 
@@ -196,9 +225,18 @@ async def truncate_from_user_message(request: Request) -> JSONResponse:
     except Exception:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
     message_id = str(body.get("message_id") or "")
-    index = next((i for i, message in enumerate(session.messages) if message.get("id") == message_id and message.get("role") == "user"), None)
+    index = next(
+        (
+            i
+            for i, message in enumerate(session.messages)
+            if message.get("id") == message_id and message.get("role") == "user"
+        ),
+        None,
+    )
     if index is None:
-        return JSONResponse({"error": "Editable user message not found. New messages support edit and resend."}, status_code=404)
+        return JSONResponse(
+            {"error": "Editable user message not found. New messages support edit and resend."}, status_code=404
+        )
     session.messages = session.messages[:index]
     # A checkpoint may summarize the message being edited, so rebuild model
     # context from the surviving raw transcript after an edit-and-resend.
@@ -273,15 +311,17 @@ async def probe_thread_context(request: Request) -> JSONResponse:
             break
 
     summary = last_user_msg[:300] if last_user_msg else (session.title or "")
-    return JSONResponse({
-        "thread_id": session.thread_id,
-        "title": session.title,
-        "role": session.role,
-        "message_count": len(session.messages),
-        "last_user_message": last_user_msg,
-        "last_assistant_message": last_assistant_msg,
-        "summary": summary,
-    })
+    return JSONResponse(
+        {
+            "thread_id": session.thread_id,
+            "title": session.title,
+            "role": session.role,
+            "message_count": len(session.messages),
+            "last_user_message": last_user_msg,
+            "last_assistant_message": last_assistant_msg,
+            "summary": summary,
+        }
+    )
 
 
 async def get_thread_context_status(request: Request) -> JSONResponse:
@@ -312,19 +352,31 @@ async def get_thread_context_status(request: Request) -> JSONResponse:
             tokens = usage.get("prompt_tokens") or usage.get("input_tokens")
             if tokens is not None:
                 timestamp = float(extra.get("timestamp") or response.get("created") or message.get("created") or 0)
-                samples.append({"timestamp": timestamp, "tokens": int(tokens), "model": str(response.get("model") or profile["name"])})
+                samples.append(
+                    {
+                        "timestamp": timestamp,
+                        "tokens": int(tokens),
+                        "model": str(response.get("model") or profile["name"]),
+                    }
+                )
         if extra.get("compaction") or extra.get("context_rebirth"):
             if extra.get("compaction"):
                 folded = extra.get("folded_message_count")
                 kept = extra.get("kept_message_count")
-                detail = f"折叠 {folded} 条早期消息，保留最近 {kept} 条" if folded is not None and kept is not None else "早期对话已整理为上下文锚点"
+                detail = (
+                    f"折叠 {folded} 条早期消息，保留最近 {kept} 条"
+                    if folded is not None and kept is not None
+                    else "早期对话已整理为上下文锚点"
+                )
             else:
                 detail = str(extra.get("reason") or "创建衔接会话并注入交接摘要")
-            rebirth_logs.append({
-                "timestamp": float(extra.get("timestamp") or 0),
-                "kind": "压缩" if extra.get("compaction") else "换血",
-                "detail": detail,
-            })
+            rebirth_logs.append(
+                {
+                    "timestamp": float(extra.get("timestamp") or 0),
+                    "kind": "压缩" if extra.get("compaction") else "换血",
+                    "detail": detail,
+                }
+            )
 
     related_sessions: list[ThreadSession] = list(state.sessions.values())
     for file in state.get_sessions_dir().glob("*.json"):
@@ -335,35 +387,56 @@ async def get_thread_context_status(request: Request) -> JSONResponse:
                 continue
     for related in related_sessions:
         if related.thread_id == thread_id and related.parent_thread_id and related.metadata.get("rebirth_timestamp"):
-            rebirth_logs.append({"timestamp": related.metadata["rebirth_timestamp"], "kind": "换血", "detail": f"由会话 {related.parent_thread_id} 衔接"})
+            rebirth_logs.append(
+                {
+                    "timestamp": related.metadata["rebirth_timestamp"],
+                    "kind": "换血",
+                    "detail": f"由会话 {related.parent_thread_id} 衔接",
+                }
+            )
         elif related.parent_thread_id == thread_id and related.metadata.get("rebirth_timestamp"):
-            rebirth_logs.append({"timestamp": related.metadata["rebirth_timestamp"], "kind": "换血", "detail": f"衔接到会话 {related.thread_id}"})
+            rebirth_logs.append(
+                {
+                    "timestamp": related.metadata["rebirth_timestamp"],
+                    "kind": "换血",
+                    "detail": f"衔接到会话 {related.thread_id}",
+                }
+            )
 
     samples.sort(key=lambda item: item["timestamp"])
     recorded_timestamps = {(item["kind"], round(item["timestamp"], 3)) for item in rebirth_logs}
-    for event in (session.metadata.get("context_events", []) if session else []):
+    for event in session.metadata.get("context_events", []) if session else []:
         timestamp = float(event.get("timestamp") or 0)
         kind = str(event.get("kind") or "压缩")
         if timestamp and (kind, round(timestamp, 3)) not in recorded_timestamps:
-            rebirth_logs.append({
-                "timestamp": timestamp,
-                "kind": kind,
-                "detail": str(event.get("detail") or f"{event.get('before_tokens', '?')} → {event.get('after_tokens', '?')} Token"),
-            })
+            rebirth_logs.append(
+                {
+                    "timestamp": timestamp,
+                    "kind": kind,
+                    "detail": str(
+                        event.get("detail")
+                        or f"{event.get('before_tokens', '?')} → {event.get('after_tokens', '?')} Token"
+                    ),
+                }
+            )
             recorded_timestamps.add((kind, round(timestamp, 3)))
     rebirth_logs.sort(key=lambda item: item["timestamp"])
     latest = samples[-1] if samples else None
     max_tokens = profile["context_window"]
-    return JSONResponse({
-        "thread_id": thread_id or None,
-        "model": profile["name"],
-        "context_limit": max_tokens,
-        "context_limit_source": profile["context_source"],
-        "used_tokens": latest["tokens"] if latest else (0 if not thread_id else None),
-        "used_percent": round(latest["tokens"] / max_tokens * 100, 2) if latest and max_tokens else (0 if not thread_id and max_tokens else None),
-        "rebirth_logs": rebirth_logs,
-        "can_manual_rebirth": bool(session and session.group_id),
-    })
+    return JSONResponse(
+        {
+            "thread_id": thread_id or None,
+            "model": profile["name"],
+            "context_limit": max_tokens,
+            "context_limit_source": profile["context_source"],
+            "used_tokens": latest["tokens"] if latest else (0 if not thread_id else None),
+            "used_percent": round(latest["tokens"] / max_tokens * 100, 2)
+            if latest and max_tokens
+            else (0 if not thread_id and max_tokens else None),
+            "rebirth_logs": rebirth_logs,
+            "can_manual_rebirth": bool(session and session.group_id),
+        }
+    )
 
 
 async def rebirth_group_thread_context(request: Request) -> JSONResponse:
@@ -382,9 +455,13 @@ async def rebirth_group_thread_context(request: Request) -> JSONResponse:
     if session is None:
         return JSONResponse({"error": "Thread not found"}, status_code=404)
     if not session.group_id:
-        return JSONResponse({"error": "Manual context rebirth is only available for group workflow threads."}, status_code=403)
+        return JSONResponse(
+            {"error": "Manual context rebirth is only available for group workflow threads."}, status_code=403
+        )
     if thread_id in state.active_chat_threads:
-        return JSONResponse({"error": "Pause or finish this thread before starting a new context epoch."}, status_code=409)
+        return JSONResponse(
+            {"error": "Pause or finish this thread before starting a new context epoch."}, status_code=409
+        )
     try:
         body = await request.json()
     except Exception:
@@ -408,10 +485,16 @@ async def rebirth_group_thread_context(request: Request) -> JSONResponse:
     )
     if not event:
         archive.unlink(missing_ok=True)
-        return JSONResponse({"error": "The current history is too short or the model context limit is unavailable; no rebirth was performed."}, status_code=409)
+        return JSONResponse(
+            {
+                "error": "The current history is too short or the model context limit is unavailable; no rebirth was performed."
+            },
+            status_code=409,
+        )
 
     rebirth_event = {
-        "kind": "换血", "timestamp": time.time(),
+        "kind": "换血",
+        "timestamp": time.time(),
         "detail": "用户手动开始新上下文阶段；完整轨迹归档，工作流节点与分组关系保持不变",
         "archive": archive.name,
         "before_tokens": event["before_tokens"],

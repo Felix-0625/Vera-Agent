@@ -218,20 +218,24 @@ def test_agent_write_protection_on_registries(temp_git_repo: Path):
     env = LocalEnvironment(cwd=str(temp_git_repo))
 
     # Attempt to write to .agents/registries
-    res_write = env.execute({
-        "tool_name": "write",
-        "path": ".agents/registries/hacked.json",
-        "content": '{"hacked": true}',
-    })
+    res_write = env.execute(
+        {
+            "tool_name": "write",
+            "path": ".agents/registries/hacked.json",
+            "content": '{"hacked": true}',
+        }
+    )
     assert res_write["returncode"] == 1
     assert "Permission Denied" in res_write["output"]
 
     # Attempt to edit in .agents/registries
-    res_edit = env.execute({
-        "tool_name": "edit",
-        "path": ".agents/registries/test.json",
-        "edits": [{"old_str": "a", "new_str": "b"}],
-    })
+    res_edit = env.execute(
+        {
+            "tool_name": "edit",
+            "path": ".agents/registries/test.json",
+            "edits": [{"old_str": "a", "new_str": "b"}],
+        }
+    )
     assert res_edit["returncode"] == 1
     assert "Permission Denied" in res_edit["output"]
 

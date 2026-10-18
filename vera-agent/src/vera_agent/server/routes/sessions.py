@@ -1,8 +1,13 @@
-"""Sessions lifecycle, attachment, health check, and direct message bus dispatch."""
+"""Health and session-wiring routes.
+
+Routes: GET /api/health, POST /api/sessions/attach, POST /api/sessions/detach,
+POST /api/messages/send (deliver a message between sessions through `SessionRouter`).
+"""
 
 from __future__ import annotations
 
 import logging
+
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
@@ -74,11 +79,13 @@ async def send_message(request: Request) -> JSONResponse:
         return JSONResponse({"error": "thread_id and content required"}, status_code=400)
 
     session = state.get_or_create_session(thread_id)
-    session.add_messages({
-        "role": "user" if sender_id == "user" else "system",
-        "content": content,
-        "extra": {"sender_id": sender_id},
-    })
+    session.add_messages(
+        {
+            "role": "user" if sender_id == "user" else "system",
+            "content": content,
+            "extra": {"sender_id": sender_id},
+        }
+    )
     session.save(state.get_sessions_dir() / f"{thread_id}.json")
 
     return JSONResponse({"status": "delivered", "thread_id": thread_id, "messages_count": len(session.messages)})

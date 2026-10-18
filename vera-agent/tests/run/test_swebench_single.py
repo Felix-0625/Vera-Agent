@@ -67,9 +67,7 @@ def test_swebench_single_end_to_end(github_test_data, tmp_path, container_execut
     with (
         patch("vera_agent.run.benchmarks.swebench_single.get_model") as mock_get_model,
         patch("vera_agent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
-        patch(
-            "vera_agent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
-        ),
+        patch("vera_agent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):
         mock_get_model.return_value = _make_model_from_fixture(model_responses, cost_per_call=0.1)
@@ -108,9 +106,7 @@ def test_swebench_single_end_to_end_exit_immediately(github_test_data, tmp_path,
     with (
         patch("vera_agent.run.benchmarks.swebench_single.get_model") as mock_get_model,
         patch("vera_agent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
-        patch(
-            "vera_agent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
-        ),
+        patch("vera_agent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):
         mock_get_model.return_value = _make_model_from_fixture(model_responses, cost_per_call=0.1)

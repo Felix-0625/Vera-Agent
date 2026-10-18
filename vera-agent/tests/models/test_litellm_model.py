@@ -65,9 +65,15 @@ class TestLitellmModel:
             message=SimpleNamespace(reasoning_content="final reasoning"),
             finish_reason="stop",
         )
-        mock_query.return_value = [SimpleNamespace(
-            id="stream-2", created=1, model="deepseek/deepseek-flash", choices=[choice], usage=None,
-        )]
+        mock_query.return_value = [
+            SimpleNamespace(
+                id="stream-2",
+                created=1,
+                model="deepseek/deepseek-flash",
+                choices=[choice],
+                usage=None,
+            )
+        ]
 
         model = LitellmModel(model_name="deepseek/deepseek-flash", allow_empty_tool_calls=True)
         result = model.query_stream([{"role": "user", "content": "test"}], on_text=lambda _text: None)
@@ -78,9 +84,15 @@ class TestLitellmModel:
     @patch("vera_agent.models.litellm_model.LitellmModel._query")
     def test_query_stream_keeps_empty_deepseek_reasoning_field(self, mock_query):
         choice = SimpleNamespace(index=0, delta=SimpleNamespace(content=None), message=None, finish_reason="stop")
-        mock_query.return_value = [SimpleNamespace(
-            id="stream-3", created=1, model="deepseek/deepseek-flash", choices=[choice], usage=None,
-        )]
+        mock_query.return_value = [
+            SimpleNamespace(
+                id="stream-3",
+                created=1,
+                model="deepseek/deepseek-flash",
+                choices=[choice],
+                usage=None,
+            )
+        ]
 
         model = LitellmModel(model_name="deepseek/deepseek-flash", allow_empty_tool_calls=True)
         result = model.query_stream([{"role": "user", "content": "test"}], on_text=lambda _text: None)

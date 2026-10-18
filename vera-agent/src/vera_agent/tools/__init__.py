@@ -1,5 +1,10 @@
-"""Pi-agent style orthogonal 4 primitives tools."""
+"""Tool schemas and executors exposed to agents (file primitives, subagents, web, handoff)."""
 
+from vera_agent.tools.handoff_tools import (
+    transfer_to_main_op,
+    transfer_to_researcher_op,
+    transfer_to_reviewer_op,
+)
 from vera_agent.tools.ops import edit_file_op, read_file_op, write_file_op
 from vera_agent.tools.primitives import (
     ALL_TOOLS,
@@ -41,11 +46,6 @@ from vera_agent.tools.web_tools import (
     WEB_TOOLS_RESPONSE_API,
     fetch_web_page_op,
     web_search_op,
-)
-from vera_agent.tools.handoff_tools import (
-    transfer_to_main_op,
-    transfer_to_researcher_op,
-    transfer_to_reviewer_op,
 )
 
 __all__ = [

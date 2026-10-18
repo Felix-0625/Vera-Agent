@@ -14,8 +14,8 @@ import pytest
 from starlette.responses import StreamingResponse
 from starlette.testclient import TestClient
 
-from vera_agent.server.app import create_app
 from vera_agent.server import state as state_module
+from vera_agent.server.app import create_app
 from vera_agent.server.routes import projects as project_routes
 from vera_agent.server.routes import tasks as scheduled_tasks
 from vera_agent.server.routes.tasks import _is_due, _parse_run_at
@@ -42,23 +42,31 @@ def test_threads_remain_listed_and_mutable_after_switching_projects(sidebar_repo
     project_b_root.mkdir()
     project_b_extra = tmp_path / "project-b-extra"
     project_b_extra.mkdir()
-    bound = client.post("/api/projects/bind", json={
-        "repo_root": str(project_b_root), "name": "Project B",
-        "folders": [str(project_b_root), str(project_b_extra)],
-    })
+    bound = client.post(
+        "/api/projects/bind",
+        json={
+            "repo_root": str(project_b_root),
+            "name": "Project B",
+            "folders": [str(project_b_root), str(project_b_extra)],
+        },
+    )
     assert bound.status_code == 200
     assert bound.json()["folders"] == [str(project_b_root), str(project_b_extra)]
     project_b = next(item for item in client.get("/api/projects").json()["projects"] if item["name"] == "Project B")
     assert client.get("/api/projects/current").json()["id"] == project_b["id"]
 
-    project_b_thread = client.post("/api/threads", json={"title": "Project B conversation", "project_id": project_b["id"]})
+    project_b_thread = client.post(
+        "/api/threads", json={"title": "Project B conversation", "project_id": project_b["id"]}
+    )
     assert project_b_thread.status_code == 200
     project_b_thread_id = project_b_thread.json()["thread_id"]
     assert (project_b_root / ".agents" / "sessions" / f"{project_b_thread_id}.json").exists()
 
     listed = client.get("/api/threads").json()["threads"]
     assert any(thread["thread_id"] == thread_id and thread["project_id"] == project_a["id"] for thread in listed)
-    assert any(thread["thread_id"] == project_b_thread_id and thread["project_id"] == project_b["id"] for thread in listed)
+    assert any(
+        thread["thread_id"] == project_b_thread_id and thread["project_id"] == project_b["id"] for thread in listed
+    )
     updated = client.patch(f"/api/threads/{thread_id}", json={"title": "Renamed from Project B"})
     assert updated.status_code == 200
     saved = json.loads((sidebar_repo / ".agents" / "sessions" / f"{thread_id}.json").read_text(encoding="utf-8"))
@@ -94,9 +102,16 @@ def test_legacy_thread_without_project_id_still_infers_its_project(sidebar_repo)
     session_dir = Path(project["path"]) / ".agents" / "sessions"
     session_dir.mkdir(parents=True, exist_ok=True)
     session_file = session_dir / "th_legacy_sidebar.json"
-    session_file.write_text(json.dumps({
-        "thread_id": "th_legacy_sidebar", "role": "main", "title": "Legacy conversation",
-    }), encoding="utf-8")
+    session_file.write_text(
+        json.dumps(
+            {
+                "thread_id": "th_legacy_sidebar",
+                "role": "main",
+                "title": "Legacy conversation",
+            }
+        ),
+        encoding="utf-8",
+    )
 
     listed = client.get("/api/threads").json()["threads"]
     legacy = next(item for item in listed if item["thread_id"] == "th_legacy_sidebar")
@@ -118,13 +133,22 @@ def test_fixed_time_schedule_requires_timezone_and_is_one_time():
 
 def test_task_creation_rejects_invalid_time_and_persists_execution_model(sidebar_repo):
     client = TestClient(create_app(repo_root=sidebar_repo))
-    invalid = client.post("/api/tasks/scheduled", json={"name": "bad", "run_at": "tomorrow", "prompt": "do work", "model_id": "model-test"})
+    invalid = client.post(
+        "/api/tasks/scheduled",
+        json={"name": "bad", "run_at": "tomorrow", "prompt": "do work", "model_id": "model-test"},
+    )
     assert invalid.status_code == 400
 
-    created = client.post("/api/tasks/scheduled", json={
-        "name": "fixed-time check", "run_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(), "prompt": "summarize the repository",
-        "model_id": "model-test", "project_id": client.get("/api/projects").json()["projects"][0]["id"],
-    })
+    created = client.post(
+        "/api/tasks/scheduled",
+        json={
+            "name": "fixed-time check",
+            "run_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+            "prompt": "summarize the repository",
+            "model_id": "model-test",
+            "project_id": client.get("/api/projects").json()["projects"][0]["id"],
+        },
+    )
     assert created.status_code == 201
     assert created.json()["model_id"] == "model-test"
     assert created.json()["project_id"] is not None
@@ -150,11 +174,23 @@ def test_scheduler_dispatches_due_fixed_time_task_once(sidebar_repo, monkeypatch
     state = state_module.ServerState(repo_root=sidebar_repo)
     scheduled_minute = datetime(2026, 10, 13, 12, 34, tzinfo=timezone.utc)
     project_id = state.load_json_config("projects_history.json", {"projects": []})["projects"][0]["id"]
-    scheduled_tasks._save_tasks(sidebar_repo, {"tasks": [{
-        "id": "task_dispatch", "name": "dispatch check", "run_at": scheduled_minute.isoformat(),
-        "prompt": "safe test", "model_id": "model-test", "project_id": project_id,
-        "enabled": True, "last_status": "idle",
-    }]})
+    scheduled_tasks._save_tasks(
+        sidebar_repo,
+        {
+            "tasks": [
+                {
+                    "id": "task_dispatch",
+                    "name": "dispatch check",
+                    "run_at": scheduled_minute.isoformat(),
+                    "prompt": "safe test",
+                    "model_id": "model-test",
+                    "project_id": project_id,
+                    "enabled": True,
+                    "last_status": "idle",
+                }
+            ]
+        },
+    )
     dispatched = asyncio.Event()
 
     class FixedDateTime(datetime):
@@ -197,7 +233,12 @@ def test_scheduled_task_uses_bound_project_but_saves_task_state_in_app_config(tm
     history = state.load_json_config("projects_history.json", {"projects": []})
     history["projects"].append({"id": project_id, "name": "Bound project", "path": str(project_root)})
     state.save_json_config("projects_history.json", history)
-    task = {"id": "task_project_scope", "name": "project scope", "prompt": "check project root", "model_id": "model-test"}
+    task = {
+        "id": "task_project_scope",
+        "name": "project scope",
+        "prompt": "check project root",
+        "model_id": "model-test",
+    }
     scheduled_tasks._save_tasks(app_root, {"tasks": [task]})
     observed_project_roots = []
 
@@ -207,6 +248,7 @@ def test_scheduled_task_uses_bound_project_but_saves_task_state_in_app_config(tm
         return StreamingResponse(iter([b'event: finish\ndata: {"exit_status":"finish"}\n\n']))
 
     from vera_agent.server.routes import chat
+
     monkeypatch.setattr(chat, "chat_stream", fake_chat_stream)
     asyncio.run(scheduled_tasks._execute_task(state, task, app_root, project_id))
 
@@ -224,19 +266,37 @@ def test_scheduled_task_executes_through_real_deepseek_model(sidebar_repo, monke
     config_dir.mkdir(exist_ok=True)
     config_path = config_dir / "models_config.json"
     request.addfinalizer(lambda: config_path.unlink(missing_ok=True))
-    config_path.write_text(json.dumps({"models": [{
-        "id": "temporary-deepseek-flash", "name": "deepseek-flash", "provider": "deepseek",
-        "api_key": key, "enabled": True, "temperature": 0,
-    }]}), encoding="utf-8")
+    config_path.write_text(
+        json.dumps(
+            {
+                "models": [
+                    {
+                        "id": "temporary-deepseek-flash",
+                        "name": "deepseek-flash",
+                        "provider": "deepseek",
+                        "api_key": key,
+                        "enabled": True,
+                        "temperature": 0,
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
     monkeypatch.setenv("VERA_TEST_DEEPSEEK_KEY", "")
 
     with TestClient(create_app(repo_root=sidebar_repo)) as client:
         project_id = client.get("/api/projects").json()["projects"][0]["id"]
-        created = client.post("/api/tasks/scheduled", json={
-            "name": "temporary model acceptance", "run_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
-            "prompt": "请只回复 DONE，不要调用任何工具。", "model_id": "temporary-deepseek-flash",
-            "project_id": project_id,
-        })
+        created = client.post(
+            "/api/tasks/scheduled",
+            json={
+                "name": "temporary model acceptance",
+                "run_at": (datetime.now(timezone.utc) + timedelta(days=1)).isoformat(),
+                "prompt": "请只回复 DONE，不要调用任何工具。",
+                "model_id": "temporary-deepseek-flash",
+                "project_id": project_id,
+            },
+        )
         assert created.status_code == 201
         task_id = created.json()["id"]
         started = client.post(f"/api/tasks/scheduled/{task_id}/run")
@@ -254,6 +314,11 @@ def test_scheduled_task_executes_through_real_deepseek_model(sidebar_repo, monke
         assert result["last_status"] == "success", result.get("last_error")
         assert result["thread_id"]
         messages = client.get(f"/api/threads/{result['thread_id']}/messages").json()["messages"]
-        assert any(message.get("role") == "assistant" and str(message.get("content", "")).strip() and "Model inference error" not in str(message.get("content", "")) for message in messages)
+        assert any(
+            message.get("role") == "assistant"
+            and str(message.get("content", "")).strip()
+            and "Model inference error" not in str(message.get("content", ""))
+            for message in messages
+        )
         client.delete(f"/api/tasks/scheduled/{task_id}")
     config_path.unlink(missing_ok=True)

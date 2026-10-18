@@ -1,3 +1,6 @@
+/**
+ * Helpers that scope the right sidebar layout to the active conversation.
+ */
 import { useChatStore } from './chatStore';
 import { DEFAULT_RIGHT_SIDEBAR_LAYOUT, useLayoutStore } from './layoutStore';
 

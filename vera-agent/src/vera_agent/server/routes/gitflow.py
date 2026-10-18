@@ -1,10 +1,16 @@
-"""Tool 9: GitFlow topology export, branch management, checkout, merge, and 3-Way merge review."""
+"""Git branch and topology routes.
+
+Routes: GET /api/topology (also the desktop launcher readiness probe),
+GET /api/gitflow/topology, GET/POST /api/branches, DELETE /api/branches/{name},
+POST /api/branches/checkout, /api/branches/merge, /api/merge-review.
+"""
 
 from __future__ import annotations
 
 import logging
 import re
 from pathlib import Path
+
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
@@ -43,7 +49,9 @@ async def get_gitflow_topology(request: Request) -> JSONResponse:
         return JSONResponse({"error": "请绑定有效项目后使用 GitFlow"}, status_code=404)
     inside_code, _, _ = state.run_git(["rev-parse", "--is-inside-work-tree"], cwd=root)
     if inside_code != 0:
-        return JSONResponse({"repo_name": root.name, "is_git": False, "current_branch": "", "branches": [], "commits": []})
+        return JSONResponse(
+            {"repo_name": root.name, "is_git": False, "current_branch": "", "branches": [], "commits": []}
+        )
     code, stdout, stderr = state.run_git(
         ["log", "--all", "--topo-order", "-n", "100", "--format=%H%x1f%P%x1f%h%x1f%ct%x1f%s"], cwd=root
     )
@@ -55,9 +63,23 @@ async def get_gitflow_topology(request: Request) -> JSONResponse:
         if len(values) != 5:
             continue
         commit, parents, short_hash, timestamp, subject = values
-        commits.append({"hash": commit, "short_hash": short_hash, "parents": parents.split() if parents else [], "timestamp": int(timestamp), "subject": subject})
+        commits.append(
+            {
+                "hash": commit,
+                "short_hash": short_hash,
+                "parents": parents.split() if parents else [],
+                "timestamp": int(timestamp),
+                "subject": subject,
+            }
+        )
     _, refs, _ = state.run_git(
-        ["for-each-ref", "--format=%(refname)%09%(objectname)%09%(HEAD)%09%(upstream:short)", "refs/heads", "refs/remotes"], cwd=root
+        [
+            "for-each-ref",
+            "--format=%(refname)%09%(objectname)%09%(HEAD)%09%(upstream:short)",
+            "refs/heads",
+            "refs/remotes",
+        ],
+        cwd=root,
     )
     branches = []
     for line in refs.splitlines():
@@ -72,7 +94,9 @@ async def get_gitflow_topology(request: Request) -> JSONResponse:
             continue
         branch = {"name": name, "head": commit, "is_current": marker == "*", "is_remote": is_remote}
         if not is_remote and upstream:
-            ahead_code, counts, _ = state.run_git(["rev-list", "--left-right", "--count", f"{name}...{upstream}"], cwd=root)
+            ahead_code, counts, _ = state.run_git(
+                ["rev-list", "--left-right", "--count", f"{name}...{upstream}"], cwd=root
+            )
             if ahead_code == 0:
                 ahead, behind = (int(value) for value in counts.split())
                 branch.update({"upstream": upstream, "ahead": ahead, "behind": behind})
@@ -99,7 +123,15 @@ async def get_gitflow_topology(request: Request) -> JSONResponse:
     for branch in branches:
         if not branch["is_remote"] and branch["name"] in preferred_parent:
             branch["parent"] = preferred_parent[branch["name"]]
-    return JSONResponse({"repo_name": root.name, "is_git": True, "current_branch": get_git_branch(root), "branches": branches, "commits": commits})
+    return JSONResponse(
+        {
+            "repo_name": root.name,
+            "is_git": True,
+            "current_branch": get_git_branch(root),
+            "branches": branches,
+            "commits": commits,
+        }
+    )
 
 
 async def get_branches(request: Request) -> JSONResponse:
@@ -119,16 +151,20 @@ async def get_branches(request: Request) -> JSONResponse:
         name = line_clean.lstrip("* ").strip()
         if "->" in name:  # remote HEAD pointer like origin/HEAD -> origin/main
             continue
-        branches.append({
-            "name": name,
-            "is_current": is_curr or (name == current_branch),
-            "is_remote": name.startswith("remotes/"),
-        })
+        branches.append(
+            {
+                "name": name,
+                "is_current": is_curr or (name == current_branch),
+                "is_remote": name.startswith("remotes/"),
+            }
+        )
 
-    return JSONResponse({
-        "current_branch": current_branch,
-        "branches": branches,
-    })
+    return JSONResponse(
+        {
+            "current_branch": current_branch,
+            "branches": branches,
+        }
+    )
 
 
 async def create_branch(request: Request) -> JSONResponse:
@@ -213,12 +249,14 @@ async def merge_branch(request: Request) -> JSONResponse:
     if source == get_git_branch(root):
         return JSONResponse({"error": "不能将当前分支合并到自身"}, status_code=400)
     code, stdout, stderr = state.run_git(["merge", "--no-ff", "--", source], cwd=root)
-    return JSONResponse({
-        "status": "merged" if code == 0 else "conflict_or_error",
-        "returncode": code,
-        "stdout": stdout,
-        "stderr": stderr,
-    })
+    return JSONResponse(
+        {
+            "status": "merged" if code == 0 else "conflict_or_error",
+            "returncode": code,
+            "stdout": stdout,
+            "stderr": stderr,
+        }
+    )
 
 
 async def merge_review(request: Request) -> JSONResponse:
@@ -240,17 +278,23 @@ async def merge_review(request: Request) -> JSONResponse:
     code, stdout, stderr = state.run_git(["merge-tree", "--write-tree", target, source], cwd=root)
     conflicts = re.findall(r"CONFLICT .*? in (.+)", stdout + "\n" + stderr)
     can_merge = code == 0
-    return JSONResponse({
-        "source_branch": source,
-        "target_branch": target,
-        "can_merge": can_merge,
-        "has_conflict": not can_merge,
-        "conflict_files": conflicts,
-        "summary": "可无冲突合并，工作区未被修改。" if can_merge else ("存在合并冲突：" + (", ".join(conflicts) if conflicts else stderr.strip() or "请检查分支和 Git 版本。")),
-        "diff_summary": stdout[:1500],
-        "test_passed": False,
-        "action_items": ["审查差异并运行项目测试"],
-    })
+    return JSONResponse(
+        {
+            "source_branch": source,
+            "target_branch": target,
+            "can_merge": can_merge,
+            "has_conflict": not can_merge,
+            "conflict_files": conflicts,
+            "summary": "可无冲突合并，工作区未被修改。"
+            if can_merge
+            else (
+                "存在合并冲突：" + (", ".join(conflicts) if conflicts else stderr.strip() or "请检查分支和 Git 版本。")
+            ),
+            "diff_summary": stdout[:1500],
+            "test_passed": False,
+            "action_items": ["审查差异并运行项目测试"],
+        }
+    )
 
 
 gitflow_routes = [

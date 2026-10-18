@@ -1,9 +1,12 @@
-"""Three-month project usage analytics backed by persisted conversation events."""
+"""Usage analytics route: GET /api/analytics/dashboard.
+
+Aggregates up to three months of token, cost, and activity data from the
+persisted conversation session files of the bound project.
+"""
 
 from __future__ import annotations
 
 import logging
-import time
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from typing import Any
@@ -109,7 +112,11 @@ async def get_analytics_dashboard(request: Request) -> JSONResponse:
                 user_extra = message.get("extra") or {}
                 task_skills = {str(name) for name in user_extra.get("attached_skills", []) if name}
                 raw_timestamp = (message.get("extra") or {}).get("timestamp") or message.get("timestamp")
-                task_timestamp = float(raw_timestamp) / 1000 if raw_timestamp and raw_timestamp > 10_000_000_000 else float(raw_timestamp or 0) or None
+                task_timestamp = (
+                    float(raw_timestamp) / 1000
+                    if raw_timestamp and raw_timestamp > 10_000_000_000
+                    else float(raw_timestamp or 0) or None
+                )
             elif role == "assistant":
                 event = _usage_event(message)
                 if event:
@@ -170,35 +177,58 @@ async def get_analytics_dashboard(request: Request) -> JSONResponse:
     monthly_rows: list[dict[str, Any]] = []
     for month, start, end in month_ranges:
         month_models = monthly_models.get(month, {})
-        monthly_rows.append({"month": month, "models": [
-            {"name": name, "tokens": int(values["tokens"]), "cost_usd": round(values["cost"], 8)}
-            for name, values in sorted(month_models.items()) if values["tokens"] or values["cost"]
-        ]})
+        monthly_rows.append(
+            {
+                "month": month,
+                "models": [
+                    {"name": name, "tokens": int(values["tokens"]), "cost_usd": round(values["cost"], 8)}
+                    for name, values in sorted(month_models.items())
+                    if values["tokens"] or values["cost"]
+                ],
+            }
+        )
         for day_number in range(1, end.day + 1):
             day = date(start.year, start.month, day_number)
             values = daily[(month, day.strftime("%Y-%m-%d"))]
-            daily_rows.append({"month": month, "date": day.strftime("%Y-%m-%d"), "tokens": int(values["tokens"]), "cost_usd": round(values["cost"], 8)})
+            daily_rows.append(
+                {
+                    "month": month,
+                    "date": day.strftime("%Y-%m-%d"),
+                    "tokens": int(values["tokens"]),
+                    "cost_usd": round(values["cost"], 8),
+                }
+            )
         week_count = (end.day - 1) // 7 + 1
         for week_number in range(1, week_count + 1):
             first = (week_number - 1) * 7 + 1
             last = min(week_number * 7, end.day)
             values = weekly[(month, week_number)]
-            weekly_rows.append({"month": month, "week": week_number, "label": f"{first:02d}–{last:02d}日", "tokens": int(values["tokens"]), "cost_usd": round(values["cost"], 8)})
+            weekly_rows.append(
+                {
+                    "month": month,
+                    "week": week_number,
+                    "label": f"{first:02d}–{last:02d}日",
+                    "tokens": int(values["tokens"]),
+                    "cost_usd": round(values["cost"], 8),
+                }
+            )
 
     today_key = today.strftime("%Y-%m-%d")
-    return JSONResponse({
-        "summary": {
-            "total_cost_usd": round(total_cost, 8),
-            "total_tokens": total_tokens,
-            "today_cost_usd": round(daily.get((_month_key(today), today_key), {}).get("cost", 0.0), 8),
-        },
-        "retained_months": month_keys,
-        "daily_trends": daily_rows,
-        "weekly_trends": weekly_rows,
-        "monthly_models": monthly_rows,
-        "mcp_usage": [{"name": name, "count": count} for name, count in sorted(mcp_counts.items())],
-        "skill_usage": [{"name": name, "count": count} for name, count in sorted(skill_counts.items())],
-    })
+    return JSONResponse(
+        {
+            "summary": {
+                "total_cost_usd": round(total_cost, 8),
+                "total_tokens": total_tokens,
+                "today_cost_usd": round(daily.get((_month_key(today), today_key), {}).get("cost", 0.0), 8),
+            },
+            "retained_months": month_keys,
+            "daily_trends": daily_rows,
+            "weekly_trends": weekly_rows,
+            "monthly_models": monthly_rows,
+            "mcp_usage": [{"name": name, "count": count} for name, count in sorted(mcp_counts.items())],
+            "skill_usage": [{"name": name, "count": count} for name, count in sorted(skill_counts.items())],
+        }
+    )
 
 
 analytics_routes = [Route("/api/analytics/dashboard", get_analytics_dashboard, methods=["GET"])]

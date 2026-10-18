@@ -1,3 +1,9 @@
+/**
+ * Main conversation store (zustand).
+ *
+ * Holds the thread list, the active thread's messages, streaming/approval state, the per-conversation
+ * prompt queue, draft attachments, and the selected model. Talks to the backend through api/chatApi.ts.
+ */
 import { create } from 'zustand';
 import { Thread, ChatMessage, ChatImageAttachment, ApprovalRequest, RuleTrigger, ChatActivityEvent, SubagentRun, QueuedPrompt } from '../types/chat';
 import {

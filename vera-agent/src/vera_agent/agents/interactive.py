@@ -224,17 +224,25 @@ class InteractiveAgent(DefaultAgent):
             success = self.compact()
             after_len = len(self.session.messages)
             if success:
-                console.print(f"\n[bold green]Context compacted successfully: {before_len} messages -> {after_len} messages.[/bold green]\n")
+                console.print(
+                    f"\n[bold green]Context compacted successfully: {before_len} messages -> {after_len} messages.[/bold green]\n"
+                )
             else:
-                console.print(f"\n[bold yellow]Session not long enough for boundary compaction ({before_len} messages).[/bold yellow]\n")
+                console.print(
+                    f"\n[bold yellow]Session not long enough for boundary compaction ({before_len} messages).[/bold yellow]\n"
+                )
             return self._prompt_and_handle_slash_commands(prompt)
         if user_input.startswith("/research ") or user_input == "/research":
-            task_arg = user_input[len("/research "):].strip() or "Perform codebase reconnaissance and dependency audit."
+            task_arg = (
+                user_input[len("/research ") :].strip() or "Perform codebase reconnaissance and dependency audit."
+            )
             res = self.execute_subagent_tool({"tool_name": "delegate_research", "task": task_arg})
             console.print(f"\n[bold cyan]{res['output']}[/bold cyan]\n")
             return self._prompt_and_handle_slash_commands(prompt)
         if user_input.startswith("/review ") or user_input == "/review":
-            task_arg = user_input[len("/review "):].strip() or "Perform pre-merge code review and edge case verification."
+            task_arg = (
+                user_input[len("/review ") :].strip() or "Perform pre-merge code review and edge case verification."
+            )
             res = self.execute_subagent_tool({"tool_name": "delegate_review", "task": task_arg})
             console.print(f"\n[bold magenta]{res['output']}[/bold magenta]\n")
             return self._prompt_and_handle_slash_commands(prompt)

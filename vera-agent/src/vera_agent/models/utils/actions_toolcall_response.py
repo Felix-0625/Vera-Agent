@@ -6,12 +6,20 @@ import time
 from jinja2 import StrictUndefined, Template
 
 from vera_agent.exceptions import FormatError
-
 from vera_agent.tools import (
     ALL_TOOLS_RESPONSE_API,
     BASH_TOOL_RESPONSE_API,
     TOOL_NAMES,
 )
+
+# Tool schemas are re-exported so Responses API adapters can import them next to the parser.
+__all__ = [
+    "ALL_TOOLS_RESPONSE_API",
+    "BASH_TOOL_RESPONSE_API",
+    "finish_reason_from_responses_api",
+    "format_toolcall_observation_messages",
+    "parse_toolcall_actions_response",
+]
 
 
 def _format_error_message(error_text: str) -> dict:

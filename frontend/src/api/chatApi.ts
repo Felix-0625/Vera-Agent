@@ -1,3 +1,9 @@
+/**
+ * Conversation and chat-stream client.
+ *
+ * Backend: `server/routes/threads.py` (`/api/threads*`, `/api/context-status`) and
+ * `server/routes/chat.py` (`/api/chat/*`). `streamChat` parses the SSE events documented in docs/API.md.
+ */
 import { request } from './client';
 import { Thread, ChatMessage, ChatImageAttachment, StreamFinishPayload, SubagentRun } from '../types/chat';
 

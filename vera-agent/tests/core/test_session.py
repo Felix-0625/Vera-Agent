@@ -10,18 +10,18 @@ Coverage:
 """
 
 from pathlib import Path
-import tempfile
+
 import pytest
 
-from vera_agent.agents.default import AgentConfig, DefaultAgent
+from vera_agent.agents.default import DefaultAgent
 from vera_agent.environments.local import LocalEnvironment
 from vera_agent.models.test_models import DeterministicModel
 from vera_agent.session import ThreadSession
 
-
 # ============================================================================
 # 1. ThreadSession Core Entity Tests
 # ============================================================================
+
 
 def test_thread_session_initialization():
     """Test default initialization properties of the session entity."""
@@ -142,6 +142,7 @@ def test_thread_session_save_and_load(tmp_path: Path):
 # ============================================================================
 # 2. Agent Integration Tests
 # ============================================================================
+
 
 def test_default_agent_session_binding():
     """Test DefaultAgent automatically attaches and synchronizes ThreadSession."""

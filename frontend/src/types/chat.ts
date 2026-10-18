@@ -1,3 +1,6 @@
+/**
+ * Conversation, message, streaming event, and approval types. Field names mirror backend JSON (snake_case).
+ */
 export interface ChatImageAttachment {
   id: string;
   name: string;

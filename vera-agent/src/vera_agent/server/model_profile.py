@@ -60,7 +60,9 @@ def resolve_model_profile(state: Any, requested_model: str | None = None) -> dic
     if selected is None:
         selected = next((item for item in models if requested_model and item.get("name") == requested_model), None)
     if requested_model and selected is None and models:
-        raise ValueError(f"Configured model '{requested_model}' was not found. Refresh the model list and select an available model.")
+        raise ValueError(
+            f"Configured model '{requested_model}' was not found. Refresh the model list and select an available model."
+        )
     if selected is None and not requested_model:
         enabled_models = [item for item in models if item.get("enabled") is not False]
         selected = next((item for item in enabled_models if item.get("is_default") is True), None)
@@ -71,7 +73,9 @@ def resolve_model_profile(state: Any, requested_model: str | None = None) -> dic
         elif selected is None and models:
             raise ValueError("No enabled model is configured. Enable a model in Settings.")
     if selected is not None and selected.get("enabled") is False:
-        raise ValueError(f"Configured model '{requested_model or selected.get('name')}' is disabled. Select an enabled model.")
+        raise ValueError(
+            f"Configured model '{requested_model or selected.get('name')}' is disabled. Select an enabled model."
+        )
     raw_model_name = str((selected or {}).get("name") or requested_model or DEFAULT_MODEL_NAME)
     model_name = resolve_litellm_model_name(raw_model_name, (selected or {}).get("provider"))
 
@@ -108,7 +112,9 @@ def resolve_model_profile(state: Any, requested_model: str | None = None) -> dic
     return {
         "name": model_name,
         "config": selected or {},
-        "context_window": int(context_window) if isinstance(context_window, (int, float)) and context_window > 0 else None,
+        "context_window": int(context_window)
+        if isinstance(context_window, (int, float)) and context_window > 0
+        else None,
         "context_source": context_source,
         "model_kwargs": model_kwargs,
     }

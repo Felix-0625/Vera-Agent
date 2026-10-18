@@ -1,7 +1,17 @@
-"""Shared ServerState and lifecycle management for the VeraAgent ASGI application.
+"""Process-wide runtime state shared by all API routes (`ServerState`).
 
-Maintains repository context, session registry, WorktreeManager, GitFlowGraph,
-SessionRouter, RegistryManager, and configuration utilities.
+Two roots matter:
+
+- `projects_config_root`: application data root (the `repo_root` passed to
+  `create_app`, default: process cwd). Application-scoped JSON configs
+  (projects history, models, permissions, MCP servers, Skills) live in
+  `<projects_config_root>/.agents/`.
+- `root_path`: the currently bound project. Other configs and default
+  sessions live in `<root_path>/.agents/`; project sessions live in
+  `<project>/.agents/sessions/<thread_id>.json`.
+
+Also holds in-memory objects that are not persisted: active `ThreadSession`
+objects, pending tool approvals, and chat interrupt/pause flags.
 """
 
 from __future__ import annotations
@@ -27,6 +37,17 @@ from vera_agent.session.worktree import WorktreeManager
 from vera_agent.tools.skill_tools import SkillManager
 
 logger = logging.getLogger("vera_server.state")
+
+# Settings shared by every project; stored under `<projects_config_root>/.agents/`.
+APPLICATION_CONFIGS = frozenset(
+    {
+        "projects_history.json",
+        "models_config.json",
+        "permissions_config.json",
+        "mcp_servers.json",
+        "skills_config.json",
+    }
+)
 
 
 def get_git_branch(repo_path: Path) -> str:
@@ -72,21 +93,14 @@ class ServerState:
         self.chat_pause_events: dict[str, threading.Event] = {}
         self.active_chat_threads: set[str] = set()
 
-        self.init_workspace(Path(repo_root or Path.cwd()))
+        self.init_workspace(Path(repo_root or Path.cwd()), record_history=repo_root is not None)
         if graph is not None:
             self.graph = graph
             self.router = SessionRouter(graph=graph)
             self.pipeline = HandoffPipeline(graph=graph)
 
     def load_json_config(self, file_name: str, default_data: Any) -> Any:
-        application_configs = {
-            "projects_history.json",
-            "models_config.json",
-            "permissions_config.json",
-            "mcp_servers.json",
-            "skills_config.json",
-        }
-        config_root = self.projects_config_root if file_name in application_configs else self.root_path
+        config_root = self.projects_config_root if file_name in APPLICATION_CONFIGS else self.root_path
         cfg_file = config_root / ".agents" / file_name
         if cfg_file.exists():
             try:
@@ -99,14 +113,7 @@ class ServerState:
         return copy.deepcopy(default_data)
 
     def save_json_config(self, file_name: str, data: Any) -> None:
-        application_configs = {
-            "projects_history.json",
-            "models_config.json",
-            "permissions_config.json",
-            "mcp_servers.json",
-            "skills_config.json",
-        }
-        config_root = self.projects_config_root if file_name in application_configs else self.root_path
+        config_root = self.projects_config_root if file_name in APPLICATION_CONFIGS else self.root_path
         cfg_file = config_root / ".agents" / file_name
         cfg_file.parent.mkdir(parents=True, exist_ok=True)
         cfg_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -117,6 +124,7 @@ class ServerState:
         project_id: str | None = None,
         project_name: str | None = None,
         folders: list[str] | None = None,
+        record_history: bool = True,
     ) -> None:
         resolved_root = target_root.resolve()
         wt = WorktreeManager(repo_root=resolved_root)
@@ -132,11 +140,15 @@ class ServerState:
         self.skill_mgr = SkillManager(root_dirs=skill_roots)
         self.registry_mgr = RegistryManager(resolved_root)
 
+        if not record_history:
+            return
         # Update projects history
         proj_hist = self.load_json_config("projects_history.json", {"projects": []})
         projects = proj_hist.get("projects", [])
         path_str = str(resolved_root)
-        existing = next((p for p in projects if (project_id and p.get("id") == project_id) or p.get("path") == path_str), None)
+        existing = next(
+            (p for p in projects if (project_id and p.get("id") == project_id) or p.get("path") == path_str), None
+        )
         if existing:
             existing["path"] = path_str
             if project_name:
@@ -146,15 +158,17 @@ class ServerState:
             existing["active_branch"] = get_git_branch(resolved_root)
             existing["folders"] = folders or existing.get("folders") or [path_str]
         else:
-            projects.append({
-                "id": project_id or f"proj_{uuid.uuid4().hex[:8]}",
-                "name": project_name or resolved_root.name,
-                "path": path_str,
-                "folders": folders or [path_str],
-                "is_git": (resolved_root / ".git").exists(),
-                "active_branch": get_git_branch(resolved_root),
-                "last_opened_at": time.time(),
-            })
+            projects.append(
+                {
+                    "id": project_id or f"proj_{uuid.uuid4().hex[:8]}",
+                    "name": project_name or resolved_root.name,
+                    "path": path_str,
+                    "folders": folders or [path_str],
+                    "is_git": (resolved_root / ".git").exists(),
+                    "active_branch": get_git_branch(resolved_root),
+                    "last_opened_at": time.time(),
+                }
+            )
         proj_hist["projects"] = projects
         self.save_json_config("projects_history.json", proj_hist)
 

@@ -1,9 +1,11 @@
-"""Project work items for the embedded VeraAgent task board.
+"""Project task board work items.
 
-This is deliberately separate from ``tasks.py``: that module stores timed
-Agent prompts, while this module stores project work that people track on a
-board. The database lives in the application config directory, not inside a
-user's checked-out project.
+Routes: GET/POST /api/taskboard/tasks, PATCH /api/taskboard/tasks/{id},
+DELETE /api/taskboard/tasks/{id} (soft archive).
+
+Items are stored in SQLite at `<projects_config_root>/.agents/taskboard.sqlite`
+and scoped by `project_id`. Updates carry a `version` for optimistic concurrency;
+a linked conversation must belong to the same project.
 """
 
 from __future__ import annotations
@@ -202,8 +204,18 @@ async def create_work_item(request: Request) -> JSONResponse:
             "INSERT INTO work_items "
             "(id, project_id, identifier, title, description, status, priority, labels, created_at, updated_at) "
             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (item_id, project_id, identifier, title.strip(), description, status, priority,
-             json.dumps(labels, ensure_ascii=False), now, now),
+            (
+                item_id,
+                project_id,
+                identifier,
+                title.strip(),
+                description,
+                status,
+                priority,
+                json.dumps(labels, ensure_ascii=False),
+                now,
+                now,
+            ),
         )
         row = connection.execute("SELECT * FROM work_items WHERE id = ?", (item_id,)).fetchone()
     return JSONResponse({"item": _item(row)}, status_code=201)
@@ -227,8 +239,14 @@ async def update_work_item(request: Request) -> JSONResponse:
             return JSONResponse({"error": "Work item not found"}, status_code=404)
 
         expected_version = body.get("version")
-        if isinstance(expected_version, bool) or not isinstance(expected_version, int) or expected_version != current["version"]:
-            return JSONResponse({"error": "Work item changed; refresh and retry", "item": _item(current)}, status_code=409)
+        if (
+            isinstance(expected_version, bool)
+            or not isinstance(expected_version, int)
+            or expected_version != current["version"]
+        ):
+            return JSONResponse(
+                {"error": "Work item changed; refresh and retry", "item": _item(current)}, status_code=409
+            )
 
         changes: dict[str, Any] = {}
         if "title" in body:
@@ -278,7 +296,9 @@ async def update_work_item(request: Request) -> JSONResponse:
         )
         if cursor.rowcount != 1:
             latest = connection.execute("SELECT * FROM work_items WHERE id = ?", (item_id,)).fetchone()
-            return JSONResponse({"error": "Work item changed; refresh and retry", "item": _item(latest)}, status_code=409)
+            return JSONResponse(
+                {"error": "Work item changed; refresh and retry", "item": _item(latest)}, status_code=409
+            )
         updated = connection.execute("SELECT * FROM work_items WHERE id = ?", (item_id,)).fetchone()
     return JSONResponse({"item": _item(updated)})
 

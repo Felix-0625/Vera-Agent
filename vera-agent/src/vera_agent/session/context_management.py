@@ -1,4 +1,4 @@
-"""Pi-style context checkpoints using VeraAgent's existing LiteLLM client.
+"""Context checkpoints (compaction) using the configured LiteLLM client.
 
 The durable transcript stays intact. Only the model-facing projection replaces
 older turns with the latest checkpoint and keeps the recent raw turns.
@@ -40,7 +40,10 @@ def _latest_checkpoint(session: ThreadSession) -> dict[str, Any] | None:
     if not checkpoints:
         return None
     valid_ids = {message.get("id") for message in session.messages}
-    return next((checkpoint for checkpoint in reversed(checkpoints) if checkpoint.get("first_kept_message_id") in valid_ids), None)
+    return next(
+        (checkpoint for checkpoint in reversed(checkpoints) if checkpoint.get("first_kept_message_id") in valid_ids),
+        None,
+    )
 
 
 def context_projection(session: ThreadSession) -> list[dict[str, Any]]:
@@ -66,7 +69,9 @@ def _summarization_prompt(previous_summary: str, messages: list[dict[str, Any]])
     for message in messages:
         if message.get("role") == "system":
             continue
-        details = [f"[{message.get('role', 'unknown')}{':' + str(message['name']) if message.get('name') else ''}] {message.get('content') or ''}"]
+        details = [
+            f"[{message.get('role', 'unknown')}{':' + str(message['name']) if message.get('name') else ''}] {message.get('content') or ''}"
+        ]
         calls = message.get("tool_calls") or []
         if calls:
             details.append("Tool calls: " + json.dumps(calls, ensure_ascii=False, default=str))
@@ -78,7 +83,7 @@ def _summarization_prompt(previous_summary: str, messages: list[dict[str, Any]])
 Preserve the user's original goal, explicit constraints and decisions, verified facts, exact file paths and identifiers, completed work, unresolved work, and the next action. Retain names, numbers, dates, quoted facts, and list items exactly when they may answer a later question; keep answer-bearing source sentences close to verbatim. Distinguish facts from assumptions. Do not invent missing details. Keep the summary compact and useful for continuing the task.
 
 <previous_checkpoint>
-{previous_summary or '(none)'}
+{previous_summary or "(none)"}
 </previous_checkpoint>
 
 <new_history>
@@ -122,7 +127,9 @@ def compact_session(
     checkpoint = _latest_checkpoint(session)
     previous_summary = str(checkpoint.get("summary", "")) if checkpoint else ""
     start_id = checkpoint.get("first_kept_message_id") if checkpoint else None
-    start = next((i for i, message in enumerate(session.messages) if message.get("id") == start_id), 0) if start_id else 0
+    start = (
+        next((i for i, message in enumerate(session.messages) if message.get("id") == start_id), 0) if start_id else 0
+    )
     source = [message for message in session.messages[start:] if message.get("role") != "system"]
     if not source:
         return None
@@ -182,7 +189,10 @@ def compact_session(
         response = litellm.completion(
             model=model_name,
             messages=[
-                {"role": "system", "content": "You compact agent conversation history into accurate, actionable checkpoints."},
+                {
+                    "role": "system",
+                    "content": "You compact agent conversation history into accurate, actionable checkpoints.",
+                },
                 {"role": "user", "content": prompt},
             ],
             **call_kwargs,
@@ -265,6 +275,8 @@ def subagent_rebirth_if_needed(
     checkpoints = session.metadata.get("context_checkpoints", [])
     if not context_window or context_window <= 0 or len(checkpoints) < min_compactions:
         return None
+    # Count before the rebirth adds its own checkpoint to the same list.
+    prior_compactions = len(checkpoints)
     used = _token_count(context_projection(session), model_name)
     percent = used / context_window
     if percent < high_watermark:
@@ -284,7 +296,7 @@ def subagent_rebirth_if_needed(
     rebirth = {
         "kind": "换血",
         "timestamp": timestamp,
-        "detail": f"累计压缩 {len(checkpoints)} 次后仍占窗口 {percent:.0%}；保留完整轨迹并以新检查点继续",
+        "detail": f"累计压缩 {prior_compactions} 次后仍占窗口 {percent:.0%}；保留完整轨迹并以新检查点继续",
         "before_tokens": used,
         "after_tokens": event["after_tokens"],
     }

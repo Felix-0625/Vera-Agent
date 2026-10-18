@@ -18,7 +18,9 @@ from vera_agent.models import get_model
 from vera_agent.run.utilities.config import configure_if_first_time
 from vera_agent.utils.serialize import UNSET, recursive_merge
 
-DEFAULT_CONFIG_FILE = Path(os.getenv("VERA_MINI_CONFIG_PATH") or os.getenv("MSWEA_MINI_CONFIG_PATH", builtin_config_dir / "mini.yaml"))
+DEFAULT_CONFIG_FILE = Path(
+    os.getenv("VERA_MINI_CONFIG_PATH") or os.getenv("MSWEA_MINI_CONFIG_PATH", builtin_config_dir / "mini.yaml")
+)
 DEFAULT_OUTPUT_FILE = global_config_dir / "last_mini_run.traj.json"
 
 

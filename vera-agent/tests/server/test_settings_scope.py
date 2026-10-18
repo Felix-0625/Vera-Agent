@@ -1,3 +1,5 @@
+"""Model and permission settings are stored at application scope, not per project."""
+
 from vera_agent.server.state import ServerState
 
 

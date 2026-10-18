@@ -1,10 +1,8 @@
-"""Tests for Phase 5: Typed Handoff Chain, Watermark Monitor, and Auto-Rebirth Pipeline."""
+"""Typed handoff chain, context watermark monitor, and automatic context rebirth pipeline."""
 
 from pathlib import Path
-import pytest
 
 from vera_agent.models.contracts import HandoverPayload
-from vera_agent.session.graph import GitFlowGraph
 from vera_agent.session.pipeline import HandoffPipeline, WatermarkPolicy
 from vera_agent.session.thread import ThreadSession
 from vera_agent.tools.handoff_tools import (

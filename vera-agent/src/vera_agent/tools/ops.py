@@ -103,7 +103,9 @@ def read_file_op(
     header = f"[File: {path} | Total lines: {total_lines} | Showing lines {start_idx + 1}-{end_idx}]"
     output = header + "\n" + "\n".join(numbered)
     if end_idx < total_lines:
-        output += f"\n[... {total_lines - end_idx} more lines truncated. Use offset={end_idx + 1} to continue reading ...]"
+        output += (
+            f"\n[... {total_lines - end_idx} more lines truncated. Use offset={end_idx + 1} to continue reading ...]"
+        )
     return {"output": output, "returncode": 0, "exception_info": ""}
 
 
@@ -114,9 +116,7 @@ def write_file_op(
     allowed_write_prefix: Path | str | None = None,
 ) -> dict[str, Any]:
     """Create or overwrite a file, creating parent directories automatically."""
-    target, err = validate_safe_path(
-        path, base_dir=base_dir, allowed_write_prefix=allowed_write_prefix, is_write=True
-    )
+    target, err = validate_safe_path(path, base_dir=base_dir, allowed_write_prefix=allowed_write_prefix, is_write=True)
     if err:
         return {
             "output": f"Error: {err}",
@@ -147,9 +147,7 @@ def edit_file_op(
     allowed_write_prefix: Path | str | None = None,
 ) -> dict[str, Any]:
     """Apply surgical find-and-replace edits to a file, returning a unified diff."""
-    target, err = validate_safe_path(
-        path, base_dir=base_dir, allowed_write_prefix=allowed_write_prefix, is_write=True
-    )
+    target, err = validate_safe_path(path, base_dir=base_dir, allowed_write_prefix=allowed_write_prefix, is_write=True)
     if err:
         return {
             "output": f"Error: {err}",

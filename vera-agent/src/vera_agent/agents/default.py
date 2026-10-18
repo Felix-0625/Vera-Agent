@@ -154,7 +154,9 @@ class DefaultAgent:
                 self.session.messages.pop()
             if task:
                 self.add_messages(
-                    self.model.format_message(role="user", content=self._render_template(self.config.instance_template)),
+                    self.model.format_message(
+                        role="user", content=self._render_template(self.config.instance_template)
+                    ),
                 )
         while True:
             try:
@@ -218,7 +220,12 @@ class DefaultAgent:
             model_kwargs = getattr(self.model.config, "model_kwargs", {}) or {}
             try:
                 import litellm
-                context_window = int(getattr(self.model, "context_window", None) or litellm.get_model_info(model_name).get("max_input_tokens") or 0)
+
+                context_window = int(
+                    getattr(self.model, "context_window", None)
+                    or litellm.get_model_info(model_name).get("max_input_tokens")
+                    or 0
+                )
             except Exception:
                 context_window = 0
             try:
@@ -232,7 +239,13 @@ class DefaultAgent:
                 self.logger.exception("Subagent context compaction failed; preserving its current transcript")
                 event = None
             if event:
-                self.report_progress({"kind": "status", "label": "压缩上下文", "detail": f"约 {event['before_tokens']:,} → {event['after_tokens']:,} Token（本地估算）"})
+                self.report_progress(
+                    {
+                        "kind": "status",
+                        "label": "压缩上下文",
+                        "detail": f"约 {event['before_tokens']:,} → {event['after_tokens']:,} Token（本地估算）",
+                    }
+                )
             rebirth = subagent_rebirth_if_needed(
                 self.session,
                 model_name,
@@ -266,6 +279,7 @@ class DefaultAgent:
         if hasattr(self.model, "get_tools_for_role"):
             return self.model.get_tools_for_role(role)
         from vera_agent.tools import MAIN_AGENT_TOOLS, RESEARCHER_TOOLS, REVIEWER_TOOLS
+
         if role == "main":
             return MAIN_AGENT_TOOLS
         elif role == "researcher":
@@ -303,7 +317,13 @@ class DefaultAgent:
         outputs = []
         for action in actions:
             tool_name = action.get("tool_name")
-            labels = {"read": "读取文件", "write": "创建文件", "edit": "修改文件", "web_search": "网页搜索", "fetch_web_page": "读取网页"}
+            labels = {
+                "read": "读取文件",
+                "write": "创建文件",
+                "edit": "修改文件",
+                "web_search": "网页搜索",
+                "fetch_web_page": "读取网页",
+            }
             label = labels.get(str(tool_name), str(tool_name or "终端命令"))
             self.report_progress({"kind": "tool", "label": label, "detail": "执行中", "status": "working"})
             if tool_name in ("delegate_research", "delegate_review"):
@@ -368,7 +388,7 @@ class DefaultAgent:
         return recursive_merge(agent_data, self.model.serialize(), self.env.serialize(), *extra_dicts)
 
     def export_handover_summary(self, target_role: str = "main", extra_notes: str = "") -> str:
-        """ Export a structured context handover brief from the current session."""
+        """Export a structured context handover brief from the current session."""
         self.session.cost = self.cost
         self.session.n_calls = self.n_calls
         return self.session.export_handover_summary(target_role=target_role, extra_notes=extra_notes)

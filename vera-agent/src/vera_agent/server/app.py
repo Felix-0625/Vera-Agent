@@ -1,21 +1,27 @@
-"""VeraAgent ASGI application entry point and domain routing aggregator.
+"""ASGI application factory for the VeraAgent local API.
 
-Adheres to Pi-agent minimalism and strict modular domain architecture:
-- server/state.py: Global ServerState runtime context and workspace configuration
-- server/routes/chat.py: SSE inference stream, human-in-the-loop approvals, interruption
-- server/routes/projects.py: Multi-project binding and history management
-- server/routes/threads.py: Threads search, lifecycle, and SideChat context probe
-- server/routes/groups.py: GitFlow business groups, topologies, and explicit registry
-- server/routes/files.py: File explorer tree, safe content preview, AST checking
-- server/routes/worktrees.py: Git diff, file staging, discarding, and checkpointing
-- server/routes/gitflow.py: Topology graph, branch operations, and 3-Way merge reviews
-- server/routes/terminal.py: Sandboxed terminal command execution
-- server/routes/tasks.py: One-time scheduled tasks CRUD and execution
-- server/routes/settings.py: LLM configs, permissions whitelist, AGENTS.md rules
-- server/routes/mcp.py: MCP Servers protocol bus and marketplace
-- server/routes/skills.py: Skill ecosystem scanning, installation, and prompt templates
-- server/routes/analytics.py: Token throughput, cost, and health metrics dashboard
-- server/routes/sessions.py: Health check, worktree attachments, and message dispatch
+`create_app` builds one `ServerState` and mounts every route list from
+`server/routes/`. Route modules by domain:
+
+- sessions.py: health check, session attach/detach, direct inter-session messages
+- chat.py: SSE chat stream, tool approval, interrupt/pause/resume
+- projects.py: project binding, folder picker, project history
+- threads.py: conversation list/CRUD, message replay/truncation, context status
+- groups.py: topology templates, workflow/architecture instances, runs, registry
+- files.py: file tree, preview/raw content, saving, syntax check, symbol search
+- worktrees.py: Git diff, stage/discard, checkpoint, reset
+- gitflow.py: topology export, branch create/delete/checkout/merge, merge review
+- terminal.py: one-shot command execution and an interactive PowerShell WebSocket
+- tasks.py: one-time scheduled Agent prompts and the background scheduler
+- taskboard.py: project task board work items (SQLite)
+- settings.py: model profiles, permissions, rules, context settings, user memories
+- mcp.py: MCP server registry and Registry market install
+- skills.py: Skill discovery, enable/disable, market install
+- analytics.py: usage dashboard derived from persisted conversation events
+
+The API has no authentication and is meant to listen on loopback only. CORS is
+currently open (`*`) so the Vite dev server and the desktop shell can call it.
+See docs/API.md for the endpoint reference.
 """
 
 from __future__ import annotations

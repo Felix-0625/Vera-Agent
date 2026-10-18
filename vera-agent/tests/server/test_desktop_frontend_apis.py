@@ -1,4 +1,4 @@
-"""Tests for newly supplemented Desktop Frontend APIs (Penpot & Desktop Spec).
+"""Desktop frontend API contracts: project history, scheduled tasks, and global threads.
 
 Validates:
 1. Projects history: GET/DELETE /api/projects
@@ -13,7 +13,6 @@ Validates:
 10. Direct message dispatch: POST /api/messages/send
 """
 
-import json
 import os
 import subprocess
 from datetime import datetime, timedelta, timezone
@@ -179,11 +178,19 @@ def test_rules_memory_api(test_git_repo: Path):
     assert get_res_2.json()["include_agents_md"] is True
     assert get_res_2.json()["memory_enabled"] is True
 
-    created = client.post("/api/settings/user-memories", json={"category": "preference", "content": "Prefers concise answers."})
+    created = client.post(
+        "/api/settings/user-memories", json={"category": "preference", "content": "Prefers concise answers."}
+    )
     assert created.status_code == 201
     memory_id = created.json()["memory"]["id"]
     assert client.get("/api/settings/user-memories").json()["memories"][0]["id"] == memory_id
-    assert client.patch(f"/api/settings/user-memories/{memory_id}", json={"category": "preference", "content": "Prefers detailed explanations."}).status_code == 200
+    assert (
+        client.patch(
+            f"/api/settings/user-memories/{memory_id}",
+            json={"category": "preference", "content": "Prefers detailed explanations."},
+        ).status_code
+        == 200
+    )
     assert client.delete(f"/api/settings/user-memories/{memory_id}").status_code == 200
 
 
@@ -317,9 +324,15 @@ def test_mcp_and_skills_and_models_enhancements(test_git_repo: Path):
     client = TestClient(app)
 
     # Seed settings-owned entities before exercising update/toggle contracts.
-    created_mcp = client.post("/api/mcp/servers", json={"id": "mcp-server-dev", "name": "Dev MCP", "type": "local", "command": "python", "args": ["server.py"]})
+    created_mcp = client.post(
+        "/api/mcp/servers",
+        json={"id": "mcp-server-dev", "name": "Dev MCP", "type": "local", "command": "python", "args": ["server.py"]},
+    )
     assert created_mcp.status_code == 200
-    installed_skill = client.post("/api/skills/install", json={"name": "gitflow-spec", "description": "GitFlow test skill", "instructions": "# GitFlow\n"})
+    installed_skill = client.post(
+        "/api/skills/install",
+        json={"name": "gitflow-spec", "description": "GitFlow test skill", "instructions": "# GitFlow\n"},
+    )
     assert installed_skill.status_code == 200
 
     # 1. Edit MCP server preserving fields
@@ -334,12 +347,16 @@ def test_mcp_and_skills_and_models_enhancements(test_git_repo: Path):
     toggle_sk_res = client.patch("/api/skills/gitflow-spec/toggle")
     assert toggle_sk_res.status_code == 200
     assert toggle_sk_res.json()["status"] == "ok"
-    listed_skill = next(skill for skill in client.get("/api/skills").json()["skills"] if skill["name"] == "gitflow-spec")
+    listed_skill = next(
+        skill for skill in client.get("/api/skills").json()["skills"] if skill["name"] == "gitflow-spec"
+    )
     assert listed_skill["enabled"] is False
     assert _enabled_attached_skills(client.app.state.server_state, ["gitflow-spec"]) == []
     assert client.patch("/api/skills/missing-skill/toggle").status_code == 404
     assert client.patch("/api/skills/gitflow-spec/toggle").status_code == 200
-    listed_skill = next(skill for skill in client.post("/api/skills/scan").json()["skills"] if skill["name"] == "gitflow-spec")
+    listed_skill = next(
+        skill for skill in client.post("/api/skills/scan").json()["skills"] if skill["name"] == "gitflow-spec"
+    )
     assert listed_skill["enabled"] is True
     assert _enabled_attached_skills(client.app.state.server_state, ["gitflow-spec"]) == ["gitflow-spec"]
 

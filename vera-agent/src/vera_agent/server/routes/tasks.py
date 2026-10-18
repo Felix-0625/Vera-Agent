@@ -1,14 +1,22 @@
-"""One-time scheduled task storage, dispatch, and Agent execution."""
+"""One-time scheduled Agent prompts and their background scheduler.
+
+Routes: GET/POST /api/tasks/scheduled, PATCH /api/tasks/scheduled/{id}/toggle,
+POST /api/tasks/scheduled/{id}/run, DELETE /api/tasks/scheduled/{id}.
+
+Tasks are stored in `<project>/.agents/scheduled_tasks.json`. The scheduler is
+started and stopped by the application lifespan in `server/app.py`. These are
+separate from task board work items (see taskboard.py).
+"""
 
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
 import json
 import logging
 import time
 import traceback
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -17,7 +25,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, StreamingResponse
 from starlette.routing import Route
 
-from vera_agent.server.state import ServerState
+from vera_agent.server.state import APPLICATION_CONFIGS, ServerState
 from vera_agent.session.thread import ThreadSession
 
 logger = logging.getLogger("vera_server.tasks")
@@ -34,7 +42,9 @@ class _ProjectScopedState:
         return getattr(self._state, name)
 
     def load_json_config(self, file_name: str, default_data: Any) -> Any:
-        if file_name == "projects_history.json":
+        # Application-scoped settings (models, permissions, MCP, Skills, project history) come from
+        # the shared application root; only the remaining configs are read from the task's project.
+        if file_name in APPLICATION_CONFIGS:
             return self._state.load_json_config(file_name, default_data)
         path = self.root_path / ".agents" / file_name
         try:
@@ -112,7 +122,9 @@ def _project_roots(state: ServerState) -> list[tuple[Path, str | None]]:
     return [(Path(path), project_id) for path, project_id in roots.items()]
 
 
-async def _execute_task(state: ServerState, task: dict[str, Any], task_storage_root: Path, project_id: str | None) -> None:
+async def _execute_task(
+    state: ServerState, task: dict[str, Any], task_storage_root: Path, project_id: str | None
+) -> None:
     """Run a task through the same chat pipeline used by interactive requests."""
     from vera_agent.server.routes.chat import chat_stream
 
@@ -155,30 +167,43 @@ async def _execute_task(state: ServerState, task: dict[str, Any], task_storage_r
         session.metadata.setdefault("project_root", str(project_root))
     session.save(state.get_session_file(session))
 
-    payload = json.dumps({
-        "thread_id": thread_id,
-        "content": str(task.get("prompt", "")),
-        "model_id": model_id,
-        "project_id": project_id,
-        "scheduled_task_id": task_id,
-    }, ensure_ascii=False).encode("utf-8")
+    payload = json.dumps(
+        {
+            "thread_id": thread_id,
+            "content": str(task.get("prompt", "")),
+            "model_id": model_id,
+            "project_id": project_id,
+            "scheduled_task_id": task_id,
+        },
+        ensure_ascii=False,
+    ).encode("utf-8")
 
     async def receive() -> dict[str, Any]:
         return {"type": "http.request", "body": payload, "more_body": False}
 
-    request = Request({
-        "type": "http", "asgi": {"version": "3.0"}, "http_version": "1.1",
-        "method": "POST", "scheme": "http", "path": "/api/chat/stream",
-        "raw_path": b"/api/chat/stream", "query_string": b"",
-        "headers": [(b"content-type", b"application/json")],
-        "client": ("127.0.0.1", 0), "server": ("127.0.0.1", 0),
-        "app": SimpleNamespace(state=SimpleNamespace(server_state=_ProjectScopedState(state, project_root))),
-    }, receive)
+    request = Request(
+        {
+            "type": "http",
+            "asgi": {"version": "3.0"},
+            "http_version": "1.1",
+            "method": "POST",
+            "scheme": "http",
+            "path": "/api/chat/stream",
+            "raw_path": b"/api/chat/stream",
+            "query_string": b"",
+            "headers": [(b"content-type", b"application/json")],
+            "client": ("127.0.0.1", 0),
+            "server": ("127.0.0.1", 0),
+            "app": SimpleNamespace(state=SimpleNamespace(server_state=_ProjectScopedState(state, project_root))),
+        },
+        receive,
+    )
 
     try:
         response = await chat_stream(request)
         if not isinstance(response, StreamingResponse) or response.status_code >= 400:
-            raise RuntimeError("模型请求未能启动")
+            detail = getattr(response, "body", b"").decode("utf-8", errors="replace")[:300]
+            raise RuntimeError(f"模型请求未能启动：{detail}")
         finished = False
         approval_required = False
         inference_failed = False
@@ -187,7 +212,9 @@ async def _execute_task(state: ServerState, task: dict[str, Any], task_storage_r
             if "event: text_chunk" in event_text:
                 try:
                     body = json.loads(event_text.split("data:", 1)[1].strip())
-                    inference_failed = inference_failed or str(body.get("content", "")).startswith("Model inference error:")
+                    inference_failed = inference_failed or str(body.get("content", "")).startswith(
+                        "Model inference error:"
+                    )
                 except (IndexError, json.JSONDecodeError):
                     pass
             if "event: approval_required" in event_text:
@@ -212,7 +239,7 @@ async def _execute_task(state: ServerState, task: dict[str, Any], task_storage_r
     except Exception as error:
         frames = traceback.extract_tb(error.__traceback__)
         location = " > ".join(f"{Path(frame.filename).name}:{frame.lineno}:{frame.name}" for frame in frames[-4:])
-        logger.error("Scheduled task %s failed (%s) at %s", task_id, type(error).__name__, location)
+        logger.error("Scheduled task %s failed (%s: %s) at %s", task_id, type(error).__name__, error, location)
         task["last_status"] = "failed"
         task["last_error"] = "任务执行失败，请检查模型配置、网络和任务权限。"
     finally:
@@ -220,7 +247,9 @@ async def _execute_task(state: ServerState, task: dict[str, Any], task_storage_r
         data = _load_tasks(task_storage_root)
         current = next((item for item in data["tasks"] if item.get("id") == task_id), None)
         if current is not None:
-            current.update({key: task.get(key) for key in ("thread_id", "last_run", "last_status", "last_error", "enabled")})
+            current.update(
+                {key: task.get(key) for key in ("thread_id", "last_run", "last_status", "last_error", "enabled")}
+            )
             _save_tasks(task_storage_root, data)
 
 
@@ -286,11 +315,18 @@ async def create_scheduled_task(request: Request) -> JSONResponse:
 
     data = _load_tasks(state.root_path)
     new_task = {
-        "id": f"task_{uuid.uuid4().hex[:8]}", "name": name, "run_at": run_at.isoformat(),
-        "prompt": prompt, "thread_id": body.get("thread_id"),
-        "model_id": body.get("model_id"), "project_id": body.get("project_id"),
-        "enabled": bool(body.get("enabled", True)), "created_at": time.time(),
-        "last_run": None, "last_status": "idle", "last_error": None,
+        "id": f"task_{uuid.uuid4().hex[:8]}",
+        "name": name,
+        "run_at": run_at.isoformat(),
+        "prompt": prompt,
+        "thread_id": body.get("thread_id"),
+        "model_id": body.get("model_id"),
+        "project_id": body.get("project_id"),
+        "enabled": bool(body.get("enabled", True)),
+        "created_at": time.time(),
+        "last_run": None,
+        "last_status": "idle",
+        "last_error": None,
     }
     data["tasks"].append(new_task)
     _save_tasks(state.root_path, data)

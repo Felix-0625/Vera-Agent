@@ -1,4 +1,13 @@
-"""Tool 7: MCP Servers bus management and ecosystem marketplace."""
+"""MCP server registry and Registry market routes.
+
+Routes: GET/POST /api/mcp/servers, PUT/DELETE /api/mcp/servers/{id},
+PATCH /api/mcp/servers/{id}/toggle, POST /api/mcp/servers/{id}/restart,
+POST /api/mcp/scan, GET /api/mcp/market, POST /api/mcp/market/install.
+
+Configuration is application-scoped in `<projects_config_root>/.agents/mcp_servers.json`.
+Market installs of npm packages run `npm install --ignore-scripts` into a local
+directory; remote entries must use HTTPS.
+"""
 
 from __future__ import annotations
 
@@ -57,17 +66,19 @@ async def scan_mcp_servers(request: Request) -> JSONResponse:
         if c_dir.exists() and (c_dir / "server.py").exists():
             sid = c_dir.name
             if sid not in known_ids:
-                servers.append({
-                    "id": sid,
-                    "name": sid,
-                    "type": "local",
-                    "status": "stopped",
-                    "enabled": False,
-                    "command": "",
-                    "args": [],
-                    "env": {},
-                    "tools": [],
-                })
+                servers.append(
+                    {
+                        "id": sid,
+                        "name": sid,
+                        "type": "local",
+                        "status": "stopped",
+                        "enabled": False,
+                        "command": "",
+                        "args": [],
+                        "env": {},
+                        "tools": [],
+                    }
+                )
                 known_ids.add(sid)
 
     cfg["servers"] = servers
@@ -87,7 +98,13 @@ async def create_mcp_server(request: Request) -> JSONResponse:
 
     sid = body.get("id") or f"mcp_{uuid.uuid4().hex[:8]}"
     registry_id = body.get("registry_id")
-    if not isinstance(sid, str) or not sid or any(server.get("id") == sid or (registry_id and server.get("registry_id") == registry_id) for server in servers):
+    if (
+        not isinstance(sid, str)
+        or not sid
+        or any(
+            server.get("id") == sid or (registry_id and server.get("registry_id") == registry_id) for server in servers
+        )
+    ):
         return JSONResponse({"error": "MCP server ID is invalid or already exists."}, status_code=409)
     enabled = body.get("enabled", False) is True
     server_entry = {
@@ -228,24 +245,36 @@ async def get_mcp_market(request: Request) -> JSONResponse:
             packages = entry.get("packages") or []
             remotes = entry.get("remotes") or []
             repo = entry.get("repository") or {}
-            market.append({
-                "id": entry.get("name", ""),
-                "name": entry.get("title") or entry.get("name", "MCP Server"),
-                "description": entry.get("description", ""),
-                "category": "远程服务" if remotes and not packages else "本地 / 远程",
-                "type": "remote" if remotes and not packages else "stdio",
-                "version": entry.get("version", ""),
-                "repository": repo.get("url", "") if isinstance(repo, dict) else str(repo),
-                "packages": packages,
-                "remotes": remotes,
-            })
+            market.append(
+                {
+                    "id": entry.get("name", ""),
+                    "name": entry.get("title") or entry.get("name", "MCP Server"),
+                    "description": entry.get("description", ""),
+                    "category": "远程服务" if remotes and not packages else "本地 / 远程",
+                    "type": "remote" if remotes and not packages else "stdio",
+                    "version": entry.get("version", ""),
+                    "repository": repo.get("url", "") if isinstance(repo, dict) else str(repo),
+                    "packages": packages,
+                    "remotes": remotes,
+                }
+            )
         metadata = payload.get("metadata") or {}
-        result = {"market": market, "source": "https://registry.modelcontextprotocol.io", "next_cursor": metadata.get("nextCursor") or None}
+        result = {
+            "market": market,
+            "source": "https://registry.modelcontextprotocol.io",
+            "next_cursor": metadata.get("nextCursor") or None,
+        }
         _MCP_MARKET_CACHE[cache_key] = (time.monotonic(), result)
         try:
             cache_file.parent.mkdir(parents=True, exist_ok=True)
             temporary_file = cache_file.with_suffix(f".{os.getpid()}.tmp")
-            temporary_file.write_text(json.dumps({"version": _MCP_MARKET_CACHE_VERSION, "fetched_at": time.time(), "payload": result}, ensure_ascii=False), encoding="utf-8")
+            temporary_file.write_text(
+                json.dumps(
+                    {"version": _MCP_MARKET_CACHE_VERSION, "fetched_at": time.time(), "payload": result},
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
             temporary_file.replace(cache_file)
         except OSError as error:
             logger.warning("Unable to persist MCP market cache: %s", error)
@@ -256,7 +285,13 @@ async def get_mcp_market(request: Request) -> JSONResponse:
         return JSONResponse(result)
     except TimeoutError:
         logger.warning("MCP Registry request timed out for query %r", search)
-        return JSONResponse({"error": "MCP Registry search timed out. Loaded results are still available; try again shortly.", "market": []}, status_code=504)
+        return JSONResponse(
+            {
+                "error": "MCP Registry search timed out. Loaded results are still available; try again shortly.",
+                "market": [],
+            },
+            status_code=504,
+        )
     except Exception as error:
         logger.warning("MCP Registry request failed: %s", error)
         return JSONResponse({"error": "Official MCP Registry is currently unavailable.", "market": []}, status_code=502)
@@ -280,7 +315,9 @@ async def install_mcp_market(request: Request) -> JSONResponse:
     target_dir = state.projects_config_root / ".agents" / "mcp" / target_id
 
     def fetch_server() -> dict | None:
-        url = "https://registry.modelcontextprotocol.io/v0.1/servers?" + urlencode({"q": registry_id, "limit": 50, "version": "latest"})
+        url = "https://registry.modelcontextprotocol.io/v0.1/servers?" + urlencode(
+            {"q": registry_id, "limit": 50, "version": "latest"}
+        )
         req = UrlRequest(url, headers={"Accept": "application/json", "User-Agent": "VeraAgent/1.0"})
         with urlopen(req, timeout=15) as response:
             records = json.loads(response.read(2_000_000)).get("servers", [])
@@ -298,7 +335,8 @@ async def install_mcp_market(request: Request) -> JSONResponse:
         if not package:
             remote = next(
                 (
-                    item for item in server.get("remotes", [])
+                    item
+                    for item in server.get("remotes", [])
                     if isinstance(item, dict) and item.get("type") == "streamable-http"
                 ),
                 None,
@@ -312,7 +350,10 @@ async def install_mcp_market(request: Request) -> JSONResponse:
                 or parsed_url.username
                 or parsed_url.password
             ):
-                return JSONResponse({"error": "This MCP server has no supported, credential-free HTTPS Streamable HTTP endpoint."}, status_code=400)
+                return JSONResponse(
+                    {"error": "This MCP server has no supported, credential-free HTTPS Streamable HTTP endpoint."},
+                    status_code=400,
+                )
             config = _load_mcp_config(state)
             servers = list(config.get("servers", []))
             if any(item.get("registry_id") == registry_id for item in servers):
@@ -342,15 +383,29 @@ async def install_mcp_market(request: Request) -> JSONResponse:
             return JSONResponse({"status": "ok", "server": server_entry, "install_scripts": "not_applicable"})
         package_name = str(package.get("identifier") or "")
         version = str(package.get("version") or server.get("version") or "")
-        if not re.fullmatch(r"(?:@[a-zA-Z0-9._-]+/)?[a-zA-Z0-9._-]+", package_name) or not re.fullmatch(r"[a-zA-Z0-9.+_-]+", version):
-            return JSONResponse({"error": "The Registry returned an invalid npm package name or version."}, status_code=400)
+        if not re.fullmatch(r"(?:@[a-zA-Z0-9._-]+/)?[a-zA-Z0-9._-]+", package_name) or not re.fullmatch(
+            r"[a-zA-Z0-9.+_-]+", version
+        ):
+            return JSONResponse(
+                {"error": "The Registry returned an invalid npm package name or version."}, status_code=400
+            )
 
         target_dir.parent.mkdir(parents=True, exist_ok=True)
         target_dir.mkdir(exist_ok=False)
         npm = shutil.which("npm.cmd" if os.name == "nt" else "npm") or shutil.which("npm")
         if not npm:
             raise RuntimeError("npm is not installed or is not available on PATH.")
-        args = [npm, "install", "--ignore-scripts", "--no-audit", "--no-fund", "--registry=https://registry.npmjs.org", "--prefix", str(target_dir), f"{package_name}@{version}"]
+        args = [
+            npm,
+            "install",
+            "--ignore-scripts",
+            "--no-audit",
+            "--no-fund",
+            "--registry=https://registry.npmjs.org",
+            "--prefix",
+            str(target_dir),
+            f"{package_name}@{version}",
+        ]
         if os.name == "nt" and npm.lower().endswith((".cmd", ".bat")):
             command = os.environ.get("COMSPEC", "cmd.exe")
             command_args = ["/d", "/s", "/c", subprocess.list2cmdline(args)]
@@ -384,12 +439,19 @@ async def install_mcp_market(request: Request) -> JSONResponse:
         repository = server.get("repository") or {}
         repository_url = repository.get("url", "") if isinstance(repository, dict) else str(repository)
         server_entry = {
-            "id": target_id, "registry_id": registry_id,
+            "id": target_id,
+            "registry_id": registry_id,
             "name": server.get("title") or server.get("name") or package_name,
-            "type": "stdio", "status": "stopped", "enabled": False,
-            "command": "node", "args": [str(executable)], "env": {}, "tools": [],
+            "type": "stdio",
+            "status": "stopped",
+            "enabled": False,
+            "command": "node",
+            "args": [str(executable)],
+            "env": {},
+            "tools": [],
             "repository": repository_url,
-            "registry_version": version, "package": package_name,
+            "registry_version": version,
+            "package": package_name,
             "install_path": str(target_dir),
         }
         servers.append(server_entry)

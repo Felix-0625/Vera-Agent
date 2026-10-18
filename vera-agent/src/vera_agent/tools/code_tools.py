@@ -9,7 +9,6 @@ Adheres to Pi-agent minimalism and zero-dependency reliability:
 from __future__ import annotations
 
 import ast
-import os
 import re
 from pathlib import Path
 from typing import Any, Literal
@@ -72,13 +71,15 @@ def symbol_search_op(
             if match and item_type:
                 doc = ast.get_docstring(node) or ""
                 doc_preview = doc.splitlines()[0][:80] if doc else ""
-                results.append({
-                    "name": getattr(node, "name", ""),
-                    "type": item_type,
-                    "path": rel_path,
-                    "line": getattr(node, "lineno", 1),
-                    "doc": doc_preview,
-                })
+                results.append(
+                    {
+                        "name": getattr(node, "name", ""),
+                        "type": item_type,
+                        "path": rel_path,
+                        "line": getattr(node, "lineno", 1),
+                        "doc": doc_preview,
+                    }
+                )
 
                 if len(results) >= max_results:
                     return results
@@ -109,11 +110,13 @@ def find_references_op(
         rel_path = str(path.relative_to(root))
         for line_no, line in enumerate(content.splitlines(), start=1):
             if pattern.search(line):
-                results.append({
-                    "path": rel_path,
-                    "line": line_no,
-                    "content": line.strip()[:100],
-                })
+                results.append(
+                    {
+                        "path": rel_path,
+                        "line": line_no,
+                        "content": line.strip()[:100],
+                    }
+                )
                 if len(results) >= max_results:
                     return results
 

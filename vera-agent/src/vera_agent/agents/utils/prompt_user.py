@@ -9,9 +9,11 @@ try:
     prompt_session = PromptSession(history=_history)
     _multiline_prompt_session = PromptSession(history=_history, multiline=True)
 except Exception:
+
     class _FallbackPromptSession:
         def prompt(self, message="", **kwargs):
             return input(message)
+
     prompt_session = _FallbackPromptSession()  # type: ignore
     _multiline_prompt_session = _FallbackPromptSession()  # type: ignore
 

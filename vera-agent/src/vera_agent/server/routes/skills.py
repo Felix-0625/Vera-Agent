@@ -1,4 +1,11 @@
-"""Tool 8: Skill ecosystem lifecycle, scanning, market, and prompt template management."""
+"""Skill discovery and market routes.
+
+Routes: GET /api/skills, POST /api/skills/scan, GET /api/skills/market,
+POST /api/skills/install, DELETE /api/skills/{name}, PATCH /api/skills/{name}/toggle.
+
+Installed Skills live in `<projects_config_root>/.agents/skills/<name>/SKILL.md`;
+disabled names are kept in `skills_config.json`. Skill text is untrusted input.
+"""
 
 from __future__ import annotations
 
@@ -47,10 +54,7 @@ def _listed_skills(state: ServerState) -> list[dict[str, str | bool]]:
     if not state.skill_mgr:
         return []
     disabled = set(state.load_json_config("skills_config.json", {"disabled_skills": []}).get("disabled_skills", []))
-    return [
-        {**skill, "enabled": skill["name"] not in disabled}
-        for skill in state.skill_mgr.list_skills()
-    ]
+    return [{**skill, "enabled": skill["name"] not in disabled} for skill in state.skill_mgr.list_skills()]
 
 
 async def list_skills(request: Request) -> JSONResponse:
@@ -133,13 +137,19 @@ async def get_skills_market(request: Request) -> JSONResponse:
         headers = {"Accept": "application/vnd.github+json", "User-Agent": "VeraAgent/1.0"}
         entries: list[dict] = []
         mapped_descriptions: dict[str, str] = {}
+
         def load_source(source_record: tuple[str, dict]) -> tuple[list[dict], dict[str, str], bool]:
             source_id, source = source_record
             repo = source["repo"]
             try:
-                with urlopen(UrlRequest(f"https://api.github.com/repos/{repo}/commits/main", headers=headers), timeout=12) as response:
+                with urlopen(
+                    UrlRequest(f"https://api.github.com/repos/{repo}/commits/main", headers=headers), timeout=12
+                ) as response:
                     commit = json.loads(response.read(1_000_000))["sha"]
-                with urlopen(UrlRequest(f"https://api.github.com/repos/{repo}/git/trees/{commit}?recursive=1", headers=headers), timeout=15) as response:
+                with urlopen(
+                    UrlRequest(f"https://api.github.com/repos/{repo}/git/trees/{commit}?recursive=1", headers=headers),
+                    timeout=15,
+                ) as response:
                     tree = json.loads(response.read(8_000_000)).get("tree", [])
                 source_entries: list[dict] = []
                 source_descriptions: dict[str, str] = {}
@@ -147,8 +157,12 @@ async def get_skills_market(request: Request) -> JSONResponse:
                     map_url = f"https://raw.githubusercontent.com/{repo}/{commit}/SKILLS-MAP.md"
                     with urlopen(UrlRequest(map_url, headers={"User-Agent": "VeraAgent/1.0"}), timeout=10) as response:
                         index_markdown = response.read(2_000_000).decode("utf-8", errors="replace")
-                    for skill_name, description in re.findall(r"^\|\s*([a-zA-Z0-9_-]+)\s*\|\s*(.*?)\s*\|\s*$", index_markdown, re.M):
-                        source_descriptions[f"{source_id}:{skill_name}"] = re.sub(r"\*\*|`", "", description).strip()[:1200]
+                    for skill_name, description in re.findall(
+                        r"^\|\s*([a-zA-Z0-9_-]+)\s*\|\s*(.*?)\s*\|\s*$", index_markdown, re.M
+                    ):
+                        source_descriptions[f"{source_id}:{skill_name}"] = re.sub(r"\*\*|`", "", description).strip()[
+                            :1200
+                        ]
                 root = source["root"]
                 prefix = f"{root}/" if root else ""
                 for item in tree:
@@ -157,7 +171,19 @@ async def get_skills_market(request: Request) -> JSONResponse:
                         continue
                     match = re.fullmatch(re.escape(prefix) + r"([^/]+)/SKILL\.md", path)
                     if match:
-                        source_entries.append({"market_id": f"{source_id}:{match.group(1)}", "name": match.group(1), "source_id": source_id, "source_path": f"{prefix}{match.group(1)}", "skill_file": path, "description": "", "category": source["label"], "source": f"https://github.com/{repo}", "commit": commit})
+                        source_entries.append(
+                            {
+                                "market_id": f"{source_id}:{match.group(1)}",
+                                "name": match.group(1),
+                                "source_id": source_id,
+                                "source_path": f"{prefix}{match.group(1)}",
+                                "skill_file": path,
+                                "description": "",
+                                "category": source["label"],
+                                "source": f"https://github.com/{repo}",
+                                "commit": commit,
+                            }
+                        )
                 return source_entries, source_descriptions, True
             except Exception as error:
                 logger.warning("Skill catalog source %s unavailable: %s", repo, error)
@@ -195,7 +221,7 @@ async def get_skills_market(request: Request) -> JSONResponse:
                         value = line.split(":", 1)[1].strip()
                         if value in (">", "|", ">-", "|-"):
                             parts = []
-                            for following in lines[index + 1:]:
+                            for following in lines[index + 1 :]:
                                 if following and not following[0].isspace():
                                     break
                                 if following.strip():
@@ -217,7 +243,12 @@ async def get_skills_market(request: Request) -> JSONResponse:
         try:
             cache_file.parent.mkdir(parents=True, exist_ok=True)
             temporary_file = cache_file.with_suffix(f".{os.getpid()}.tmp")
-            temporary_file.write_text(json.dumps({"version": _MARKET_CACHE_VERSION, "fetched_at": time.time(), "market": entries}, ensure_ascii=False), encoding="utf-8")
+            temporary_file.write_text(
+                json.dumps(
+                    {"version": _MARKET_CACHE_VERSION, "fetched_at": time.time(), "market": entries}, ensure_ascii=False
+                ),
+                encoding="utf-8",
+            )
             temporary_file.replace(cache_file)
         except OSError as error:
             logger.warning("Unable to persist Skill market cache: %s", error)
@@ -226,8 +257,21 @@ async def get_skills_market(request: Request) -> JSONResponse:
     try:
         entries = await asyncio.to_thread(fetch_market)
         if query:
-            entries = [entry for entry in entries if query in " ".join((entry["name"], entry["description"], entry["category"], entry["source"])).casefold()]
-        return JSONResponse({"market": entries, "sources": [{"id": key, "label": value["label"], "url": f"https://github.com/{value['repo']}"} for key, value in SKILL_SOURCES.items()]})
+            entries = [
+                entry
+                for entry in entries
+                if query
+                in " ".join((entry["name"], entry["description"], entry["category"], entry["source"])).casefold()
+            ]
+        return JSONResponse(
+            {
+                "market": entries,
+                "sources": [
+                    {"id": key, "label": value["label"], "url": f"https://github.com/{value['repo']}"}
+                    for key, value in SKILL_SOURCES.items()
+                ],
+            }
+        )
     except Exception as error:
         logger.warning("Skills catalog request failed: %s", error)
         return JSONResponse({"error": "Skill catalogs are currently unavailable.", "market": []}, status_code=502)
@@ -247,7 +291,11 @@ async def install_skill(request: Request) -> JSONResponse:
         source_id = body.get("source_id")
         source = SKILL_SOURCES.get(source_id) if isinstance(source_id, str) else None
         root = source["root"] if source else None
-        if not source or not isinstance(source_path, str) or not re.fullmatch((re.escape(root + "/") if root else "") + r"[a-zA-Z0-9_-]+", source_path):
+        if (
+            not source
+            or not isinstance(source_path, str)
+            or not re.fullmatch((re.escape(root + "/") if root else "") + r"[a-zA-Z0-9_-]+", source_path)
+        ):
             return JSONResponse({"error": "Invalid Skill catalog source path."}, status_code=400)
         if not isinstance(commit, str) or not re.fullmatch(r"[a-f0-9]{40}", commit):
             return JSONResponse({"error": "A full upstream commit SHA is required."}, status_code=400)
@@ -278,7 +326,7 @@ async def install_skill(request: Request) -> JSONResponse:
                     parts = item.filename.split("/", 1)
                     if len(parts) != 2 or not parts[1].startswith(prefix) or item.is_dir():
                         continue
-                    relative = parts[1][len(prefix):]
+                    relative = parts[1][len(prefix) :]
                     relative_path = Path(relative)
                     if not relative or relative_path.is_absolute() or ".." in relative_path.parts:
                         continue
@@ -315,7 +363,14 @@ async def install_skill(request: Request) -> JSONResponse:
             staging_dir.rename(target_dir)
             if state.skill_mgr:
                 state.skill_mgr.refresh()
-            return JSONResponse({"status": "ok", "installed_skill": name, "source": f"https://github.com/{source['repo']}", "commit": commit})
+            return JSONResponse(
+                {
+                    "status": "ok",
+                    "installed_skill": name,
+                    "source": f"https://github.com/{source['repo']}",
+                    "commit": commit,
+                }
+            )
         except Exception as error:
             if "staging_dir" in locals():
                 shutil.rmtree(staging_dir, ignore_errors=True)

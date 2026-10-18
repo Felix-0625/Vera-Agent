@@ -9,6 +9,7 @@ Coverage:
 
 from pathlib import Path
 from types import SimpleNamespace
+
 import pytest
 
 from vera_agent.exceptions import FormatError
@@ -16,10 +17,10 @@ from vera_agent.models.utils.actions_toolcall import parse_toolcall_actions
 from vera_agent.models.utils.actions_toolcall_response import parse_toolcall_actions_response
 from vera_agent.tools.ops import edit_file_op, read_file_op, write_file_op
 
-
 # ============================================================================
 # 1. read_file_op Primitive Tests
 # ============================================================================
+
 
 def test_read_file_op_success(tmp_path: Path):
     """Test standard file reading with line numbers and formatting."""
@@ -70,6 +71,7 @@ def test_read_file_op_directory_error(tmp_path: Path):
 # 2. write_file_op Primitive Tests
 # ============================================================================
 
+
 def test_write_file_op_auto_mkdir(tmp_path: Path):
     """Test writing a new file automatically creates missing parent directories."""
     target = "nested/deep/directory/test.py"
@@ -97,13 +99,11 @@ def test_write_file_op_overwrite(tmp_path: Path):
 # 3. edit_file_op Primitive Tests
 # ============================================================================
 
+
 def test_edit_file_op_success(tmp_path: Path):
     """Test precise string matching and replacement with unified diff output."""
     target_file = tmp_path / "calculator.py"
-    initial_code = (
-        "def add(a, b):\n"
-        "    return a - b  # bug here\n"
-    )
+    initial_code = "def add(a, b):\n    return a - b  # bug here\n"
     target_file.write_text(initial_code, encoding="utf-8")
 
     edits = [
@@ -167,6 +167,7 @@ def test_edit_file_op_multiple_sequential_edits(tmp_path: Path):
 # 4. Parser Tests (Function Calling & Responses API)
 # ============================================================================
 
+
 def test_parse_toolcall_actions_all_primitives():
     """Verify standard OpenAI Function Calling parser for all 4 primitives."""
     # Simulate bash
@@ -228,7 +229,7 @@ def test_parse_toolcall_unknown_tool_raises_format_error():
     """Verify unknown tool name raises FormatError."""
     bad_call = SimpleNamespace(
         id="bad_1",
-        function=SimpleNamespace(name="unknown_tool", arguments='{}'),
+        function=SimpleNamespace(name="unknown_tool", arguments="{}"),
     )
     with pytest.raises(FormatError) as exc_info:
         parse_toolcall_actions([bad_call], format_error_template="{{ error }}")

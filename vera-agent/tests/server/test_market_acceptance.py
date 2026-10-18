@@ -1,3 +1,5 @@
+"""MCP/Skill settings scope, attached Skill resource access, and Registry market installation."""
+
 import io
 import json
 from pathlib import Path
@@ -20,8 +22,13 @@ def test_mcp_and_skill_settings_are_application_scoped(tmp_path: Path):
     state.save_json_config("mcp_servers.json", {"servers": [{"id": "global", "enabled": False}]})
     state.save_json_config("skills_config.json", {"disabled_skills": ["global-skill"]})
 
-    assert json.loads((app_root / ".agents" / "mcp_servers.json").read_text(encoding="utf-8"))["servers"][0]["id"] == "global"
-    assert json.loads((app_root / ".agents" / "skills_config.json").read_text(encoding="utf-8"))["disabled_skills"] == ["global-skill"]
+    assert (
+        json.loads((app_root / ".agents" / "mcp_servers.json").read_text(encoding="utf-8"))["servers"][0]["id"]
+        == "global"
+    )
+    assert json.loads((app_root / ".agents" / "skills_config.json").read_text(encoding="utf-8"))["disabled_skills"] == [
+        "global-skill"
+    ]
     assert not (project_root / ".agents" / "mcp_servers.json").exists()
     assert not (project_root / ".agents" / "skills_config.json").exists()
 
@@ -51,16 +58,18 @@ def test_market_installs_registry_remote_disabled_by_default(tmp_path: Path, mon
     app_root.mkdir()
     client = TestClient(create_app(repo_root=app_root))
     payload = {
-        "servers": [{
-            "server": {
-                "name": "com.example/remote",
-                "title": "Example Remote",
-                "version": "1.0.0",
-                "repository": {"url": "https://github.com/example/remote"},
-                "remotes": [{"type": "streamable-http", "url": "https://example.com/mcp"}],
-                "packages": [],
+        "servers": [
+            {
+                "server": {
+                    "name": "com.example/remote",
+                    "title": "Example Remote",
+                    "version": "1.0.0",
+                    "repository": {"url": "https://github.com/example/remote"},
+                    "remotes": [{"type": "streamable-http", "url": "https://example.com/mcp"}],
+                    "packages": [],
+                }
             }
-        }]
+        ]
     }
 
     class FakeResponse(io.BytesIO):

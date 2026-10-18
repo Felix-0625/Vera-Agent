@@ -7,7 +7,6 @@ from jinja2 import StrictUndefined, Template
 
 from vera_agent.exceptions import FormatError
 from vera_agent.models.utils.openai_multimodal import expand_multimodal_content
-
 from vera_agent.tools import (
     ALL_TOOLS,
     BASH_TOOL,
@@ -16,6 +15,17 @@ from vera_agent.tools import (
     TOOL_NAMES,
     WRITE_TOOL,
 )
+
+# Tool schemas are re-exported so model adapters can import them next to the parser.
+__all__ = [
+    "ALL_TOOLS",
+    "BASH_TOOL",
+    "EDIT_TOOL",
+    "READ_TOOL",
+    "WRITE_TOOL",
+    "format_toolcall_observation_messages",
+    "parse_toolcall_actions",
+]
 
 
 def parse_toolcall_actions(
@@ -59,7 +69,9 @@ def parse_toolcall_actions(
         elif not isinstance(args, dict):
             error_msg += f"Tool arguments for '{tool_name}' must be a JSON dictionary."
         elif tool_name in (additional_tool_names or set()):
-            actions.append({"tool_name": tool_name, "arguments": args, "command": f"MCP {tool_name}", "tool_call_id": tool_call.id})
+            actions.append(
+                {"tool_name": tool_name, "arguments": args, "command": f"MCP {tool_name}", "tool_call_id": tool_call.id}
+            )
         else:
             if tool_name == "bash":
                 if "command" not in args:

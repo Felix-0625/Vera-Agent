@@ -10,7 +10,7 @@ Coverage:
 """
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+
 import pytest
 
 from vera_agent.agents.default import DefaultAgent
@@ -22,15 +22,14 @@ from vera_agent.session import ThreadSession
 from vera_agent.tools.subagent_tools import (
     DELEGATE_RESEARCH_TOOL,
     DELEGATE_REVIEW_TOOL,
-    SUBAGENT_TOOL_NAMES,
     check_subagent_gating,
     execute_subagent,
 )
 
-
 # ============================================================================
 # 1. Tool Specification and Parsing Tests
 # ============================================================================
+
 
 def test_subagent_tool_definitions():
     """Verify subagent tool schemas and required parameters."""
@@ -85,6 +84,7 @@ def test_parse_subagent_toolcalls_response_api():
 # 2. Strict Gating Tests
 # ============================================================================
 
+
 def test_subagent_gating_researcher_limit():
     """Test researcher gating: maximum 2 invocations allowed, 3rd call is blocked."""
     mock_agent = SimpleNamespace(_subagent_call_counts={})
@@ -120,6 +120,7 @@ def test_subagent_gating_reviewer_limit():
 # ============================================================================
 # 3. Context Firewall and Shared Environment Tests
 # ============================================================================
+
 
 def test_execute_subagent_context_isolation_and_handover():
     """Test subagent execution: parent context is isolated, findings return via handover summary."""
@@ -236,11 +237,13 @@ def test_interactive_agent_slash_commands():
     )
     agent.execute_subagent_tool = mock_subagent_run
 
-    with mock_prompts([
-        "/research investigate caching options",
-        "/review check concurrency deadlocks",
-        "echo done",
-    ]):
+    with mock_prompts(
+        [
+            "/research investigate caching options",
+            "/review check concurrency deadlocks",
+            "echo done",
+        ]
+    ):
         res = agent._prompt_and_handle_slash_commands("prompt> ")
 
     assert res == "echo done"

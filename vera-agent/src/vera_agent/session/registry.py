@@ -13,6 +13,7 @@ import logging
 import time
 from pathlib import Path
 from typing import Any
+
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
@@ -250,11 +251,7 @@ class RegistryManager:
             return False
 
         reg.agents = [a for a in reg.agents if a.thread_id != thread_id]
-        reg.edges = [
-            e
-            for e in reg.edges
-            if e.source_thread_id != thread_id and e.target_thread_id != thread_id
-        ]
+        reg.edges = [e for e in reg.edges if e.source_thread_id != thread_id and e.target_thread_id != thread_id]
         self.save_group_registry(reg)
         return True
 

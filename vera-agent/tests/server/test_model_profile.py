@@ -1,3 +1,5 @@
+"""Model profile resolution: default selection, enabled/disabled models, and legacy name fallback."""
+
 import pytest
 
 from vera_agent.server.model_profile import resolve_model_profile
@@ -13,7 +15,14 @@ class ConfigState:
 
 
 def _model(model_id, name, **extra):
-    return {"id": model_id, "name": name, "provider": "deepseek", "base_url": "https://example.invalid/v1", "api_key": "configured-key", **extra}
+    return {
+        "id": model_id,
+        "name": name,
+        "provider": "deepseek",
+        "base_url": "https://example.invalid/v1",
+        "api_key": "configured-key",
+        **extra,
+    }
 
 
 def test_missing_selection_uses_only_enabled_configured_model():
@@ -48,19 +57,28 @@ def test_unknown_or_disabled_selection_is_rejected():
 
 
 def test_missing_selection_uses_explicit_enabled_default():
-    profile = resolve_model_profile(ConfigState([
-        _model("cfg_1", "one"),
-        _model("cfg_2", "two", is_default=True),
-    ]))
+    profile = resolve_model_profile(
+        ConfigState(
+            [
+                _model("cfg_1", "one"),
+                _model("cfg_2", "two", is_default=True),
+            ]
+        )
+    )
 
     assert profile["config"]["id"] == "cfg_2"
     assert profile["name"] == "deepseek/two"
 
 
 def test_model_id_takes_precedence_over_ambiguous_legacy_name():
-    profile = resolve_model_profile(ConfigState([
-        _model("same-name", "first"),
-        _model("cfg_2", "same-name"),
-    ]), "same-name")
+    profile = resolve_model_profile(
+        ConfigState(
+            [
+                _model("same-name", "first"),
+                _model("cfg_2", "same-name"),
+            ]
+        ),
+        "same-name",
+    )
 
     assert profile["config"]["id"] == "same-name"

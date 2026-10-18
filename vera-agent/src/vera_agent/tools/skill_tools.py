@@ -1,9 +1,8 @@
-"""Dynamic skill discovery and loading for Phase 6.
+"""Skill discovery and on-demand loading.
 
-Adheres to Antigravity and Pi-agent skill architecture:
-- Discovers skills dynamically from .agents/skills/<name>/SKILL.md
-- Parses YAML frontmatter metadata and markdown instructions
-- On-demand injection keeps base prompts tiny (< 400 tokens)
+Skills are discovered from `.agents/skills/<name>/SKILL.md` under the configured
+roots; YAML front matter supplies metadata and the Markdown body is injected
+only when the Skill is activated.
 """
 
 from __future__ import annotations
@@ -103,10 +102,7 @@ class SkillManager:
 
     def list_skills(self) -> list[dict[str, str]]:
         """List all discovered skills."""
-        return [
-            {"name": s.name, "description": s.description, "path": str(s.path)}
-            for s in self.skills.values()
-        ]
+        return [{"name": s.name, "description": s.description, "path": str(s.path)} for s in self.skills.values()]
 
     def get_skill(self, name: str) -> Skill | None:
         """Retrieve a skill by name."""

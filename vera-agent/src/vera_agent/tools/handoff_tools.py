@@ -1,15 +1,12 @@
-"""Typed Handoff Tools for Phase 5 agent relay and control transfer.
+"""Typed handoff tools that transfer control between Main, Researcher, and Reviewer roles.
 
-Adheres to Pi-agent minimalism and PydanticAI handoff semantics:
-- transfer_to_researcher: Hand off architecture exploration to Researcher
-- transfer_to_reviewer: Hand off code verification to Reviewer
-- transfer_to_main: Subagent handoff back to Main Implementer with validated payload
+- transfer_to_researcher / transfer_to_reviewer: hand work to a subagent role
+- transfer_to_main: return a validated payload to the main agent
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from vera_agent.models.contracts import HandoverPayload
 from vera_agent.session.pipeline import HandoffPipeline

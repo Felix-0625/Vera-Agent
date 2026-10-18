@@ -1,8 +1,7 @@
-"""Industrial-grade external web search and documentation fetching tools (Pi-agent compatible).
+"""Web search and page fetching tools.
 
-Provides:
-- web_search: Query real-time search engines (DuckDuckGo / Tavily fallback) for up-to-date documentation and solutions
-- fetch_web_page: Fetch web page content via HTTP and convert HTML to token-efficient clean Markdown
+- web_search: uses Tavily when TAVILY_API_KEY is set, otherwise DuckDuckGo
+- fetch_web_page: fetches a URL over HTTP and converts the HTML to Markdown
 """
 
 from __future__ import annotations
@@ -10,6 +9,7 @@ from __future__ import annotations
 import os
 import re
 from typing import Any
+
 import httpx
 
 try:
@@ -168,7 +168,10 @@ def fetch_web_page_op(url: str, max_chars: int = 8000) -> dict[str, Any]:
     total_chars = len(md_text)
     if total_chars > max_chars:
         elided = total_chars - max_chars
-        md_text = md_text[:max_chars] + f"\n\n... [Content truncated: {elided} characters omitted. Original length: {total_chars} chars] ..."
+        md_text = (
+            md_text[:max_chars]
+            + f"\n\n... [Content truncated: {elided} characters omitted. Original length: {total_chars} chars] ..."
+        )
 
     return {
         "output": f"# Web Page Content: {clean_url}\n\n{md_text}",

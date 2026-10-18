@@ -7,7 +7,6 @@ import json
 import re
 from typing import Any
 
-
 PERMISSION_MODES = {"allow_all", "auto", "manual"}
 PERMISSION_CATEGORIES = {"read", "create", "edit", "terminal", "search", "mcp", "delegation"}
 DEFAULT_APPROVAL_ACTIONS = ["create", "edit", "terminal", "search", "mcp", "delegation"]
@@ -73,7 +72,9 @@ def validate_permissions_config(config: Any) -> tuple[dict[str, Any] | None, str
     if not isinstance(mode, str) or mode not in PERMISSION_MODES:
         return None, "default_mode must be 'allow_all', 'auto', or 'manual'."
     actions = config.get("approval_actions")
-    if not isinstance(actions, list) or any(not isinstance(item, str) or item not in PERMISSION_CATEGORIES for item in actions):
+    if not isinstance(actions, list) or any(
+        not isinstance(item, str) or item not in PERMISSION_CATEGORIES for item in actions
+    ):
         return None, "approval_actions must contain only supported permission categories."
     if len(set(actions)) != len(actions):
         return None, "approval_actions must not contain duplicates."

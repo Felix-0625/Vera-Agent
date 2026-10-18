@@ -1,6 +1,5 @@
 """Unit tests for path sandboxing, subagent scratchpad isolation, and multi-turn sanitization."""
 
-import pytest
 from pathlib import Path
 
 from vera_agent.environments.local import LocalEnvironment
@@ -8,7 +7,6 @@ from vera_agent.models.litellm_model import LitellmModel
 from vera_agent.models.utils.actions_toolcall import parse_toolcall_actions
 from vera_agent.tools.ops import (
     edit_file_op,
-    read_file_op,
     validate_safe_path,
     write_file_op,
 )
@@ -37,9 +35,7 @@ def test_validate_safe_path_subagent_scratch_restriction(tmp_path: Path):
     scratch.mkdir(parents=True)
 
     # 1. Read anywhere inside workspace is allowed
-    target, err = validate_safe_path(
-        "src/payment.py", base_dir=workspace, allowed_write_prefix=scratch, is_write=False
-    )
+    target, err = validate_safe_path("src/payment.py", base_dir=workspace, allowed_write_prefix=scratch, is_write=False)
     assert err is None
 
     # 2. Write inside scratch is allowed
@@ -52,9 +48,7 @@ def test_validate_safe_path_subagent_scratch_restriction(tmp_path: Path):
     assert err is None
 
     # 3. Write outside scratch (to project code) is blocked
-    target, err = validate_safe_path(
-        "src/payment.py", base_dir=workspace, allowed_write_prefix=scratch, is_write=True
-    )
+    target, err = validate_safe_path("src/payment.py", base_dir=workspace, allowed_write_prefix=scratch, is_write=True)
     assert target is None
     assert err is not None
     assert "PermissionDenied" in err
@@ -72,9 +66,7 @@ def test_ops_subagent_write_blocking(tmp_path: Path):
     proj_file.write_text("x = 1\n", encoding="utf-8")
 
     # 1. Subagent attempts to write to project code -> BLOCKED
-    res_write = write_file_op(
-        "core.py", "x = 999\n", base_dir=workspace, allowed_write_prefix=scratch
-    )
+    res_write = write_file_op("core.py", "x = 999\n", base_dir=workspace, allowed_write_prefix=scratch)
     assert res_write["returncode"] == 1
     assert res_write["exception_info"] == "PermissionDenied"
     assert proj_file.read_text(encoding="utf-8") == "x = 1\n"
@@ -147,6 +139,7 @@ def test_parse_toolcall_actions_allow_empty():
 def test_default_agent_auto_enables_allow_empty_tool_calls(tmp_path: Path):
     """Test that DefaultAgent with complete_on_empty_actions=True auto-enables model.config.allow_empty_tool_calls."""
     from vera_agent.agents.default import DefaultAgent
+
     model = LitellmModel(model_name="mock-model", model_kwargs={"drop_params": True})
     assert model.config.allow_empty_tool_calls is False
 

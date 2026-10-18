@@ -1,3 +1,5 @@
+"""Permission categories and approval requirements for each settings permission mode."""
+
 from vera_agent.server.permissions import permission_category, requires_approval
 
 

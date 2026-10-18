@@ -1,4 +1,9 @@
-"""Tool 3: Terminal execution endpoint for local development commands."""
+"""Local terminal routes.
+
+Routes: POST /api/terminal/exec (one-shot command) and WebSocket
+/api/terminal/session (interactive PowerShell). Commands run in the project
+directory with the current OS user's privileges; there is no OS-level sandbox.
+"""
 
 from __future__ import annotations
 
@@ -8,8 +13,8 @@ import logging
 import os
 import shutil
 import subprocess
-from urllib.parse import urlsplit
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -71,29 +76,37 @@ async def exec_terminal_command(request: Request) -> JSONResponse:
             timeout=timeout,
             env=env,
         )
-        return JSONResponse({
-            "command": cmd,
-            "cwd": str(target_dir),
-            "exit_code": res.returncode,
-            "stdout": res.stdout,
-            "stderr": res.stderr,
-        })
+        return JSONResponse(
+            {
+                "command": cmd,
+                "cwd": str(target_dir),
+                "exit_code": res.returncode,
+                "stdout": res.stdout,
+                "stderr": res.stderr,
+            }
+        )
     except subprocess.TimeoutExpired:
-        return JSONResponse({
-            "command": cmd,
-            "cwd": str(target_dir),
-            "exit_code": 124,
-            "stdout": "",
-            "stderr": f"Command timed out after {timeout} seconds",
-        }, status_code=408)
+        return JSONResponse(
+            {
+                "command": cmd,
+                "cwd": str(target_dir),
+                "exit_code": 124,
+                "stdout": "",
+                "stderr": f"Command timed out after {timeout} seconds",
+            },
+            status_code=408,
+        )
     except Exception as e:
-        return JSONResponse({
-            "command": cmd,
-            "cwd": str(target_dir),
-            "exit_code": -1,
-            "stdout": "",
-            "stderr": str(e),
-        }, status_code=500)
+        return JSONResponse(
+            {
+                "command": cmd,
+                "cwd": str(target_dir),
+                "exit_code": -1,
+                "stdout": "",
+                "stderr": str(e),
+            },
+            status_code=500,
+        )
 
 
 async def terminal_session(websocket: WebSocket) -> None:
@@ -125,7 +138,9 @@ async def terminal_session(websocket: WebSocket) -> None:
     shell = shutil.which("powershell.exe") or shutil.which("pwsh.exe")
     if not shell:
         await websocket.accept()
-        await websocket.send_json({"type": "error", "message": "找不到 Windows PowerShell（powershell.exe / pwsh.exe）。"})
+        await websocket.send_json(
+            {"type": "error", "message": "找不到 Windows PowerShell（powershell.exe / pwsh.exe）。"}
+        )
         await websocket.close(code=1011)
         return
 
@@ -149,11 +164,13 @@ async def terminal_session(websocket: WebSocket) -> None:
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
         )
-        await websocket.send_json({
-            "type": "connected",
-            "shell": Path(shell).name,
-            "cwd": str(target_dir),
-        })
+        await websocket.send_json(
+            {
+                "type": "connected",
+                "shell": Path(shell).name,
+                "cwd": str(target_dir),
+            }
+        )
 
         async def forward_output() -> None:
             assert process is not None and process.stdout is not None

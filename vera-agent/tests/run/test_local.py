@@ -1,9 +1,9 @@
 import re
 from unittest.mock import patch
 
+from tests.conftest import assert_observations_match
 from vera_agent.models.test_models import DeterministicModel, make_output
 from vera_agent.run.mini import DEFAULT_CONFIG_FILE, main
-from tests.conftest import assert_observations_match
 
 
 def _make_model_from_fixture(text_outputs: list[str], cost_per_call: float = 1.0, **kwargs) -> DeterministicModel:
@@ -30,9 +30,7 @@ def test_local_end_to_end(local_test_data):
         patch("vera_agent.run.mini.configure_if_first_time"),
         patch("vera_agent.models.litellm_model.LitellmModel") as mock_model_class,
         patch("vera_agent.agents.utils.prompt_user.prompt_session.prompt", side_effect=lambda *a, **kw: ""),
-        patch(
-            "vera_agent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""
-        ),
+        patch("vera_agent.agents.utils.prompt_user._multiline_prompt_session.prompt", side_effect=lambda *a, **kw: ""),
         patch("builtins.input", return_value=""),  # For LimitsExceeded handling
     ):
         mock_model_class.return_value = _make_model_from_fixture(model_responses)

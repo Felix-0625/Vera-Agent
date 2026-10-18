@@ -14,8 +14,14 @@ REMEMBER_USER_TOOL = {
             "type": "object",
             "properties": {
                 "category": {"type": "string", "enum": ["profile", "preference", "habit", "feedback"]},
-                "content": {"type": "string", "description": "One concise, durable user-profile memory, at most 500 characters."},
-                "memory_id": {"type": "string", "description": "Existing memory ID to revise when this updates or corrects a remembered item."},
+                "content": {
+                    "type": "string",
+                    "description": "One concise, durable user-profile memory, at most 500 characters.",
+                },
+                "memory_id": {
+                    "type": "string",
+                    "description": "Existing memory ID to revise when this updates or corrects a remembered item.",
+                },
             },
             "required": ["category", "content"],
         },

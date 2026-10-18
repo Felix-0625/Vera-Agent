@@ -1,3 +1,6 @@
+/**
+ * Queue of workflow invocations requested from chat, consumed by the matching workflow panel once mounted.
+ */
 import { create } from 'zustand';
 
 export interface OrchestrationInvocation {

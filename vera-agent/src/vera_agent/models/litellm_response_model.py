@@ -46,6 +46,7 @@ class LitellmResponseModel(LitellmModel):
             RESEARCHER_TOOLS_RESPONSE_API,
             REVIEWER_TOOLS_RESPONSE_API,
         )
+
         if role == "main":
             return MAIN_AGENT_TOOLS_RESPONSE_API
         elif role == "researcher":

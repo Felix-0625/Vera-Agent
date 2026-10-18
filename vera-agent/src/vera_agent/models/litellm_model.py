@@ -74,6 +74,7 @@ class LitellmModel:
     def get_tools_for_role(self, role: str = "main") -> list[dict]:
         """Return dynamic tool schema definitions matching the agent's role (Pi-agent philosophy)."""
         from vera_agent.tools import MAIN_AGENT_TOOLS, RESEARCHER_TOOLS, REVIEWER_TOOLS
+
         if role == "main":
             return MAIN_AGENT_TOOLS
         elif role == "researcher":
@@ -101,8 +102,11 @@ class LitellmModel:
             # DeepSeek requires every prior assistant turn to carry this field
             # when tools are enabled, including turns with no reasoning tokens.
             prepared = [
-                ({**message, "reasoning_content": message.get("reasoning_content") or ""}
-                 if message.get("role") == "assistant" else message)
+                (
+                    {**message, "reasoning_content": message.get("reasoning_content") or ""}
+                    if message.get("role") == "assistant"
+                    else message
+                )
                 for message in prepared
             ]
         prepared = _reorder_anthropic_thinking_blocks(prepared)
@@ -168,9 +172,7 @@ class LitellmModel:
                 abort_exceptions=[*self.abort_exceptions, _StreamFailedAfterOutputError],
             ):
                 with attempt:
-                    chunks = self._query(
-                        self._prepare_messages_for_api(messages), tools=passed_tools, **call_kwargs
-                    )
+                    chunks = self._query(self._prepare_messages_for_api(messages), tools=passed_tools, **call_kwargs)
                     try:
                         for chunk in chunks:
                             response_id = getattr(chunk, "id", response_id)
@@ -178,7 +180,11 @@ class LitellmModel:
                             response_model = getattr(chunk, "model", response_model)
                             choices = getattr(chunk, "choices", None) or []
                             if getattr(chunk, "usage", None) is not None:
-                                usage = chunk.usage.model_dump() if hasattr(chunk.usage, "model_dump") else dict(chunk.usage)
+                                usage = (
+                                    chunk.usage.model_dump()
+                                    if hasattr(chunk.usage, "model_dump")
+                                    else dict(chunk.usage)
+                                )
                             if not choices:
                                 continue
                             choice = choices[0]
@@ -202,7 +208,9 @@ class LitellmModel:
                                 reasoning_parts.append(reasoning)
                             for call in getattr(delta, "tool_calls", None) or []:
                                 index = getattr(call, "index", 0)
-                                current = tool_calls.setdefault(index, {"id": "", "type": "function", "function": {"name": "", "arguments": ""}})
+                                current = tool_calls.setdefault(
+                                    index, {"id": "", "type": "function", "function": {"name": "", "arguments": ""}}
+                                )
                                 if getattr(call, "id", None):
                                     current["id"] = call.id
                                 if getattr(call, "type", None):
@@ -224,15 +232,17 @@ class LitellmModel:
             id=response_id,
             created=created,
             model=response_model,
-            choices=[{
-                "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": "".join(content_parts) or None,
-                    "tool_calls": [tool_calls[index] for index in sorted(tool_calls)] or None,
-                },
-                "finish_reason": finish_reason,
-            }],
+            choices=[
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "".join(content_parts) or None,
+                        "tool_calls": [tool_calls[index] for index in sorted(tool_calls)] or None,
+                    },
+                    "finish_reason": finish_reason,
+                }
+            ],
             usage=usage,
         )
         # Some reasoning models require their reasoning trace to be echoed when

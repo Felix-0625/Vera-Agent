@@ -1,3 +1,6 @@
+/**
+ * File preview pane state, keyed by project so each project keeps its own open preview.
+ */
 import { create } from 'zustand';
 import { FilePreviewData } from '../types/tool';
 

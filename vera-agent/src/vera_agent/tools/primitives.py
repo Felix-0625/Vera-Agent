@@ -1,4 +1,4 @@
-""" 4 orthogonal primitive tool definitions (read, write, edit, bash)."""
+"""Schemas for the four file/shell primitives (read, write, edit, bash) and per-role tool sets."""
 
 READ_TOOL = {
     "type": "function",
@@ -157,19 +157,11 @@ ALL_TOOLS_RESPONSE_API = [
 ]
 
 from vera_agent.tools.subagent_tools import (
-    DELEGATE_RESEARCH_TOOL,
-    DELEGATE_RESEARCH_TOOL_RESPONSE_API,
-    DELEGATE_REVIEW_TOOL,
-    DELEGATE_REVIEW_TOOL_RESPONSE_API,
     SUBAGENT_TOOL_NAMES,
     SUBAGENT_TOOLS,
     SUBAGENT_TOOLS_RESPONSE_API,
 )
 from vera_agent.tools.web_tools import (
-    FETCH_WEB_PAGE_TOOL,
-    FETCH_WEB_PAGE_TOOL_RESPONSE_API,
-    WEB_SEARCH_TOOL,
-    WEB_SEARCH_TOOL_RESPONSE_API,
     WEB_TOOL_NAMES,
     WEB_TOOLS,
     WEB_TOOLS_RESPONSE_API,
@@ -191,5 +183,3 @@ REVIEWER_TOOLS_RESPONSE_API = ALL_TOOLS_RESPONSE_API
 
 # Complete set of allowed tool names across all roles
 TOOL_NAMES = {"read", "write", "edit", "bash"} | SUBAGENT_TOOL_NAMES | WEB_TOOL_NAMES
-
-

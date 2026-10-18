@@ -1,3 +1,8 @@
+/**
+ * Right-side tool panel client: diff/worktree, files, terminal, task board, scheduled tasks, Git, analytics.
+ *
+ * Backend: `server/routes/{worktrees,files,terminal,taskboard,tasks,gitflow,analytics}.py`.
+ */
 import { request } from './client';
 import {
   WorktreeDiffData,

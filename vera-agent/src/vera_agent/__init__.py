@@ -36,7 +36,9 @@ from vera_agent.utils.log import logger
 package_dir = Path(__file__).resolve().parent
 
 
-global_config_dir = Path(os.getenv("VERA_GLOBAL_CONFIG_DIR") or os.getenv("MSWEA_GLOBAL_CONFIG_DIR") or user_config_dir("vera-agent"))
+global_config_dir = Path(
+    os.getenv("VERA_GLOBAL_CONFIG_DIR") or os.getenv("MSWEA_GLOBAL_CONFIG_DIR") or user_config_dir("vera-agent")
+)
 global_config_dir.mkdir(parents=True, exist_ok=True)
 global_config_file = Path(global_config_dir) / ".env"
 

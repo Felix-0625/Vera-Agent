@@ -1,3 +1,9 @@
+/**
+ * Ephemeral side chats opened from a conversation's context.
+ *
+ * Each side chat streams through `/api/chat/stream` with `ephemeral: true` and is closed via
+ * `/api/chat/ephemeral/close`; nothing is persisted as a thread.
+ */
 import { create } from 'zustand';
 import { closeEphemeralChat, confirmApproval, interruptChat, streamChat } from '../api/chatApi';
 import { useChatStore } from './chatStore';

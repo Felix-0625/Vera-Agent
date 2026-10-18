@@ -82,7 +82,9 @@ class LocalEnvironment:
             except Exception as e:
                 raw_output = getattr(e, "output", None)
                 raw_output = (
-                    raw_output.decode("utf-8", errors="replace") if isinstance(raw_output, bytes) else (raw_output or "")
+                    raw_output.decode("utf-8", errors="replace")
+                    if isinstance(raw_output, bytes)
+                    else (raw_output or "")
                 )
                 output = {
                     "output": raw_output,
@@ -104,7 +106,8 @@ class LocalEnvironment:
             if len(truncated_text) > max_bytes:
                 truncated_text = truncated_text[:max_bytes]
             output["output"] = (
-                truncated_text + f"\n\n[... Warning: Tool output truncated. Exceeded limit ({max_lines} lines / {max_bytes} bytes). ...]"
+                truncated_text
+                + f"\n\n[... Warning: Tool output truncated. Exceeded limit ({max_lines} lines / {max_bytes} bytes). ...]"
             )
 
         return output
@@ -112,12 +115,18 @@ class LocalEnvironment:
     def _check_finished(self, output: dict):
         """Raises Submitted if the output indicates task completion."""
         lines = output.get("output", "").lstrip().splitlines(keepends=True)
-        if lines and lines[0].strip().strip("'\"") == "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT" and output["returncode"] == 0:
+        if (
+            lines
+            and lines[0].strip().strip("'\"") == "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT"
+            and output["returncode"] == 0
+        ):
             if os.name == "nt":
                 submission_lines = []
                 for l in lines[1:]:
                     stripped = l.strip()
-                    if (stripped.startswith("'") and stripped.endswith("'")) or (stripped.startswith('"') and stripped.endswith('"')):
+                    if (stripped.startswith("'") and stripped.endswith("'")) or (
+                        stripped.startswith('"') and stripped.endswith('"')
+                    ):
                         stripped = stripped[1:-1]
                     submission_lines.append(stripped)
                 submission = "\n".join(submission_lines) + ("\n" if lines[1:] else "")
@@ -209,6 +218,4 @@ def _find_windows_bash() -> str:
                 if bash.is_file():
                     return str(bash)
 
-    raise FileNotFoundError(
-        "Git Bash was not found. Install Git for Windows or set VERA_AGENT_BASH_PATH to bash.exe."
-    )
+    raise FileNotFoundError("Git Bash was not found. Install Git for Windows or set VERA_AGENT_BASH_PATH to bash.exe.")

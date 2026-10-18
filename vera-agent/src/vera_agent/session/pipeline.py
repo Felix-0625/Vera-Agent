@@ -1,18 +1,15 @@
-"""Context auto-rebirth pipeline and watermark monitor for Phase 5.
+"""Context watermark monitoring and session rebirth.
 
-Adheres to Pi-agent minimalism and eliminates long-context hallucination:
-- WatermarkPolicy: Configurable thresholds (turns, chars, cost) for proactive context refresh.
-- HandoffPipeline: Manages clean session rebirth and typed handoffs between agent nodes.
+- WatermarkPolicy: thresholds (turns, characters, cost) that trigger a context refresh.
+- HandoffPipeline: starts a fresh session seeded with a typed handoff summary.
 """
 
 from __future__ import annotations
 
-import json
 import logging
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 from vera_agent.models.contracts import HandoverPayload
 from vera_agent.session.graph import GitFlowGraph
@@ -160,11 +157,13 @@ class HandoffPipeline:
         if extra_notes:
             handover_md += f"\n## 5. Extra Directives\n{extra_notes.strip()}\n"
 
-        new_session.add_messages({
-            "role": "user",
-            "content": f"[SYSTEM HANDOVER ANCHOR: Pure state inherited from parent session {session.thread_id}]\n\n{handover_md}",
-            "extra": {"inherited": True, "parent_thread_id": session.thread_id},
-        })
+        new_session.add_messages(
+            {
+                "role": "user",
+                "content": f"[SYSTEM HANDOVER ANCHOR: Pure state inherited from parent session {session.thread_id}]\n\n{handover_md}",
+                "extra": {"inherited": True, "parent_thread_id": session.thread_id},
+            }
+        )
 
         # 5. Graph registration
         if self.graph:

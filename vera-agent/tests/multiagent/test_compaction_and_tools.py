@@ -1,23 +1,18 @@
 """Unit tests for dynamic role-based tool loading and 3-tier conversation compaction."""
 
 import os
-
-import pytest
 from unittest.mock import MagicMock
 
-from vera_agent.session.thread import ThreadSession
+import pytest
+
+from vera_agent.agents.default import DefaultAgent
 from vera_agent.models.litellm_model import LitellmModel, LitellmModelConfig
 from vera_agent.models.litellm_response_model import LitellmResponseModel, LitellmResponseModelConfig
-from vera_agent.agents.default import DefaultAgent, AgentConfig
+from vera_agent.session.thread import ThreadSession
 from vera_agent.tools import (
     ALL_TOOLS,
     MAIN_AGENT_TOOLS,
     RESEARCHER_TOOLS,
-    REVIEWER_TOOLS,
-    ALL_TOOLS_RESPONSE_API,
-    MAIN_AGENT_TOOLS_RESPONSE_API,
-    RESEARCHER_TOOLS_RESPONSE_API,
-    REVIEWER_TOOLS_RESPONSE_API,
 )
 
 
@@ -82,7 +77,9 @@ def test_dynamic_tools_for_response_model():
 def test_agent_get_tools_respects_role():
     """Verify DefaultAgent constructs role-specific tool schemas."""
     mock_model = MagicMock()
-    mock_model.get_tools_for_role = lambda role: MAIN_AGENT_TOOLS if role == "main" else (RESEARCHER_TOOLS if role == "researcher" else ALL_TOOLS)
+    mock_model.get_tools_for_role = lambda role: (
+        MAIN_AGENT_TOOLS if role == "main" else (RESEARCHER_TOOLS if role == "researcher" else ALL_TOOLS)
+    )
     mock_env = MagicMock()
     mock_env.get_template_vars.return_value = {}
 
@@ -109,7 +106,9 @@ def test_agent_get_tools_respects_role():
 
 
 @pytest.mark.network
-@pytest.mark.skipif(os.getenv("VERA_RUN_NETWORK_TESTS") != "1", reason="set VERA_RUN_NETWORK_TESTS=1 to use live web services")
+@pytest.mark.skipif(
+    os.getenv("VERA_RUN_NETWORK_TESTS") != "1", reason="set VERA_RUN_NETWORK_TESTS=1 to use live web services"
+)
 def test_web_search_and_fetch_ops():
     """Verify web search and fetch tools operation."""
     from vera_agent.tools.web_tools import fetch_web_page_op, web_search_op
@@ -159,7 +158,9 @@ def test_observation_pruning_level_1():
     # If keep_last_n_observations=2:
     # Observations 0, 1, 2, 3 should be pruned.
     # Observations 4, 5 (last 2) should remain intact.
-    pruned = session.get_chat_history(prune_stale_observations=True, keep_last_n_observations=2, max_observation_chars=200)
+    pruned = session.get_chat_history(
+        prune_stale_observations=True, keep_last_n_observations=2, max_observation_chars=200
+    )
 
     # 1. Total message length should not change
     assert len(pruned) == len(session.messages)

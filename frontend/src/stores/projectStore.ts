@@ -1,3 +1,8 @@
+/**
+ * Current project, project history, and the current project's groups (zustand).
+ *
+ * Backend: `/api/projects*` and `/api/groups` through api/projectApi.ts.
+ */
 import { create } from 'zustand';
 import { Project, Group } from '../types/project';
 import {

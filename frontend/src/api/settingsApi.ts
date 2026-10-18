@@ -1,3 +1,9 @@
+/**
+ * Settings, MCP, and Skill client.
+ *
+ * Backend: `server/routes/settings.py` (`/api/settings/*`), `server/routes/mcp.py` (`/api/mcp/*`),
+ * and `server/routes/skills.py` (`/api/skills*`).
+ */
 import { request } from './client';
 import {
   ModelConfig,

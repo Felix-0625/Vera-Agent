@@ -1,3 +1,6 @@
+/**
+ * Right-side tool tabs per conversation (open, active, mounted panels) and their project scope.
+ */
 import { create } from 'zustand';
 import { ToolTab, ToolTabId } from '../types/tool';
 import { useSideChatStore } from './sideChatStore';
@@ -99,8 +102,6 @@ export const useToolTabsStore = create<ToolTabsState>((set, get) => ({
   }),
 
   openTab: (toolType, customTitle, requestedConversationKey, requestedProjectId) => {
-    // MCP and Skill management is application configuration, so it belongs in Settings.
-    if (toolType === 'mcp' || toolType === 'skills') return;
     const conversationKey = requestedConversationKey || getConversationToolScope();
     const scopeKey = getToolScope(toolType, requestedProjectId ?? getCurrentProjectId(), conversationKey);
     if (toolType === 'sidechat') {

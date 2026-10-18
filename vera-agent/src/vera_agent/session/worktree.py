@@ -108,6 +108,7 @@ class WorktreeManager:
             self._run_git(["worktree", "prune"], check=False)
             if target_path.exists() and not (target_path / ".git").exists():
                 import shutil
+
                 shutil.rmtree(target_path, ignore_errors=True)
 
         # Check if branch exists
@@ -138,6 +139,7 @@ class WorktreeManager:
         except subprocess.CalledProcessError:
             if force and wt_path.exists():
                 import shutil
+
                 shutil.rmtree(wt_path, ignore_errors=True)
                 self._run_git(["worktree", "prune"], check=False)
                 return True

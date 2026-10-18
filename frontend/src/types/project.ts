@@ -1,3 +1,8 @@
+/**
+ * Project, group, workflow node/edge, and topology template types.
+ *
+ * Mirrors `server/routes/groups.py` records; see docs/DATA_MODEL.md for field semantics.
+ */
 import { Thread } from './chat';
 
 export interface Project {

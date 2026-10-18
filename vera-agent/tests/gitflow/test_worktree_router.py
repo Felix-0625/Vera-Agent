@@ -1,8 +1,9 @@
-"""Comprehensive tests for Phase 4: Contracts, Worktree, GitFlowGraph, and SessionRouter."""
+"""Handoff contracts, Git worktree management, GitFlowGraph, and SessionRouter messaging."""
 
 import os
 import subprocess
 from pathlib import Path
+
 import pytest
 
 from vera_agent.models.contracts import (
@@ -315,7 +316,7 @@ async def test_session_router_broadcast_and_merge_request(temp_git_repo: Path):
     router = SessionRouter(graph=graph)
 
     # Create Group with 2 sessions
-    group = graph.create_group("grp_test", branch_name="feat/test", base_branch="main")
+    graph.create_group("grp_test", branch_name="feat/test", base_branch="main")
     graph.register_session("th_1", group_id="grp_test")
     graph.register_session("th_2", group_id="grp_test")
 

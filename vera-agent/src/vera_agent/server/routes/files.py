@@ -1,4 +1,12 @@
-"""Tool 2: File tree exploration, content preview, AST syntax checking, and symbol search."""
+"""Project file explorer routes.
+
+Routes: GET /api/files/tree, /api/files/content, /api/files/preview, /api/files/raw;
+PUT /api/files/content, /api/files/excel; POST /api/code/check-syntax,
+/api/code/search-symbols.
+
+Paths are resolved against the bound project and checked to stay inside it.
+This is an application-level path policy, not an OS sandbox.
+"""
 
 from __future__ import annotations
 
@@ -8,7 +16,6 @@ import os
 import re
 import tempfile
 import zipfile
-from io import BytesIO
 from pathlib import Path
 from urllib.parse import urlencode
 from xml.etree import ElementTree as ET
@@ -34,12 +41,55 @@ EXCLUDED_DIRS = {
 }
 
 EDITABLE_TEXT_SUFFIXES = {
-    ".md", ".markdown", ".txt", ".py", ".pyw", ".yaml", ".yml", ".toml",
-    ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".json", ".jsonc",
-    ".sh", ".bash", ".zsh", ".ps1", ".bat", ".cmd", ".html", ".htm",
-    ".xml", ".css", ".scss", ".sass", ".less", ".sql", ".ini", ".cfg",
-    ".conf", ".log", ".go", ".rs", ".java", ".c", ".h", ".cpp", ".hpp",
-    ".cs", ".php", ".rb", ".vue", ".svelte", ".graphql", ".gql", ".r",
+    ".md",
+    ".markdown",
+    ".txt",
+    ".py",
+    ".pyw",
+    ".yaml",
+    ".yml",
+    ".toml",
+    ".js",
+    ".jsx",
+    ".mjs",
+    ".cjs",
+    ".ts",
+    ".tsx",
+    ".json",
+    ".jsonc",
+    ".sh",
+    ".bash",
+    ".zsh",
+    ".ps1",
+    ".bat",
+    ".cmd",
+    ".html",
+    ".htm",
+    ".xml",
+    ".css",
+    ".scss",
+    ".sass",
+    ".less",
+    ".sql",
+    ".ini",
+    ".cfg",
+    ".conf",
+    ".log",
+    ".go",
+    ".rs",
+    ".java",
+    ".c",
+    ".h",
+    ".cpp",
+    ".hpp",
+    ".cs",
+    ".php",
+    ".rb",
+    ".vue",
+    ".svelte",
+    ".graphql",
+    ".gql",
+    ".r",
 }
 
 
@@ -294,16 +344,20 @@ def _build_tree(
                 if sub_tree:
                     children.append(sub_tree)
             else:
-                children.append({
-                    "name": entry.name,
-                    "path": rel_path,
-                    "is_dir": False,
-                    "size": entry.stat().st_size if entry.exists() else 0,
-                })
+                children.append(
+                    {
+                        "name": entry.name,
+                        "path": rel_path,
+                        "is_dir": False,
+                        "size": entry.stat().st_size if entry.exists() else 0,
+                    }
+                )
 
         return {
             "name": curr_dir.name if current_depth > 0 else base_dir.name,
-            "path": path_prefix if current_depth == 0 else f"{path_prefix}/{str(curr_dir.relative_to(base_dir)).replace(chr(92), '/') }".strip("/"),
+            "path": path_prefix
+            if current_depth == 0
+            else f"{path_prefix}/{str(curr_dir.relative_to(base_dir)).replace(chr(92), '/')}".strip("/"),
             "is_dir": True,
             "children": children,
         }
@@ -329,7 +383,8 @@ async def get_files_tree(request: Request) -> JSONResponse:
         project, roots = project_scope
         if len(roots) > 1:
             children = [
-                tree for index, folder in enumerate(roots)
+                tree
+                for index, folder in enumerate(roots)
                 if (tree := _build_tree(folder, folder, path_prefix=f"@folder/{index}")) is not None
             ]
             tree = {"name": project.get("name") or roots[0].name, "path": "", "is_dir": True, "children": children}
@@ -361,13 +416,15 @@ async def get_file_content(request: Request) -> JSONResponse:
     try:
         content = target.read_text(encoding="utf-8", errors="replace")
         lines = len(content.splitlines())
-        return JSONResponse({
-            "path": str(target.relative_to(base)).replace("\\", "/"),
-            "name": target.name,
-            "content": content,
-            "lines": lines,
-            "size": target.stat().st_size,
-        })
+        return JSONResponse(
+            {
+                "path": str(target.relative_to(base)).replace("\\", "/"),
+                "name": target.name,
+                "content": content,
+                "lines": lines,
+                "size": target.stat().st_size,
+            }
+        )
     except Exception as e:
         return JSONResponse({"error": f"Failed to read file: {e}"}, status_code=500)
 
@@ -390,7 +447,9 @@ async def get_file_preview(request: Request) -> JSONResponse:
         try:
             with zipfile.ZipFile(target) as archive:
                 sheet_defs, _ = _xlsx_layout(archive)
-            return JSONResponse({"kind": "excel", "sheets": _read_xlsx(target), "sheet_names": [sheet["name"] for sheet in sheet_defs]})
+            return JSONResponse(
+                {"kind": "excel", "sheets": _read_xlsx(target), "sheet_names": [sheet["name"] for sheet in sheet_defs]}
+            )
         except (OSError, zipfile.BadZipFile, ET.ParseError, KeyError, ValueError) as exc:
             return JSONResponse({"error": f"无法预览 Excel 文件: {exc}"}, status_code=400)
     if suffix == ".pptx":
@@ -399,15 +458,29 @@ async def get_file_preview(request: Request) -> JSONResponse:
         except (OSError, zipfile.BadZipFile, ET.ParseError) as exc:
             return JSONResponse({"error": f"无法预览 PowerPoint 文件: {exc}"}, status_code=400)
     if suffix in {".ppt", ".xls", ".doc", ".docx"}:
-        return JSONResponse({"kind": "unsupported", "message": "此旧版或非目标格式暂不支持内嵌预览。", "url": _raw_file_url(request, target)})
+        return JSONResponse(
+            {
+                "kind": "unsupported",
+                "message": "此旧版或非目标格式暂不支持内嵌预览。",
+                "url": _raw_file_url(request, target),
+            }
+        )
     try:
         raw = target.read_bytes()
         if b"\x00" in raw:
-            return JSONResponse({"kind": "unsupported", "message": "二进制文件不支持文本预览。", "url": _raw_file_url(request, target)})
+            return JSONResponse(
+                {"kind": "unsupported", "message": "二进制文件不支持文本预览。", "url": _raw_file_url(request, target)}
+            )
         try:
             content = raw.decode("utf-8")
         except UnicodeDecodeError:
-            return JSONResponse({"kind": "unsupported", "message": "该文件不是 UTF-8 文本，无法安全地作为文本预览。", "url": _raw_file_url(request, target)})
+            return JSONResponse(
+                {
+                    "kind": "unsupported",
+                    "message": "该文件不是 UTF-8 文本，无法安全地作为文本预览。",
+                    "url": _raw_file_url(request, target),
+                }
+            )
         return JSONResponse({"kind": "text", "content": content})
     except OSError as exc:
         return JSONResponse({"error": f"无法预览文件: {exc}"}, status_code=400)
@@ -468,7 +541,9 @@ async def save_excel_file(request: Request) -> JSONResponse:
         body = await request.json()
     except Exception:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-    resolved = _resolve_file(state, request, str(body.get("path", "")).strip(), body.get("group_id"), body.get("project_id"))
+    resolved = _resolve_file(
+        state, request, str(body.get("path", "")).strip(), body.get("group_id"), body.get("project_id")
+    )
     if resolved is None:
         return JSONResponse({"error": "Access denied: Path is outside workspace root"}, status_code=403)
     _, target = resolved

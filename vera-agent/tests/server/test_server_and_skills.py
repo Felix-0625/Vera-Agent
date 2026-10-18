@@ -1,8 +1,9 @@
-"""Tests for Phase 6: Code intelligence tools, Dynamic Skill Manager, and Starlette Web API Server."""
+"""Code intelligence tools, Skill discovery/activation, and core Starlette API routes."""
 
 import os
 import subprocess
 from pathlib import Path
+
 import pytest
 from starlette.testclient import TestClient
 

@@ -12,6 +12,7 @@ import logging
 import time
 import uuid
 from typing import Any, Literal
+
 from pydantic import BaseModel, Field
 
 from vera_agent.models.contracts import HandoverPayload, MergeReviewResult
@@ -48,8 +49,7 @@ def prompt_structured_choice(
         return "Y"
 
     formatted_prompt = (
-        f"\n{prompt}\n"
-        f"Select: [Y] Approve | [N] Reject | [O] Provide alternative instructions (Default: {default}): "
+        f"\n{prompt}\nSelect: [Y] Approve | [N] Reject | [O] Provide alternative instructions (Default: {default}): "
     )
 
     try:

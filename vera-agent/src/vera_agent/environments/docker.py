@@ -136,7 +136,7 @@ class DockerEnvironment:
             "            numbered = [f'{i+1:6d} | {l}' for i, l in enumerate(lines[start_idx:end_idx], start=start_idx)]\n"
             "            out = f\"[File: {payload['path']} | Total lines: {len(lines)} | Showing lines {start_idx+1}-{end_idx}]\\n\" + '\\n'.join(numbered)\n"
             "            if end_idx < len(lines):\n"
-            "                out += f\"\\n[... {len(lines) - end_idx} more lines truncated. Use offset={end_idx+1} to continue reading ...]\"\n"
+            '                out += f"\\n[... {len(lines) - end_idx} more lines truncated. Use offset={end_idx+1} to continue reading ...]"\n'
             "            res = {'output': out, 'returncode': 0, 'exception_info': ''}\n"
             "        except Exception as e:\n"
             "            res = {'output': f'Error reading file: {e}', 'returncode': 1, 'exception_info': str(e)}\n"
@@ -198,7 +198,11 @@ class DockerEnvironment:
                 return json.loads(json_part)
             return {"output": stdout, "returncode": result.returncode, "exception_info": ""}
         except Exception as e:
-            return {"output": f"Error running tool '{tool_name}' in container: {e}", "returncode": 1, "exception_info": str(e)}
+            return {
+                "output": f"Error running tool '{tool_name}' in container: {e}",
+                "returncode": 1,
+                "exception_info": str(e),
+            }
 
     def execute(self, action: dict, cwd: str = "", *, timeout: int | None = None) -> dict[str, Any]:
         """Execute a tool action (read, write, edit, bash) in the Docker container."""

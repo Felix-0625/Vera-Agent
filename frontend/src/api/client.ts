@@ -1,3 +1,9 @@
+/**
+ * Shared fetch wrapper for the local VeraAgent API.
+ *
+ * `VITE_API_BASE_URL` is injected by vite.config.ts: empty in dev (Vite proxies `/api`),
+ * an absolute loopback URL in desktop builds. Non-2xx responses throw `Error(body.error)`.
+ */
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export async function request<T>(

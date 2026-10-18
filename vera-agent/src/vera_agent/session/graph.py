@@ -196,8 +196,7 @@ class GitFlowGraph:
         """Remove a communication link between two sessions."""
         orig_len = len(self.communication_links)
         self.communication_links = [
-            (f, t, l) for f, t, l in self.communication_links
-            if not (f == from_thread and t == to_thread)
+            (f, t, l) for f, t, l in self.communication_links if not (f == from_thread and t == to_thread)
         ]
         return len(self.communication_links) != orig_len
 

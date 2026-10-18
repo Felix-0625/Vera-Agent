@@ -1,4 +1,11 @@
-"""Module 2: Project workspace binding and projects history management."""
+"""Project binding and history routes.
+
+Routes: GET /api/projects, GET /api/projects/current, POST /api/projects/bind,
+POST /api/projects/select-folder (native folder picker), PATCH/DELETE /api/projects/{id}.
+
+History is stored in `<projects_config_root>/.agents/projects_history.json`.
+Binding records a local path; it does not copy or sandbox the project.
+"""
 
 from __future__ import annotations
 
@@ -6,9 +13,9 @@ import asyncio
 import ctypes
 import logging
 import os
-from pathlib import Path
 import shutil
 import subprocess
+from pathlib import Path
 
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -34,14 +41,16 @@ async def get_current_project(request: Request) -> JSONResponse:
     current_root = state.root_path
     projects = state.load_json_config("projects_history.json", {"projects": []}).get("projects", [])
     current = next((project for project in projects if project.get("path") == str(current_root)), {})
-    return JSONResponse({
-        "id": current.get("id"),
-        "repo_root": str(current_root),
-        "name": current.get("name") or current_root.name,
-        "folders": current.get("folders") or [str(current_root)],
-        "is_git": (current_root / ".git").exists(),
-        "active_branch": get_git_branch(current_root),
-    })
+    return JSONResponse(
+        {
+            "id": current.get("id"),
+            "repo_root": str(current_root),
+            "name": current.get("name") or current_root.name,
+            "folders": current.get("folders") or [str(current_root)],
+            "is_git": (current_root / ".git").exists(),
+            "active_branch": get_git_branch(current_root),
+        }
+    )
 
 
 def _choose_directory() -> str | None:
@@ -122,7 +131,11 @@ async def bind_project(request: Request) -> JSONResponse:
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
 
     raw_folders = body.get("folders") or [body.get("repo_root") or body.get("path")]
-    if not isinstance(raw_folders, list) or not raw_folders or not all(isinstance(folder, str) and folder.strip() for folder in raw_folders):
+    if (
+        not isinstance(raw_folders, list)
+        or not raw_folders
+        or not all(isinstance(folder, str) and folder.strip() for folder in raw_folders)
+    ):
         return JSONResponse({"error": "At least one folder path is required"}, status_code=400)
     folders = list(dict.fromkeys(str(Path(folder).expanduser().resolve()) for folder in raw_folders))
     new_repo_root = body.get("repo_root") or body.get("path") or folders[0]
@@ -139,15 +152,24 @@ async def bind_project(request: Request) -> JSONResponse:
     project_name = str(body.get("name") or target_path.name).strip()
     state.init_workspace(target_path, body.get("project_id"), project_name, folders)
     state.sessions.clear()
-    project = next((item for item in state.load_json_config("projects_history.json", {"projects": []}).get("projects", []) if item.get("path") == str(target_path)), {})
-    return JSONResponse({
-        "status": "ok",
-        "id": project.get("id"),
-        "repo_root": str(state.root_path),
-        "name": project.get("name") or state.root_path.name,
-        "folders": project.get("folders") or folders,
-        "active_branch": get_git_branch(state.root_path),
-    })
+    project = next(
+        (
+            item
+            for item in state.load_json_config("projects_history.json", {"projects": []}).get("projects", [])
+            if item.get("path") == str(target_path)
+        ),
+        {},
+    )
+    return JSONResponse(
+        {
+            "status": "ok",
+            "id": project.get("id"),
+            "repo_root": str(state.root_path),
+            "name": project.get("name") or state.root_path.name,
+            "folders": project.get("folders") or folders,
+            "active_branch": get_git_branch(state.root_path),
+        }
+    )
 
 
 async def update_project(request: Request) -> JSONResponse:
@@ -167,7 +189,11 @@ async def update_project(request: Request) -> JSONResponse:
     folders = project.get("folders") or [old_path]
     if "folders" in body:
         raw_folders = body["folders"]
-        if not isinstance(raw_folders, list) or not raw_folders or not all(isinstance(folder, str) and folder.strip() for folder in raw_folders):
+        if (
+            not isinstance(raw_folders, list)
+            or not raw_folders
+            or not all(isinstance(folder, str) and folder.strip() for folder in raw_folders)
+        ):
             return JSONResponse({"error": "At least one folder path is required"}, status_code=400)
         folders = list(dict.fromkeys(str(Path(folder).expanduser().resolve()) for folder in raw_folders))
         for folder in folders:

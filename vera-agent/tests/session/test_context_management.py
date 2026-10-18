@@ -1,3 +1,5 @@
+"""Conversation compaction: recent-turn retention, oversized turns, and summary budget retries."""
+
 from types import SimpleNamespace
 
 from vera_agent.session import context_management
@@ -99,7 +101,9 @@ def test_compaction_folds_an_oversized_older_turn_at_the_next_user_boundary(monk
     assert event["folded_message_count"] == 2
     assert event["kept_message_count"] == 1
     assert "OVERSIZED_OLD_TURN" in summary_prompts[0]
-    assert [message.get("content") for message in context_management.context_projection(session)[-1:]] == ["Current question"]
+    assert [message.get("content") for message in context_management.context_projection(session)[-1:]] == [
+        "Current question"
+    ]
 
 
 def test_compaction_uses_minimum_summary_budget_and_retries_empty_response(monkeypatch):

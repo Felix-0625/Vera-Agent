@@ -2,9 +2,9 @@ import os
 import re
 from unittest.mock import patch
 
+from tests.conftest import assert_observations_match
 from vera_agent.models.test_models import DeterministicModel, make_output
 from vera_agent.run.hello_world import main
-from tests.conftest import assert_observations_match
 
 
 def _make_model_from_fixture(text_outputs: list[str], cost_per_call: float = 1.0, **kwargs) -> DeterministicModel:

@@ -16,17 +16,14 @@ keywords = ["ai-agent", "developer-tools", "desktop", "mcp"]
 # and MIT notice are preserved in LICENSE.md; do not attribute all VeraAgent
 # changes to the upstream authors.
 
-# Classifiers help users find your project by categorizing it.
+# The package is installed from source (`uv sync --locked`); it is not published to PyPI.
 classifiers = [
-  # How mature is this project? Common values are
-  #   3 - Alpha, 4 - Beta, 5 - Production/Stable
   "Development Status :: 3 - Alpha",
-  "Operating System :: OS Independent",
-  # Indicate who your project is intended for
+  "Operating System :: Microsoft :: Windows",
   "Intended Audience :: Developers",
-  # Pick your license as you wish
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3 :: Only",
+  "Private :: Do Not Upload",
 ]
 
 dependencies = [
@@ -68,14 +65,7 @@ dev = [
     "pytest-cov",
     "pytest-asyncio",
     "pytest-xdist",
-    "pre-commit",
     "ruff",
-    "mkdocs-include-markdown-plugin",
-    "mkdocstrings[python]>=0.18",
-    "mike",
-    "mkdocs-material",
-    "mkdocs-glightbox",
-    "mkdocs-redirects",
     "portkey-ai",
     "swe-rex",
 ]
@@ -93,12 +83,13 @@ Repository = "https://github.com/Felix-0625/Agents"
 "Bug Tracker" = "https://github.com/Felix-0625/Agents/issues"
 
 [project.scripts]
+# `vera`/`vera-agent` run the inherited single-agent CLI. The `mini*` aliases are kept
+# because CLI help and error messages inherited from mini-swe-agent refer to them.
 vera = "vera_agent.run.mini:app"
 vera-agent = "vera_agent.run.mini:app"
 mini = "vera_agent.run.mini:app"
-mini-swe-agent = "vera_agent.run.mini:app"
 mini-extra = "vera_agent.run.utilities.mini_extra:main"
-mini-e= "vera_agent.run.utilities.mini_extra:main"
+mini-e = "vera_agent.run.utilities.mini_extra:main"
 
 [tool.setuptools]
 include-package-data = true
@@ -108,7 +99,7 @@ version = {attr = "vera_agent.__version__"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["vera_agent*", "vera_agent*"]
+include = ["vera_agent*"]
 
 [tool.setuptools.package-data]
 vera_agent = [

@@ -1,4 +1,8 @@
-"""Tool 1: Git worktree status, diff inspection, file staging, discarding, checkpointing, and resetting."""
+"""Git working-tree routes used by the diff viewer.
+
+Routes: GET /api/worktrees/refs, /api/worktrees/diff; POST /api/worktrees/stage,
+/api/worktrees/discard, /api/worktrees/checkpoint, /api/worktrees/reset.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +22,9 @@ def _get_state(request: Request) -> ServerState:
     return request.app.state.server_state
 
 
-def _resolve_target_dir(state: ServerState, group_id: str | None, wt_path_str: str | None, project_id: str | None = None) -> Path | None:
+def _resolve_target_dir(
+    state: ServerState, group_id: str | None, wt_path_str: str | None, project_id: str | None = None
+) -> Path | None:
     if wt_path_str:
         return Path(wt_path_str).resolve()
     if group_id and state.graph and group_id in state.graph.groups:
@@ -44,15 +50,19 @@ async def get_worktree_refs(request: Request) -> JSONResponse:
     _, branches_text, _ = state.run_git(["branch", "--format=%(refname:short)"], cwd=target_dir)
     _, current_text, _ = state.run_git(["branch", "--show-current"], cwd=target_dir)
     branch = request.query_params.get("branch") or current_text.strip() or "HEAD"
-    _, commits_text, _ = state.run_git(
-        ["log", branch, "--format=%H%x1f%h%x1f%s%x1f%ct", "-n", "60"], cwd=target_dir
-    )
+    _, commits_text, _ = state.run_git(["log", branch, "--format=%H%x1f%h%x1f%s%x1f%ct", "-n", "60"], cwd=target_dir)
     commits = []
     for line in commits_text.splitlines():
         parts = line.split("\x1f", 3)
         if len(parts) == 4:
             commits.append({"hash": parts[0], "short_hash": parts[1], "subject": parts[2], "timestamp": int(parts[3])})
-    return JSONResponse({"branches": [item for item in branches_text.splitlines() if item], "current_branch": current_text.strip(), "commits": commits})
+    return JSONResponse(
+        {
+            "branches": [item for item in branches_text.splitlines() if item],
+            "current_branch": current_text.strip(),
+            "commits": commits,
+        }
+    )
 
 
 async def get_worktree_diff(request: Request) -> JSONResponse:
@@ -66,7 +76,9 @@ async def get_worktree_diff(request: Request) -> JSONResponse:
         return JSONResponse({"error": "项目不存在或项目目录不可用"}, status_code=404)
 
     # 1. Status porcelain
-    code_st, stdout_st, stderr_st = state.run_git(["-c", "core.quotepath=false", "status", "--porcelain=v1", "--untracked-files=all", "-z"], cwd=target_dir)
+    code_st, stdout_st, stderr_st = state.run_git(
+        ["-c", "core.quotepath=false", "status", "--porcelain=v1", "--untracked-files=all", "-z"], cwd=target_dir
+    )
     _, git_prefix, _ = state.run_git(["rev-parse", "--show-prefix"], cwd=target_dir)
     git_prefix = git_prefix.strip().replace("\\", "/")
     staged: list[dict] = []
@@ -82,7 +94,7 @@ async def get_worktree_diff(request: Request) -> JSONResponse:
             continue
         index_status, worktree_status, filepath = line[0], line[1], line[3:]
         if git_prefix and filepath.replace("\\", "/").startswith(git_prefix):
-            filepath = filepath[len(git_prefix):]
+            filepath = filepath[len(git_prefix) :]
         if "R" in (index_status, worktree_status) or "C" in (index_status, worktree_status):
             index += 1
 
@@ -94,18 +106,27 @@ async def get_worktree_diff(request: Request) -> JSONResponse:
             untracked.append(filepath)
 
     # 2. Raw diffs
-    _, diff_unstaged, _ = state.run_git(["-c", "core.quotepath=false", "diff", "--relative", "--no-color", "--no-ext-diff"], cwd=target_dir)
-    _, diff_staged, _ = state.run_git(["-c", "core.quotepath=false", "diff", "--cached", "--relative", "--no-color", "--no-ext-diff"], cwd=target_dir)
+    _, diff_unstaged, _ = state.run_git(
+        ["-c", "core.quotepath=false", "diff", "--relative", "--no-color", "--no-ext-diff"], cwd=target_dir
+    )
+    _, diff_staged, _ = state.run_git(
+        ["-c", "core.quotepath=false", "diff", "--cached", "--relative", "--no-color", "--no-ext-diff"], cwd=target_dir
+    )
 
     if base_ref:
         code, resolved_ref, stderr = state.run_git(["rev-parse", "--verify", f"{base_ref}^{{commit}}"], cwd=target_dir)
         if code != 0:
             return JSONResponse({"error": stderr or "无效的对比分支或提交"}, status_code=400)
         base_ref = resolved_ref.strip()
-        code, compare_diff, stderr = state.run_git(["-c", "core.quotepath=false", "diff", "--relative", "--no-color", "--no-ext-diff", base_ref, "--"], cwd=target_dir)
+        code, compare_diff, stderr = state.run_git(
+            ["-c", "core.quotepath=false", "diff", "--relative", "--no-color", "--no-ext-diff", base_ref, "--"],
+            cwd=target_dir,
+        )
         if code != 0:
             return JSONResponse({"error": stderr or "无法生成差异"}, status_code=400)
-        _, changed_names, _ = state.run_git(["-c", "core.quotepath=false", "diff", "--relative", "--name-only", "-z", base_ref, "--"], cwd=target_dir)
+        _, changed_names, _ = state.run_git(
+            ["-c", "core.quotepath=false", "diff", "--relative", "--name-only", "-z", base_ref, "--"], cwd=target_dir
+        )
         unstaged = [{"file": name, "status": "M"} for name in changed_names.split("\0") if name]
         diff_unstaged = compare_diff
         diff_staged = ""
@@ -142,17 +163,22 @@ async def get_worktree_diff(request: Request) -> JSONResponse:
             pass
     for item in staged + unstaged:
         item["additions"], item["deletions"] = file_stats.get(item["file"], [0, 0])
-    unstaged.extend({"file": filepath, "status": "?", "additions": file_stats.get(filepath, [0, 0])[0], "deletions": 0} for filepath in untracked)
+    unstaged.extend(
+        {"file": filepath, "status": "?", "additions": file_stats.get(filepath, [0, 0])[0], "deletions": 0}
+        for filepath in untracked
+    )
 
-    return JSONResponse({
-        "cwd": str(target_dir),
-        "staged": staged,
-        "unstaged": unstaged,
-        "untracked": untracked,
-        "diff_text": diff_unstaged,
-        "diff_staged": diff_staged,
-        "base_ref": base_ref,
-    })
+    return JSONResponse(
+        {
+            "cwd": str(target_dir),
+            "staged": staged,
+            "unstaged": unstaged,
+            "untracked": untracked,
+            "diff_text": diff_unstaged,
+            "diff_staged": diff_staged,
+            "base_ref": base_ref,
+        }
+    )
 
 
 async def stage_worktree_file(request: Request) -> JSONResponse:

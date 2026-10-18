@@ -123,9 +123,7 @@ def test_get_sb_environment_does_not_mutate_shared_config():
     config = {"environment": {"environment_class": "docker"}}
     instance = {"instance_id": "repo1__test1", "image_name": "custom/image:tag"}
 
-    with patch(
-        "vera_agent.run.benchmarks.swebench.get_environment", return_value=MagicMock()
-    ) as mock_get_environment:
+    with patch("vera_agent.run.benchmarks.swebench.get_environment", return_value=MagicMock()) as mock_get_environment:
         get_sb_environment(config, instance)
 
     assert mock_get_environment.call_args.args[0]["image"] == "custom/image:tag"
