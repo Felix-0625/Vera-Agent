@@ -1,5 +1,7 @@
 # 前端 UI 实现的说明文档
 
+> Archived legacy specification. It describes earlier planned behavior and is not a source of truth for the current product. Use the repository README, maintained docs, and current code/tests instead.
+
 | penpot 中画出了原型，本文档为 penpot 中的页面细节说明和后端逻辑说明以及界面跳转
 
 ## Penpot 原型设计概述

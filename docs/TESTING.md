@@ -2,7 +2,7 @@
 
 ## Existing test layers
 
-The backend suite lives in `vera-agent/tests/` and is organized around API/server, agents, configuration, environments, models, sessions, tools, and integration behavior. The current checkout contains 71 test files; this is a file count, not a pass rate or coverage claim. Tests for optional ConTree and Modal adapters are skipped when their extras are not installed.
+The backend suite lives in `vera-agent/tests/` and is organized around API/server, agents, configuration, environments, models, sessions, tools, and integration behavior. Tests for optional ConTree and Modal adapters are skipped when their extras are not installed.
 
 The frontend currently has TypeScript/Vite build and Oxlint checks, but no dedicated React component test runner in `frontend/package.json`. A successful production build checks compilation and bundling; it does not prove that every screen or backend interaction behaves correctly.
 
@@ -56,3 +56,30 @@ This acceptance covered the current workflow/architecture editor changes and the
 | Desktop chain | Restarted with `start-desktop.ps1` after the final frontend build; the pywebview process launched and `/api/topology` returned HTTP 200 | Passed |
 
 The Task Board test items were archived and are excluded from normal board listings; the synthetic Agent verification conversation remains in the test project history for inspection. The current temporary DeepSeek credential passed the model connection test and was used for the synthetic workflow/Task Board calls. Drag gesture itself was not exercised. This record accepts the tested interaction paths; it is not a clean-machine installer or release certification.
+
+## Release-preparation verification (2026-10-17)
+
+| Area | Verification | Result |
+| --- | --- | --- |
+| Backend | `tests/check-all.ps1` on Windows/Python 3.14.5 | 656 passed, 81 skipped, 3 warnings |
+| MCP example | Official SDK stdio handshake, tool discovery, and four read-only fixture calls | Passed |
+| Frontend | Oxlint and production TypeScript/Vite build | Passed |
+| Website | Static route, asset, and anchor checker | Passed for all three pages |
+| Locked installs | `uv lock --check`; clean temporary `npm ci --ignore-scripts` from `frontend/package-lock.json` | Passed |
+| License inventory | Clean temporary Windows desktop runtime environment plus all npm lockfile entries | 98 Python packages and 92 npm lockfile packages; no unknown license metadata |
+| npm package | `npm publish --dry-run --access public --registry=https://registry.npmjs.org` | Passed; tarball contained five expected files. No publication occurred. |
+| Workflow files | `actionlint` 1.7.12 and YAML parsing for CI, npm publish, Pages deploy, and Dependabot; Actions pinned to verified release commit SHAs | Passed locally; GitHub-hosted workflow runs have not been observed |
+
+These checks do not prove a clean-machine Windows install, a public GitHub Pages deployment, npm account ownership, or first publication. The npm package is not registered and its name is not reserved. Review [release limitations](INSTALL_WINDOWS.md) and [license provenance](LICENSES.md) before claiming public-release readiness.
+
+## Release-preparation follow-up (2026-10-18)
+
+| Area | Verification | Result |
+| --- | --- | --- |
+| Repository checks | `./tests/check-all.ps1` | Passed: 656 passed, 81 skipped, 3 warnings; MCP stdio smoke, website checker, frontend lint, and production build passed |
+| Clean Windows desktop dependencies | `uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.12` into a fresh temporary environment, followed by importing VeraAgent, pywebview, and uvicorn | Passed; 99 locked packages resolved, 98 runtime distributions inventoried |
+| Frontend clean install | Copied tracked frontend sources without `node_modules` or `dist` into a new temporary directory and ran `npm ci` | Passed; 49 packages installed, npm audit reported 0 vulnerabilities |
+| Frontend clean build | `npm run lint` and `npm run build` in that clean directory | Passed; Oxlint exited 0 and TypeScript/Vite production build completed |
+| License inventory | Regenerated from the clean Windows desktop environment and `frontend/package-lock.json` | Passed; 98 Python and 92 npm package rows, no unknown license metadata |
+
+The temporary verification environment and frontend copy are local build artifacts, not tracked repository content. These results verify reproducible dependency installation and frontend compilation; they do not replace a clean-machine desktop launch or external GitHub/npm account setup.

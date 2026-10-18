@@ -3,8 +3,8 @@
 **/.mini-coding-agent/
 **/.pi-agent/
 
-# Local reference checkouts kept outside the distributable repository
-scratch/dashi-taskboard-upstream/
+# Temporary experiments, local test workspaces, and downloaded reference repositories
+scratch/
 mini-coding-agent/
 pi-agent/
 piagent/

@@ -1,7 +1,6 @@
 import React from 'react';
 import { VeraLogo } from '../common/VeraLogo';
 
-
 export const WelcomeBanner: React.FC = () => {
   return (
     <div
@@ -14,12 +13,10 @@ export const WelcomeBanner: React.FC = () => {
         userSelect: 'none',
       }}
     >
-      {}
       <div style={{ marginBottom: 'var(--space-5)' }}>
         <VeraLogo size={52} />
       </div>
 
-      {}
       <h1
         style={{
           fontSize: 22,

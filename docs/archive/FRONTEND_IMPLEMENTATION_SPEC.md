@@ -1,7 +1,7 @@
 # VeraAgent 桌面端前端工程架构与实施规范说明书 (Frontend Implementation Specification)
 
 > **文档性质**：本文档为 **VeraAgent 桌面端应用前端工程的权威实施指导规范**。  
-> **制定依据**：严格对齐 Penpot 26 个核心原型画板与 [UI_Implementation.md](file:///c:/Users/FAST/Desktop/Multi-agents/UI_Implementation.md) 业务流转逻辑。  
+> **制定依据**：严格对齐 Penpot 26 个核心原型画板与 [UI_IMPLEMENTATION_LEGACY.md](UI_IMPLEMENTATION_LEGACY.md) 业务流转逻辑。
 > **核心铁律**：**严格对齐 Penpot 原型布局与文字（禁止擅自改动文案与空间排版），全量使用标准矢量图标（Lucide Vector），严禁前端编写超大单文件代码（严格践行原子组件解耦与逻辑外置）。**
 
 ---
@@ -26,7 +26,7 @@
 
 ## 一、 桌面端技术架构与运行选型澄清
 
-在 [UI_Implementation.md](file:///c:/Users/FAST/Desktop/Multi-agents/UI_Implementation.md) 中，目标形态明确为**“桌面端 App，本地化运行，一体化交付，无需用户在终端敲命令启动”**。针对该定位，确立以下技术架构选型：
+在 [UI_IMPLEMENTATION_LEGACY.md](UI_IMPLEMENTATION_LEGACY.md) 中，目标形态明确为**“桌面端 App，本地化运行，一体化交付，无需用户在终端敲命令启动”**。针对该定位，确立以下技术架构选型：
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -118,7 +118,7 @@ src/
 
 ## 三、 视窗布局系统与弹性伸缩机制（核心前端细节）
 
-严格对齐 [UI_Implementation.md](file:///c:/Users/FAST/Desktop/Multi-agents/UI_Implementation.md) 第 4 节中的交互规范：
+严格对齐 [UI_IMPLEMENTATION_LEGACY.md](UI_IMPLEMENTATION_LEGACY.md) 第 4 节中的交互规范：
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -166,7 +166,7 @@ src/
 
 ## 四、 Penpot 原型与文档 100% 严格对齐映射清单
 
-在 Penpot 中已创建的 26 个画板与 [UI_Implementation.md](file:///c:/Users/FAST/Desktop/Multi-agents/UI_Implementation.md) 中的业务逻辑**严格对齐，零文案修改**：
+在 Penpot 中已创建的 26 个画板与 [UI_IMPLEMENTATION_LEGACY.md](UI_IMPLEMENTATION_LEGACY.md) 中的业务逻辑**严格对齐，零文案修改**：
 
 | Penpot 原型画板名称 | 对应功能区域 / 模块定位 | 触发入口与交互动作 | 目标跳转与状态行为 |
 | :--- | :--- | :--- | :--- |
@@ -375,7 +375,7 @@ src/
 前端工程师在开发完成每个组件后，必须根据以下清单进行**严格逐项自检**，未通过自检不得提交代码：
 
 ### 1. Penpot 视觉与文字一致性自检 (Zero-Deviation Check)
-- [ ] **文案完全对齐**：检查页面中的每个文字，是否与 Penpot 原型和 `UI_Implementation.md` 完全一致？（例如：`新建对话`、`历史对话`、`计划任务`、`项目名称`、`选择项目`、`Ask anything, / for actions`、`模型切换 ▾` 等，严禁随意更名）；
+- [ ] **文案完全对齐**：检查页面中的每个文字，是否与 Penpot 原型和 `UI_IMPLEMENTATION_LEGACY.md` 完全一致？（例如：`新建对话`、`历史对话`、`计划任务`、`项目名称`、`选择项目`、`Ask anything, / for actions`、`模型切换 ▾` 等，严禁随意更名）；
 - [ ] **布局排版对齐**：左侧边栏是否为列表行而非卡片？项目是否包含折叠树与双方框/加号图标？右侧是否为 4 行 2 列工具卡片？
 - [ ] **全量矢量图标**：是否彻底摒弃位图与散乱 XML？是否全部使用规范化的 `lucide-react` 图标组件？
 - [ ] **暗夜玻璃拟态**：底色是否锁定为 `#0D0E12`？容器是否采用深色低透明磨砂（`#111217` / `#161720`）并辅以 `1px solid #1E2028` 极细高光边？

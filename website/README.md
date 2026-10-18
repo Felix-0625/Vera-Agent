@@ -10,6 +10,6 @@ All pages share `assets/site.css`, `assets/site.js`, and `assets/favicon.svg`. R
 
 ## GitHub Pages
 
-`.github/workflows/website-pages.yml` deploys the `website/` directory when manually triggered. It first validates local routes and assets. GitHub Pages must already be enabled for the repository and configured to use GitHub Actions. The workflow has not been triggered from this workspace; a successful local validation does not prove a public deployment.
+`.github/workflows/website-pages.yml` deploys the `website/` directory when manually triggered. It first validates local routes and assets. GitHub Pages must already be enabled for the repository and configured to use GitHub Actions. The external Actions are pinned to commit SHAs and maintained by weekly Dependabot updates. The workflow has not been triggered from this workspace; a successful local validation does not prove a public deployment.
 
 For another static host, publish the contents of this directory as the site root. No server-side secrets or environment variables are required.

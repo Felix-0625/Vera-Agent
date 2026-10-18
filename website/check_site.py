@@ -20,7 +20,7 @@ class PageInspector(HTMLParser):
         attributes = dict(attrs)
         if element_id := attributes.get("id"):
             self.ids.add(element_id)
-        for attribute in ("href", "src"):
+        for attribute in ("href", "src", "poster"):
             value = attributes.get(attribute)
             if value:
                 self.links.append((tag, value))

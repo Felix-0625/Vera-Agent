@@ -1,6 +1,6 @@
 # Third-party dependency license inventory
 
-Generated on 2026-10-17 from the locked Windows desktop runtime environment and `frontend/package-lock.json`.
+Generated on 2026-10-18 from the locked Windows desktop runtime environment and `frontend/package-lock.json`.
 The Python section reflects packages installed in the supplied environment; create that environment from the locked `desktop` extra before regenerating.
 The npm section includes every package in the lockfile, including development-only and platform-specific packages.
 License strings come from distribution metadata, license files, classifiers, or npm lock metadata. `UNKNOWN` requires maintainer review.
