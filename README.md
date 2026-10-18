@@ -8,7 +8,7 @@ VeraAgent 是一个面向本地软件项目的桌面 AI Agent 工作站：把项
 
 [![VeraAgent 交互演示预览](website/assets/video/demo-poster.png)](website/assets/video/veraagent-task-collaboration-demo.webm)
 
-这是一个基于脚本数据的交互演示，不连接 VeraAgent 后端、模型服务或访客本地文件。可以[查看演示页面源码](website/playground/)或[打开演示录像](website/assets/video/veraagent-task-collaboration-demo.webm)。
+这是一个基于脚本数据的交互演示，不连接 VeraAgent 后端、模型服务或访客本地文件。可以[查看演示页面源码](website/playground/index.html)或[打开演示录像](website/assets/video/veraagent-task-collaboration-demo.webm)。
 
 ## 当前能做什么
 
@@ -45,13 +45,11 @@ cd ..
 frontend/              React + TypeScript 桌面界面
 vera-agent/            Python Agent、工具、会话和本地 API
 vera-agent/tests/      后端单元、集成和 API 测试
-examples/              可单独运行的项目/MCP 示例
+examples/              项目配置示例与只读 MCP 服务示例
 tests/                 仓库级验证入口与测试说明
 docs/                  面向使用者和维护者的事实型文档
 website/               静态产品介绍页与 GitHub Pages 部署配置
 ```
-
-`mcp-sever/` 曾作为未配置远端的嵌套 Git 指针存在，其他克隆无法可靠取得。可复现的 MCP 示例已放在 `examples/mcp-server/`。本机原目录保留为忽略的本地副本。
 
 ## 验证
 
@@ -72,7 +70,10 @@ website/               静态产品介绍页与 GitHub Pages 部署配置
 | `OPENROUTER_API_KEY` | OpenRouter 模型服务密钥 | 未设置 | 仅选择 OpenRouter 时 |
 | `PORTKEY_API_KEY` | Portkey 网关密钥 | 未设置 | 仅选择 Portkey 时 |
 | `PORTKEY_VIRTUAL_KEY` | Portkey 虚拟密钥；按所用 Portkey 模型配置 | 未设置 | 否 |
+| `REQUESTY_API_KEY` | Requesty 模型服务密钥 | 未设置 | 仅选择 Requesty 时 |
 | `TAVILY_API_KEY` | 可选 Tavily 网页搜索；未配置时搜索工具尝试 DuckDuckGo | 未设置 | 否 |
+| `LITELLM_MODEL_REGISTRY_PATH` | LiteLLM 自定义模型元数据注册表路径 | 未设置 | 否 |
+| `MSWEA_COST_TRACKING` | 成本元数据缺失或报错时的处理方式：`default` 或 `ignore_errors` | `default` | 否 |
 | `MSWEA_GLOBAL_COST_LIMIT` | 进程级模型累计费用上限；`0` 表示禁用 | `0` | 否 |
 | `MSWEA_GLOBAL_CALL_LIMIT` | 进程级模型调用次数上限；`0` 表示禁用 | `0` | 否 |
 | `MSWEA_MODEL_RETRY_STOP_AFTER_ATTEMPT` | 模型请求最多尝试次数 | `10` | 否 |
@@ -85,7 +86,9 @@ website/               静态产品介绍页与 GitHub Pages 部署配置
 - [架构概览](docs/ARCHITECTURE.md)
 - [工具、权限与 MCP](docs/TOOLS_AND_MCP.md)
 - [配置与本地数据](docs/CONFIGURATION.md)
+- [可运行示例说明](examples/README.md)
 - [测试与已知限制](docs/TESTING.md)
+- [Windows 源码安装](docs/INSTALL_WINDOWS.md)
 - [贡献指南](CONTRIBUTING.md)
 - [网站现状](website/README.md)
 

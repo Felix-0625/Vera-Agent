@@ -33,7 +33,7 @@ The top-level script stops on the first failing command and prints each stage. I
 ## What these checks do not prove
 
 - Mock model tests do not prove compatibility with every provider or that a key is valid.
-- API tests do not prove the Windows pywebview picker, WebView2 runtime, or installer works on a clean machine.
+- API tests do not prove the Windows pywebview picker, WebView2 runtime, or first launch from a clean checkout.
 - A workflow template saved in storage does not prove a full workflow run, visible stage trace, and result return path.
 - MCP protocol smoke tests do not certify a package’s safety.
 - Passing tests do not establish performance or benchmark results. Publish only measured results with the exact dataset, command, and environment.
@@ -55,7 +55,7 @@ This acceptance covered the current workflow/architecture editor changes and the
 | Python style | Ruff on changed workflow/chat/taskboard routes and their focused API tests | Passed |
 | Desktop chain | Restarted with `start-desktop.ps1` after the final frontend build; the pywebview process launched and `/api/topology` returned HTTP 200 | Passed |
 
-The Task Board test items were archived and are excluded from normal board listings; the synthetic Agent verification conversation remains in the test project history for inspection. The current temporary DeepSeek credential passed the model connection test and was used for the synthetic workflow/Task Board calls. Drag gesture itself was not exercised. This record accepts the tested interaction paths; it is not a clean-machine installer or release certification.
+Task Board test items were archived after the run. The temporary provider credential passed a connection check and was used for synthetic workflow and Task Board calls. Drag gesture itself was not exercised. This record accepts the tested interaction paths; it is not a clean-machine first-launch or release certification.
 
 ## Release-preparation verification (2026-10-17)
 
