@@ -1,7 +1,7 @@
 # Third-party dependency license inventory
 
-Generated on 2026-10-18 from the locked Windows desktop runtime environment and `frontend/package-lock.json`.
-The Python section reflects packages installed in the supplied environment; create that environment from the locked `desktop` extra before regenerating.
+Generated on 2026-10-18 from the locked Windows desktop runtime environments and `frontend/package-lock.json`.
+The Python sections cover the declared minimum runtime and the current release-test Python version; both environments are resolved from the locked `desktop` extra.
 The npm section includes every package in the lockfile, including development-only and platform-specific packages.
 License strings come from distribution metadata, license files, classifiers, or npm lock metadata. `UNKNOWN` requires maintainer review.
 This inventory is not legal advice and does not replace retaining upstream notices in redistributed artifacts.
@@ -11,17 +11,126 @@ This inventory is not legal advice and does not replace retaining upstream notic
 Run these commands from the repository root after changing a dependency lockfile:
 
 ```powershell
-$auditEnv = Join-Path $env:TEMP 'veraagent-license-audit'
-$requirements = Join-Path $env:TEMP 'veraagent-release-requirements.txt'
-uv venv $auditEnv --python 3.12
-uv export --project vera-agent --locked --no-dev --extra desktop --no-hashes --no-annotate --no-header --format requirements-txt | Set-Content -LiteralPath $requirements -Encoding utf8
-uv pip install --directory vera-agent --python (Join-Path $auditEnv 'Scripts/python.exe') -r $requirements
-python scripts/generate_license_inventory.py --python (Join-Path $auditEnv 'Scripts/python.exe')
+$python310 = Join-Path $env:TEMP 'veraagent-license-audit-310'
+$python312 = Join-Path $env:TEMP 'veraagent-license-audit-312'
+$env:UV_PROJECT_ENVIRONMENT = $python310
+uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.10
+$env:UV_PROJECT_ENVIRONMENT = $python312
+uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.12
+Remove-Item Env:UV_PROJECT_ENVIRONMENT
+python scripts/generate_license_inventory.py --python (Join-Path $python310 'Scripts/python.exe') (Join-Path $python312 'Scripts/python.exe')
 ```
 
-Python packages: 98; frontend lockfile packages: 92.
+Python package rows across supported runtimes: 200; frontend lockfile packages: 92.
 
-## Python Windows desktop runtime
+## Python 3.10 Windows desktop runtime
+
+| Package | Version | License metadata |
+| --- | --- | --- |
+| `aiohappyeyeballs` | `2.7.1` | PSF-2.0 |
+| `aiohttp` | `3.14.3` | Apache-2.0 AND MIT |
+| `aiosignal` | `1.4.0` | Apache 2.0 |
+| `annotated-doc` | `0.0.5` | MIT |
+| `annotated-types` | `0.8.0` | MIT |
+| `anyio` | `4.15.1` | MIT |
+| `async-timeout` | `5.0.1` | Apache 2 |
+| `attrs` | `26.1.0` | MIT |
+| `boto3` | `1.43.108` | Apache-2.0 |
+| `botocore` | `1.43.108` | Apache-2.0 |
+| `bottle` | `0.13.4` | MIT |
+| `certifi` | `2026.7.22` | MPL-2.0 |
+| `cffi` | `2.1.1` | MIT-0 |
+| `charset-normalizer` | `3.5.2` | MIT |
+| `click` | `8.5.0` | BSD-3-Clause |
+| `clr_loader` | `0.3.1` | MIT (license file) |
+| `colorama` | `0.4.6` | OSI Approved :: BSD License |
+| `cryptography` | `50.0.2` | Apache-2.0 OR BSD-3-Clause |
+| `datasets` | `5.0.1` | Apache 2.0 |
+| `dill` | `0.4.1` | BSD-3-Clause |
+| `distro` | `1.9.0` | Apache License, Version 2.0 |
+| `exceptiongroup` | `1.3.1` | OSI Approved :: MIT License |
+| `fastuuid` | `0.14.0` | OSI Approved :: BSD License |
+| `filelock` | `4.0.9` | MIT |
+| `frozenlist` | `1.8.0` | Apache-2.0 |
+| `fsspec` | `2026.6.0` | BSD-3-Clause |
+| `h11` | `0.16.0` | MIT |
+| `h2` | `4.4.1` | MIT |
+| `hf-xet` | `1.6.0` | Apache-2.0 |
+| `hpack` | `4.2.0` | MIT |
+| `httpcore` | `1.0.9` | BSD-3-Clause |
+| `httpx` | `0.28.1` | BSD-3-Clause |
+| `httpx-sse` | `0.4.3` | MIT |
+| `huggingface_hub` | `1.33.0` | Apache-2.0 |
+| `hyperframe` | `6.1.0` | MIT |
+| `idna` | `3.20` | BSD-3-Clause |
+| `importlib_metadata` | `8.9.0` | Apache-2.0 |
+| `Jinja2` | `3.1.6` | OSI Approved :: BSD License |
+| `jiter` | `0.17.0` | MIT |
+| `jmespath` | `1.1.0` | MIT |
+| `jsonschema` | `4.26.0` | MIT |
+| `jsonschema-specifications` | `2025.9.1` | MIT |
+| `linkify-it-py` | `2.2.0` | MIT |
+| `litellm` | `1.103.2` | MIT |
+| `markdown-it-py` | `4.2.0` | OSI Approved :: MIT License |
+| `MarkupSafe` | `3.0.4` | BSD-3-Clause |
+| `mcp` | `1.30.0` | MIT |
+| `mdit-py-plugins` | `0.6.1` | OSI Approved :: MIT License |
+| `mdurl` | `0.1.2` | OSI Approved :: MIT License |
+| `multidict` | `6.9.1` | Apache License 2.0 |
+| `multiprocess` | `0.70.19` | BSD-3-Clause |
+| `numpy` | `2.2.6` | Copyright (c) 2005-2024, NumPy Developers. |
+| `openai` | `2.54.0` | Apache-2.0 |
+| `packaging` | `26.3` | Apache-2.0 OR BSD-2-Clause |
+| `pandas` | `2.3.3` | BSD 3-Clause License |
+| `platformdirs` | `4.12.2` | MIT |
+| `prompt_toolkit` | `3.0.53` | OSI Approved :: BSD License |
+| `propcache` | `0.5.4` | Apache-2.0 |
+| `proxy_tools` | `0.1.0` | MIT |
+| `pyarrow` | `25.0.1` | Apache-2.0 |
+| `pycparser` | `3.11` | BSD-3-Clause |
+| `pydantic` | `2.13.5` | MIT |
+| `pydantic-settings` | `2.15.0` | MIT |
+| `pydantic_core` | `2.46.5` | MIT |
+| `Pygments` | `2.21.0` | BSD-2-Clause |
+| `PyJWT` | `2.15.1` | MIT |
+| `python-dateutil` | `2.9.0.post0` | Dual License |
+| `python-dotenv` | `1.2.4` | BSD-3-Clause |
+| `python-multipart` | `0.0.32` | Apache-2.0 |
+| `pythonnet` | `3.1.0` | MIT |
+| `pytz` | `2026.4` | MIT |
+| `pywebview` | `6.2.1` | BSD 3-Clause License |
+| `pywin32` | `312` | PSF |
+| `PyYAML` | `6.0.3` | MIT |
+| `referencing` | `0.37.0` | MIT |
+| `regex` | `2026.9.29` | Apache-2.0 AND CNRI-Python |
+| `requests` | `2.34.2` | Apache-2.0 |
+| `rich` | `15.0.0` | MIT |
+| `rpds-py` | `0.30.0` | MIT |
+| `s3transfer` | `0.19.2` | Apache License 2.0 |
+| `shellingham` | `1.5.4` | ISC License |
+| `six` | `1.17.0` | MIT |
+| `sniffio` | `1.3.1` | MIT OR Apache-2.0 |
+| `sse-starlette` | `3.5.0` | BSD-3-Clause |
+| `starlette` | `1.7.0` | BSD-3-Clause |
+| `tenacity` | `9.1.4` | Apache 2.0 |
+| `textual` | `8.2.8` | MIT |
+| `tiktoken` | `0.14.0` | MIT |
+| `tokenizers` | `0.23.2` | OSI Approved :: Apache Software License |
+| `tomli` | `2.4.1` | MIT |
+| `tqdm` | `4.70.1` | MPL-2.0 AND MIT |
+| `typer` | `0.27.2` | MIT |
+| `typing-inspection` | `0.4.4` | MIT |
+| `typing_extensions` | `4.16.0` | PSF-2.0 |
+| `tzdata` | `2026.4` | Apache-2.0 |
+| `urllib3` | `2.8.0` | MIT |
+| `uvicorn` | `0.54.0` | BSD-3-Clause |
+| `wcwidth` | `0.9.1` | OSI Approved :: MIT License |
+| `websockets` | `16.1.1` | BSD-3-Clause |
+| `xxhash` | `4.0.1` | BSD-2-Clause |
+| `yarl` | `1.25.1` | Apache-2.0 |
+| `zipp` | `4.1.0` | MIT |
+
+## Python 3.12 Windows desktop runtime
 
 | Package | Version | License metadata |
 | --- | --- | --- |

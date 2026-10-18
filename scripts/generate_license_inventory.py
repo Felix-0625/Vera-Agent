@@ -13,12 +13,13 @@ ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "docs" / "THIRD_PARTY_LICENSES.md"
 
 
-def python_inventory(interpreter: Path) -> list[tuple[str, str, str]]:
+def python_inventory(interpreter: Path) -> tuple[str, list[tuple[str, str, str]]]:
     payload = r"""
 import json
 from importlib import metadata
 from pathlib import Path
 import re
+import sys
 
 def license_for(dist):
     expression = dist.metadata.get('License-Expression')
@@ -57,7 +58,10 @@ for dist in metadata.distributions():
     if not name or name.lower().replace('_', '-') == 'vera-agent':
         continue
     rows.append((name, dist.version, license_for(dist)))
-print(json.dumps(sorted(rows, key=lambda row: row[0].lower()), ensure_ascii=False))
+print(json.dumps({
+    'python': '.'.join(map(str, sys.version_info[:2])),
+    'packages': sorted(rows, key=lambda row: row[0].lower()),
+}, ensure_ascii=False))
 """
     completed = subprocess.run(
         [str(interpreter), "-c", payload],
@@ -66,8 +70,11 @@ print(json.dumps(sorted(rows, key=lambda row: row[0].lower()), ensure_ascii=Fals
         text=True,
         encoding="utf-8",
     )
-    rows = json.loads(completed.stdout)
-    return [(str(name), str(version), str(license_name)) for name, version, license_name in rows]
+    result = json.loads(completed.stdout)
+    rows = result["packages"]
+    return str(result["python"]), [
+        (str(name), str(version), str(license_name)) for name, version, license_name in rows
+    ]
 
 
 def frontend_inventory() -> list[tuple[str, str, str, str]]:
@@ -97,18 +104,20 @@ def main() -> None:
     parser.add_argument(
         "--python",
         required=True,
+        nargs="+",
         type=Path,
-        help="Python executable for a clean install of the locked Windows desktop runtime dependencies",
+        help="Python executables for clean installs of the locked Windows desktop runtime dependencies",
     )
     args = parser.parse_args()
 
-    python_rows = python_inventory(args.python.resolve())
+    python_inventories = [python_inventory(interpreter.resolve()) for interpreter in args.python]
     npm_rows = frontend_inventory()
+    total_python_rows = sum(len(rows) for _, rows in python_inventories)
     lines = [
         "# Third-party dependency license inventory",
         "",
-        f"Generated on {date.today().isoformat()} from the locked Windows desktop runtime environment and `frontend/package-lock.json`.",
-        "The Python section reflects packages installed in the supplied environment; create that environment from the locked `desktop` extra before regenerating.",
+        f"Generated on {date.today().isoformat()} from the locked Windows desktop runtime environments and `frontend/package-lock.json`.",
+        "The Python sections cover the declared minimum runtime and the current release-test Python version; both environments are resolved from the locked `desktop` extra.",
         "The npm section includes every package in the lockfile, including development-only and platform-specific packages.",
         "License strings come from distribution metadata, license files, classifiers, or npm lock metadata. `UNKNOWN` requires maintainer review.",
         "This inventory is not legal advice and does not replace retaining upstream notices in redistributed artifacts.",
@@ -118,22 +127,32 @@ def main() -> None:
         "Run these commands from the repository root after changing a dependency lockfile:",
         "",
         "```powershell",
-        "$auditEnv = Join-Path $env:TEMP 'veraagent-license-audit'",
-        "$requirements = Join-Path $env:TEMP 'veraagent-release-requirements.txt'",
-        "uv venv $auditEnv --python 3.12",
-        "uv export --project vera-agent --locked --no-dev --extra desktop --no-hashes --no-annotate --no-header --format requirements-txt | Set-Content -LiteralPath $requirements -Encoding utf8",
-        "uv pip install --directory vera-agent --python (Join-Path $auditEnv 'Scripts/python.exe') -r $requirements",
-        "python scripts/generate_license_inventory.py --python (Join-Path $auditEnv 'Scripts/python.exe')",
+        "$python310 = Join-Path $env:TEMP 'veraagent-license-audit-310'",
+        "$python312 = Join-Path $env:TEMP 'veraagent-license-audit-312'",
+        "$env:UV_PROJECT_ENVIRONMENT = $python310",
+        "uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.10",
+        "$env:UV_PROJECT_ENVIRONMENT = $python312",
+        "uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.12",
+        "Remove-Item Env:UV_PROJECT_ENVIRONMENT",
+        "python scripts/generate_license_inventory.py --python (Join-Path $python310 'Scripts/python.exe') (Join-Path $python312 'Scripts/python.exe')",
         "```",
         "",
-        f"Python packages: {len(python_rows)}; frontend lockfile packages: {len(npm_rows)}.",
-        "",
-        "## Python Windows desktop runtime",
-        "",
-        "| Package | Version | License metadata |",
-        "| --- | --- | --- |",
+        f"Python package rows across supported runtimes: {total_python_rows}; frontend lockfile packages: {len(npm_rows)}.",
     ]
-    lines.extend(f"| `{name}` | `{version}` | {markdown_cell(license_name)} |" for name, version, license_name in python_rows)
+    for version, rows in python_inventories:
+        lines.extend(
+            [
+                "",
+                f"## Python {version} Windows desktop runtime",
+                "",
+                "| Package | Version | License metadata |",
+                "| --- | --- | --- |",
+            ]
+        )
+        lines.extend(
+            f"| `{name}` | `{package_version}` | {markdown_cell(license_name)} |"
+            for name, package_version, license_name in rows
+        )
     lines.extend(
         [
             "",
@@ -149,9 +168,15 @@ def main() -> None:
     )
     lines.append("")
     REPORT_PATH.write_text("\n".join(lines), encoding="utf-8", newline="\n")
-    unknown_python = [row for row in python_rows if "UNKNOWN" in row[2]]
+    unknown_python = [
+        row for _, rows in python_inventories for row in rows if "UNKNOWN" in row[2]
+    ]
     unknown_npm = [row for row in npm_rows if "UNKNOWN" in row[2]]
-    print(f"Wrote {REPORT_PATH.relative_to(ROOT)} ({len(python_rows)} Python, {len(npm_rows)} npm packages).")
+    print(
+        f"Wrote {REPORT_PATH.relative_to(ROOT)} "
+        f"({total_python_rows} Python rows across {len(python_inventories)} runtimes, "
+        f"{len(npm_rows)} npm packages)."
+    )
     if unknown_python or unknown_npm:
         print(f"Unknown license metadata: {len(unknown_python)} Python, {len(unknown_npm)} npm packages.")
         raise SystemExit(1)

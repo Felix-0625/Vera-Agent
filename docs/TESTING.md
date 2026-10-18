@@ -78,8 +78,9 @@ These checks do not prove a clean-machine Windows install, a public GitHub Pages
 | --- | --- | --- |
 | Repository checks | `./tests/check-all.ps1` | Passed: 656 passed, 81 skipped, 3 warnings; MCP stdio smoke, website checker, frontend lint, and production build passed |
 | Clean Windows desktop dependencies | `uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.12` into a fresh temporary environment, followed by importing VeraAgent, pywebview, and uvicorn | Passed; 99 locked packages resolved, 98 runtime distributions inventoried |
+| Minimum Python runtime | Fresh `uv sync --project vera-agent --locked --no-dev --extra desktop --python 3.10` environment and imports for VeraAgent, pywebview, and uvicorn | Passed on CPython 3.10.20; 103 locked packages installed |
 | Frontend clean install | Copied tracked frontend sources without `node_modules` or `dist` into a new temporary directory and ran `npm ci` | Passed; 49 packages installed, npm audit reported 0 vulnerabilities |
 | Frontend clean build | `npm run lint` and `npm run build` in that clean directory | Passed; Oxlint exited 0 and TypeScript/Vite production build completed |
-| License inventory | Regenerated from the clean Windows desktop environment and `frontend/package-lock.json` | Passed; 98 Python and 92 npm package rows, no unknown license metadata |
+| License inventory | Regenerated from clean Python 3.10 and 3.12 Windows desktop environments plus `frontend/package-lock.json` | Passed; 200 Python rows across both runtime versions and 92 npm package rows, no unknown license metadata |
 
 The temporary verification environment and frontend copy are local build artifacts, not tracked repository content. These results verify reproducible dependency installation and frontend compilation; they do not replace a clean-machine desktop launch or external GitHub/npm account setup.
