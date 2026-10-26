@@ -55,3 +55,34 @@ def _save_run(run_file: Path, run: dict[str, Any]) -> None:
     temporary = run_file.with_name(f"{run_file.name}.{uuid.uuid4().hex}.tmp")
     temporary.write_text(json.dumps(run, indent=2, ensure_ascii=False), encoding="utf-8")
     temporary.replace(run_file)
+
+
+def organization_tree_error(nodes: list[Any], edges: list[Any]) -> str | None:
+    """Return why ``edges`` are not a valid organization tree, or None.
+
+    Organizations (``group_mode == "architecture"``) are reporting hierarchies: every edge points
+    from a superior to a subordinate agent, each role has at most one superior, there is exactly
+    one top role, and there are no cycles. Workflows allow general graphs and are not checked here.
+    """
+    agents = {node.get("id") for node in nodes if isinstance(node, dict) and node.get("type", "agent") == "agent"}
+    if len(agents) != len([node for node in nodes if isinstance(node, dict)]):
+        return "组织架构只能包含职责窗口，不能包含判断或循环节点。"
+    parents: dict[str, str] = {}
+    for edge in edges:
+        source, target = edge.get("source"), edge.get("target")
+        if source == target:
+            return "组织架构中的职责窗口不能指向自己。"
+        if target in parents:
+            return "每个职责窗口只能有一个直接上级。"
+        parents[target] = source
+    roots = [node_id for node_id in agents if node_id not in parents]
+    if len(roots) != 1:
+        return "组织架构必须且只能有一个顶层职责窗口；请通过“添加下级 / 添加同级”建立上下级关系。"
+    for node_id in agents:
+        seen = set()
+        while node_id in parents:
+            if node_id in seen:
+                return "组织架构的上下级关系不能形成循环。"
+            seen.add(node_id)
+            node_id = parents[node_id]
+    return None

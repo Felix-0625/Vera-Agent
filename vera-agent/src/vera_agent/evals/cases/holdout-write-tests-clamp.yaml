@@ -1,0 +1,48 @@
+id: holdout-write-tests-clamp
+split: holdout
+tags: [tests, python]
+task: |
+  ranges.py 目前没有测试。请在 `tests/test_ranges.py` 中用 unittest 编写测试，覆盖 `clamp` 文档字符串中
+  描述的所有行为（区间内、低于下限、高于上限、边界值、lo > hi 时报错）。测试必须在当前（正确的）实现下通过。
+  不要修改 ranges.py。
+fixture:
+  ranges.py: |
+    """Numeric range helpers."""
+
+
+    def clamp(value, lo, hi):
+        """Return ``value`` limited to the closed interval ``[lo, hi]``.
+
+        Values below ``lo`` return ``lo``, values above ``hi`` return ``hi``, boundary values are
+        returned unchanged. Raises ``ValueError`` if ``lo > hi``.
+        """
+        if lo > hi:
+            raise ValueError("lo must not exceed hi")
+        if value < lo:
+            return lo
+        if value > hi:
+            return hi
+        return value
+  tests/__init__.py: ""
+accept: |
+  git diff --quiet HEAD -- ranges.py && test -f tests/test_ranges.py && python -m unittest discover -s tests -t . -q && python -c '
+  import pathlib, shutil, subprocess, sys, tempfile
+  src = pathlib.Path("ranges.py").read_text(encoding="utf-8")
+  mutants = [
+      src.replace("if lo > hi:", "if False:"),
+      src.replace("return lo\n", "return value\n"),
+      src.replace("return hi\n", "return value\n"),
+      src.replace("value < lo", "value <= lo - 1"),
+      src.replace("value > hi:\n        return hi", "value > hi:\n        return lo"),
+  ]
+  for i, mutant in enumerate(mutants):
+      assert mutant != src, i
+      with tempfile.TemporaryDirectory() as tmp:
+          shutil.copytree("tests", pathlib.Path(tmp) / "tests")
+          (pathlib.Path(tmp) / "ranges.py").write_text(mutant, encoding="utf-8")
+          code = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-t", ".", "-q"], cwd=tmp, capture_output=True).returncode
+          assert code != 0, f"tests do not catch mutant {i}"
+  print("ok")'
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 10
+timeout: 60

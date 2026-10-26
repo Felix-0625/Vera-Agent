@@ -12,6 +12,7 @@ export const DEFAULT_TOOL_TABS: ToolTab[] = [INITIAL_TAB];
 const DEFAULT_TOOL_TITLES: Partial<Record<ToolTabId, string>> = {
   launcher: '新标签页', diff: '变更', files: '文件', fileDocument: '文件', terminal: '终端', sidechat: '侧边聊天',
   subagents: '子智能体', metrics: '数据看板', gitflow: 'GitFlow', workflow: '流程编排',
+  traces: '执行记录', memory: '长期记忆', evolution: '改进提案',
 };
 export const getConversationToolScope = () => {
   const { activeThreadId, draftConversationId } = useChatStore.getState();

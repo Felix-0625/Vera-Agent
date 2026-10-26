@@ -1,0 +1,41 @@
+id: train-implement-from-docstring
+split: train
+tags: [feature, python, spec]
+task: |
+  chunks.py 中的 `chunk` 函数只有文档字符串，函数体是 `raise NotImplementedError`。
+  请按文档字符串的规格实现它。
+fixture:
+  chunks.py: |
+    """Batching helpers."""
+
+
+    def chunk(seq, size):
+        """Split ``seq`` into consecutive lists of length ``size``.
+
+        - The last chunk may be shorter.
+        - ``seq`` may be any iterable (list, tuple, generator, string); chunks are always lists.
+        - An empty iterable returns ``[]``.
+        - ``size`` must be an int >= 1, otherwise raise ``ValueError``.
+
+        >>> chunk([1, 2, 3, 4, 5], 2)
+        [[1, 2], [3, 4], [5]]
+        """
+        raise NotImplementedError
+accept: |
+  python -c '
+  from chunks import chunk
+  assert chunk([1, 2, 3, 4, 5], 2) == [[1, 2], [3, 4], [5]]
+  assert chunk((x for x in range(4)), 2) == [[0, 1], [2, 3]]
+  assert chunk("abc", 5) == [["a", "b", "c"]]
+  assert chunk([], 3) == []
+  for bad in (0, -1):
+      try:
+          chunk([1], bad)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError(bad)
+  print("ok")'
+allowed_commands: ["python *.py", "python -c *"]
+max_tool_calls: 8
+timeout: 60

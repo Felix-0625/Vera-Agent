@@ -38,6 +38,7 @@ from vera_agent.server.routes.group_store import (
     _load_group,
     _project_root,
     _save_group,
+    organization_tree_error,
 )
 from vera_agent.server.routes.runs import create_group_run, update_group_run
 from vera_agent.server.routes.templates import get_templates, save_topology_template
@@ -295,6 +296,8 @@ async def update_group(request: Request) -> JSONResponse:
             for edge in edges
         ):
             return JSONResponse({"error": "Every edge must connect two existing nodes"}, status_code=400)
+        if group_record.get("group_mode") == "architecture" and (tree_error := organization_tree_error(nodes, edges)):
+            return JSONResponse({"error": tree_error}, status_code=400)
         _materialize_group_sessions(state, project_root, group_record)
         _save_group(project_root, group_record)
         registry_mgr = RegistryManager(project_root)
@@ -570,6 +573,8 @@ async def create_group_instance(request: Request) -> JSONResponse:
         )
     ):
         return JSONResponse({"error": "Invalid node IDs or edges"}, status_code=400)
+    if group_mode == "architecture" and (tree_error := organization_tree_error(nodes, edges)):
+        return JSONResponse({"error": tree_error}, status_code=400)
     group_id = f"flow_{uuid.uuid4().hex[:10]}"
     record = {
         "group_id": group_id,

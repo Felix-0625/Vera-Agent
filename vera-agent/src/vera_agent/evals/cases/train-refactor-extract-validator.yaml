@@ -1,0 +1,61 @@
+id: train-refactor-extract-validator
+split: train
+tags: [refactor, python]
+task: |
+  users.py and signup.py both contain the same inline e-mail validation logic. Extract it into a
+  new module validators.py as `is_valid_email(email)` and make both files import and use it
+  instead of their own copy. Behaviour must not change; the existing tests must keep passing.
+  Do not modify tests/.
+fixture:
+  users.py: |
+    """User records."""
+
+
+    def make_user(name, email):
+        email = email.strip().lower()
+        if "@" not in email or email.startswith("@") or "." not in email.split("@")[-1]:
+            raise ValueError(f"invalid email: {email}")
+        return {"name": name, "email": email}
+  signup.py: |
+    """Signup form handling."""
+
+
+    def validate_form(form):
+        errors = []
+        email = form.get("email", "").strip().lower()
+        if "@" not in email or email.startswith("@") or "." not in email.split("@")[-1]:
+            errors.append("email")
+        if not form.get("name"):
+            errors.append("name")
+        return errors
+  tests/__init__.py: ""
+  tests/test_users.py: |
+    import unittest
+
+    from signup import validate_form
+    from users import make_user
+
+
+    class UsersTest(unittest.TestCase):
+        def test_make_user(self):
+            self.assertEqual(make_user("a", " A@x.io ")["email"], "a@x.io")
+            for bad in ("ax.io", "@x.io", "a@xio"):
+                with self.assertRaises(ValueError):
+                    make_user("a", bad)
+
+        def test_form(self):
+            self.assertEqual(validate_form({"name": "a", "email": "a@x.io"}), [])
+            self.assertEqual(validate_form({"email": "bad"}), ["email", "name"])
+accept: |
+  git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q && python -c '
+  import ast, pathlib
+  from validators import is_valid_email
+  assert is_valid_email(" A@x.io ") and not is_valid_email("@x.io") and not is_valid_email("a@xio")
+  for name in ("users.py", "signup.py"):
+      src = pathlib.Path(name).read_text(encoding="utf-8")
+      assert "is_valid_email" in src, name
+      assert "startswith(\"@\")" not in src and "startswith(\x27@\x27)" not in src, name
+  print("ok")'
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 12
+timeout: 60

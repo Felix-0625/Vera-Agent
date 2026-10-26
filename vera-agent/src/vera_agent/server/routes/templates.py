@@ -16,6 +16,7 @@ from starlette.responses import JSONResponse
 
 from vera_agent.server.routes.group_store import (
     _get_state,
+    organization_tree_error,
 )
 from vera_agent.session.templates import BUILTIN_TEMPLATES
 
@@ -67,6 +68,8 @@ async def save_topology_template(request: Request) -> JSONResponse:
         for edge in edges
     ):
         return JSONResponse({"error": "Every template edge must connect two existing nodes"}, status_code=400)
+    if body.get("topology_type") == "architecture" and (tree_error := organization_tree_error(nodes, edges)):
+        return JSONResponse({"error": tree_error}, status_code=400)
     template_id = str(body.get("template_id") or f"tpl_{uuid.uuid4().hex[:10]}")
     template = {
         "template_id": template_id,

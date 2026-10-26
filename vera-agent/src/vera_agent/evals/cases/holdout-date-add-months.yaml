@@ -1,0 +1,45 @@
+id: holdout-date-add-months
+split: holdout
+tags: [fix, python, date]
+task: |
+  订阅续费日期计算有 bug：1 月 31 日加一个月会抛 ValueError，12 月加一个月年份也不对。
+  请按文档字符串修复 billing.py 中的 `add_months`，让 tests/ 中的测试通过。不要修改 tests/ 目录。
+fixture:
+  billing.py: |
+    """Subscription billing dates."""
+
+    from datetime import date
+
+
+    def add_months(day, months):
+        """Return ``day`` shifted by ``months`` (may be negative).
+
+        If the target month is shorter, clamp to its last day (Jan 31 + 1 month -> Feb 28/29).
+        """
+        month = day.month + months
+        return date(day.year, month, day.day)
+  tests/__init__.py: ""
+  tests/test_billing.py: |
+    import unittest
+    from datetime import date
+
+    from billing import add_months
+
+
+    class AddMonthsTest(unittest.TestCase):
+        def test_simple(self):
+            self.assertEqual(add_months(date(2024, 3, 15), 1), date(2024, 4, 15))
+
+        def test_clamp(self):
+            self.assertEqual(add_months(date(2023, 1, 31), 1), date(2023, 2, 28))
+            self.assertEqual(add_months(date(2024, 1, 31), 1), date(2024, 2, 29))
+            self.assertEqual(add_months(date(2024, 5, 31), -1), date(2024, 4, 30))
+
+        def test_year_wrap(self):
+            self.assertEqual(add_months(date(2024, 12, 10), 1), date(2025, 1, 10))
+            self.assertEqual(add_months(date(2024, 1, 10), -1), date(2023, 12, 10))
+            self.assertEqual(add_months(date(2024, 2, 29), 24), date(2026, 2, 28))
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 10
+timeout: 60

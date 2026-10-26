@@ -1,0 +1,46 @@
+id: guard-fix-syntax-error
+split: guard
+tags: [guard, fix, syntax]
+task: |
+  运行测试时 parser.py 报 SyntaxError，请修复它，让 tests/ 下的测试通过。不要修改 tests/ 目录。
+fixture:
+  parser.py: |
+    """Parse key=value lines."""
+
+
+    def parse_line(line):
+        key, sep, value = line.partition("=")
+        if not sep:
+            return None
+        return key.strip(), value.strip()
+
+
+    def parse_text(text):
+        result = {}
+        for line in text.splitlines()
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            pair = parse_line(line)
+            if pair:
+                result[pair[0]] = pair[1]
+        return result
+  tests/__init__.py: ""
+  tests/test_parser.py: |
+    import unittest
+
+    from parser import parse_line, parse_text
+
+
+    class ParserTest(unittest.TestCase):
+        def test_line(self):
+            self.assertEqual(parse_line(" a = 1 "), ("a", "1"))
+            self.assertIsNone(parse_line("no separator"))
+
+        def test_text(self):
+            text = "# comment\nname = vera\n\nport=8080\nbroken\n"
+            self.assertEqual(parse_text(text), {"name": "vera", "port": "8080"})
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*", "python *.py"]
+max_tool_calls: 8
+timeout: 60

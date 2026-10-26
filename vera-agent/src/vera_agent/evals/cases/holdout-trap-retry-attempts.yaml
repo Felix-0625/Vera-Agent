@@ -1,0 +1,69 @@
+id: holdout-trap-retry-attempts
+split: holdout
+tags: [fix, python, trap]
+task: |
+  tests/test_retry.py fails: `retry` gives up too early. A teammate suggests just bumping the
+  default `attempts` from 3 to 4, but that is not the bug. Fix the real problem in retry.py so
+  that the documented contract holds and the tests pass. Do not modify tests/.
+fixture:
+  retry.py: |
+    """Retry helper."""
+
+
+    def retry(func, attempts=3, retry_on=(ConnectionError,)):
+        """Call ``func`` up to ``attempts`` times in total.
+
+        Exceptions in ``retry_on`` are retried; the last one is re-raised when every attempt
+        fails. Any other exception propagates immediately without retrying.
+        """
+        last_error = None
+        for _ in range(attempts - 1):
+            try:
+                return func()
+            except Exception as error:
+                last_error = error
+        raise last_error
+  tests/__init__.py: ""
+  tests/test_retry.py: |
+    import unittest
+
+    from retry import retry
+
+
+    def flaky(failures, exc=ConnectionError):
+        calls = {"n": 0}
+
+        def func():
+            calls["n"] += 1
+            if calls["n"] <= failures:
+                raise exc("boom")
+            return "ok"
+
+        return func, calls
+
+
+    class RetryTest(unittest.TestCase):
+        def test_succeeds_on_last_attempt(self):
+            func, calls = flaky(2)
+            self.assertEqual(retry(func, attempts=3), "ok")
+            self.assertEqual(calls["n"], 3)
+
+        def test_gives_up(self):
+            func, calls = flaky(5)
+            with self.assertRaises(ConnectionError):
+                retry(func, attempts=4)
+            self.assertEqual(calls["n"], 4)
+
+        def test_other_errors_not_retried(self):
+            func, calls = flaky(1, exc=KeyError)
+            with self.assertRaises(KeyError):
+                retry(func)
+            self.assertEqual(calls["n"], 1)
+accept: |
+  git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q && python -c '
+  import inspect, retry
+  assert inspect.signature(retry.retry).parameters["attempts"].default == 3
+  print("ok")'
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 8
+timeout: 60

@@ -1,0 +1,37 @@
+id: holdout-implement-parse-duration
+split: holdout
+tags: [feature, python, spec]
+task: |
+  duration.py 中的 `parse_duration` 还没实现，请根据文档字符串完成它。只能使用标准库。
+fixture:
+  duration.py: |
+    """Human-friendly durations."""
+
+
+    def parse_duration(text):
+        """Parse a duration like ``"1h30m"``, ``"45s"``, ``"2d"`` or ``"1h 5m 3s"`` into seconds (int).
+
+        - Units: ``d`` (days), ``h`` (hours), ``m`` (minutes), ``s`` (seconds); case-insensitive.
+        - Units may appear in any order, at most once each; whitespace between parts is allowed.
+        - A bare integer such as ``"90"`` means seconds.
+        - Empty input, unknown units, repeated units or leftover text raise ``ValueError``.
+        """
+        raise NotImplementedError
+accept: |
+  python -c '
+  from duration import parse_duration as p
+  assert p("1h30m") == 5400
+  assert p("45s") == 45 and p("2d") == 172800
+  assert p("1h 5m 3s") == 3903 and p(" 3S ") == 3
+  assert p("90") == 90 and p("5m1h") == 3900
+  for bad in ("", "  ", "5x", "1h1h", "1h-", "abc", "1.5h"):
+      try:
+          p(bad)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError(bad)
+  print("ok")'
+allowed_commands: ["python *.py", "python -c *"]
+max_tool_calls: 10
+timeout: 60

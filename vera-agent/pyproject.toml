@@ -90,6 +90,7 @@ vera-agent = "vera_agent.run.mini:app"
 mini = "vera_agent.run.mini:app"
 mini-extra = "vera_agent.run.utilities.mini_extra:main"
 mini-e = "vera_agent.run.utilities.mini_extra:main"
+vera-eval = "vera_agent.evals.cli:main"
 
 [tool.setuptools]
 include-package-data = true
@@ -108,6 +109,7 @@ vera_agent = [
   "config/*.md",
   "config/benchmarks/*.yaml",
   "config/subagents/*.yaml",
+  "evals/cases/*.yaml",
 ]
 
 [tool.setuptools.exclude-package-data]

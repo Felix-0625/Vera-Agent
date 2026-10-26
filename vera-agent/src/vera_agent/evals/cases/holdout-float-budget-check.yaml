@@ -1,0 +1,44 @@
+id: holdout-float-budget-check
+split: holdout
+tags: [fix, python, float]
+task: |
+  `within_budget([0.1, 0.2], 0.3)` returns False although the expenses exactly use the budget, and
+  `split_evenly` loses a cent. Fix budget.py so tests/test_budget.py passes. Do not modify tests/.
+fixture:
+  budget.py: |
+    """Budget helpers. Amounts are in yuan with 2 decimals."""
+
+
+    def within_budget(expenses, limit):
+        """Return True if the sum of ``expenses`` does not exceed ``limit`` (to the cent)."""
+        return sum(expenses) <= limit
+
+
+    def split_evenly(amount, people):
+        """Split ``amount`` into ``people`` shares in cents that add up exactly to ``amount``.
+
+        Extra cents go to the first shares. Returns a list of floats with 2 decimals.
+        """
+        share = round(amount / people, 2)
+        return [share] * people
+  tests/__init__.py: ""
+  tests/test_budget.py: |
+    import unittest
+
+    from budget import split_evenly, within_budget
+
+
+    class BudgetTest(unittest.TestCase):
+        def test_within(self):
+            self.assertTrue(within_budget([0.1, 0.2], 0.3))
+            self.assertTrue(within_budget([0.7, 0.1, 0.1, 0.1], 1.0))
+            self.assertFalse(within_budget([0.1, 0.21], 0.3))
+
+        def test_split(self):
+            self.assertEqual(split_evenly(10, 3), [3.34, 3.33, 3.33])
+            self.assertEqual(split_evenly(0.05, 2), [0.03, 0.02])
+            self.assertEqual(split_evenly(9, 3), [3.0, 3.0, 3.0])
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*", "python -c *"]
+max_tool_calls: 10
+timeout: 60

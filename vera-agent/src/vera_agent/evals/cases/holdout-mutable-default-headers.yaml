@@ -1,0 +1,46 @@
+id: holdout-mutable-default-headers
+split: holdout
+tags: [fix, python, mutable-default]
+task: |
+  每次调用 `build_request` 之后，后面的请求会带上之前请求的 header（比如上一次的 Authorization）。
+  请修复 http_client.py，让 tests/ 中的测试通过，函数签名保持兼容。不要修改 tests/ 目录。
+fixture:
+  http_client.py: |
+    """Request builder."""
+
+    DEFAULT_HEADERS = {"User-Agent": "vera/1.0"}
+
+
+    def build_request(url, headers={}, token=None):
+        """Return a request dict; ``headers`` is merged over the defaults and never modified."""
+        headers.update(DEFAULT_HEADERS)
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        return {"url": url, "headers": headers}
+  tests/__init__.py: ""
+  tests/test_http_client.py: |
+    import unittest
+
+    from http_client import DEFAULT_HEADERS, build_request
+
+
+    class BuildRequestTest(unittest.TestCase):
+        def test_no_leak(self):
+            build_request("/a", token="secret")
+            self.assertNotIn("Authorization", build_request("/b")["headers"])
+
+        def test_caller_headers_untouched(self):
+            mine = {"Accept": "text/plain"}
+            req = build_request("/c", mine, token="t")
+            self.assertEqual(mine, {"Accept": "text/plain"})
+            self.assertEqual(req["headers"]["Accept"], "text/plain")
+            self.assertEqual(req["headers"]["Authorization"], "Bearer t")
+
+        def test_override_default(self):
+            req = build_request("/d", {"User-Agent": "custom"})
+            self.assertEqual(req["headers"]["User-Agent"], "custom")
+            self.assertEqual(DEFAULT_HEADERS, {"User-Agent": "vera/1.0"})
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 8
+timeout: 60

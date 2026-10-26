@@ -1,0 +1,59 @@
+id: guard-multi-file-bugfix
+split: guard
+tags: [guard, fix, multi-file]
+task: |
+  tests/test_cart.py 里的测试失败了。问题分布在不止一个文件里（cart.py 和 tax.py），
+  请找到并修复所有相关 bug，让测试通过。不要修改 tests/ 目录。
+fixture:
+  tax.py: |
+    """Tax rates by region."""
+
+    RATES = {"cn": 0.13, "us": 0.07}
+
+
+    def tax_for(amount, region):
+        """Return the tax owed on ``amount`` for ``region`` (unknown regions pay no tax)."""
+        return amount * RATES.get(region, 0) * 100
+  cart.py: |
+    """Shopping cart."""
+
+    from tax import tax_for
+
+
+    class Cart:
+        def __init__(self, region):
+            self.region = region
+            self.lines = []
+
+        def add(self, price, qty=1):
+            self.lines.append((price, qty))
+
+        def subtotal(self):
+            return sum(price for price, qty in self.lines)
+
+        def total(self):
+            subtotal = self.subtotal()
+            return round(subtotal + tax_for(subtotal, self.region), 2)
+  tests/__init__.py: ""
+  tests/test_cart.py: |
+    import unittest
+
+    from cart import Cart
+    from tax import tax_for
+
+
+    class CartTest(unittest.TestCase):
+        def test_tax(self):
+            self.assertAlmostEqual(tax_for(100, "cn"), 13.0)
+            self.assertEqual(tax_for(100, "mars"), 0)
+
+        def test_total(self):
+            cart = Cart("us")
+            cart.add(10.0, 3)
+            cart.add(5.0)
+            self.assertEqual(cart.subtotal(), 35.0)
+            self.assertEqual(cart.total(), 37.45)
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 10
+timeout: 60

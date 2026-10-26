@@ -46,6 +46,9 @@ APPLICATION_CONFIGS = frozenset(
         "permissions_config.json",
         "mcp_servers.json",
         "skills_config.json",
+        "telemetry_config.json",
+        "memory_config.json",
+        "evolution_config.json",
     }
 )
 

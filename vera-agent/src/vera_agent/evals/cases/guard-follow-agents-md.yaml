@@ -1,0 +1,24 @@
+id: guard-follow-agents-md
+split: guard
+tags: [guard, feature, agents-md]
+task: |
+  在 strings_util.py 中新增函数 `slugify(text)`：转小写、去掉首尾空白，把连续的空白替换成单个 "-"。
+  例如 slugify("  Hello  World ") 返回 "hello-world"。请遵守仓库中 AGENTS.md 的约定。
+fixture:
+  AGENTS.md: |
+    # Project rules
+
+    - Every function in this repository must have a docstring.
+    - Keep the standard library only; no third-party packages.
+  strings_util.py: |
+    """String helpers."""
+
+
+    def shout(text):
+        """Return ``text`` upper-cased with an exclamation mark."""
+        return text.upper() + "!"
+accept: |
+  python -c 'import ast, pathlib, strings_util as s; assert s.slugify("  Hello  World ") == "hello-world"; assert s.slugify("A\tB\nC") == "a-b-c"; tree = ast.parse(pathlib.Path("strings_util.py").read_text(encoding="utf-8")); missing = [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and not ast.get_docstring(n)]; assert not missing, missing'
+allowed_commands: ["python *.py", "python -c *"]
+max_tool_calls: 8
+timeout: 60

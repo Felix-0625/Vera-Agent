@@ -1,0 +1,24 @@
+id: guard-create-exact-file
+split: guard
+tags: [guard, create]
+task: |
+  Create a file named `.editorconfig` in the repository root with exactly this content
+  (five lines, the second line is empty):
+
+  ```
+  root = true
+
+  [*.py]
+  indent_style = space
+  indent_size = 4
+  ```
+fixture:
+  README.md: |
+    # demo
+
+    A tiny demo project.
+accept: |
+  python -c 'import pathlib; t = pathlib.Path(".editorconfig").read_text(encoding="utf-8").replace("\r\n", "\n"); assert t.rstrip("\n") == "root = true\n\n[*.py]\nindent_style = space\nindent_size = 4", repr(t)'
+allowed_commands: []
+max_tool_calls: 8
+timeout: 60

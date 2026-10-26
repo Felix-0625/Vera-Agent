@@ -1,0 +1,47 @@
+id: train-write-tests-slug
+split: train
+tags: [tests, python]
+task: |
+  slug.py has no tests yet. Write unittest tests in `tests/test_slug.py` that pin down the
+  documented behaviour of `make_slug` (lower-casing, separator handling, stripping of
+  punctuation, max length). The tests must pass against the current, correct implementation.
+  Do not change slug.py.
+fixture:
+  slug.py: |
+    """URL slugs."""
+
+    import re
+
+
+    def make_slug(title, max_len=40):
+        """Turn ``title`` into a URL slug.
+
+        Lower-cases, replaces runs of non-alphanumeric characters with a single "-", strips
+        leading/trailing "-", and cuts the result to ``max_len`` characters without leaving a
+        trailing "-".
+        """
+        slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+        return slug[:max_len].rstrip("-")
+  tests/__init__.py: ""
+accept: |
+  git diff --quiet HEAD -- slug.py && test -f tests/test_slug.py && python -m unittest discover -s tests -t . -q && python -c '
+  import pathlib, shutil, subprocess, sys, tempfile
+  src = pathlib.Path("slug.py").read_text(encoding="utf-8")
+  mutants = [
+      src.replace("title.lower()", "title"),
+      src.replace("[^a-z0-9]+", "[^a-z0-9]"),
+      src.replace(".strip(\"-\")", ""),
+      src.replace("slug[:max_len]", "slug"),
+      src.replace("[:max_len].rstrip(\"-\")", "[:max_len]"),
+  ]
+  for i, mutant in enumerate(mutants):
+      assert mutant != src, i
+      with tempfile.TemporaryDirectory() as tmp:
+          shutil.copytree("tests", pathlib.Path(tmp) / "tests")
+          (pathlib.Path(tmp) / "slug.py").write_text(mutant, encoding="utf-8")
+          code = subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-t", ".", "-q"], cwd=tmp, capture_output=True).returncode
+          assert code != 0, f"tests do not catch mutant {i}"
+  print("ok")'
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 10
+timeout: 60

@@ -1,0 +1,45 @@
+id: guard-rename-function
+split: guard
+tags: [guard, refactor, rename]
+task: |
+  Rename the function `calc_total` to `compute_total` everywhere it is defined or used
+  (utils.py and report.py). Do not keep the old name as an alias. Do not modify tests/.
+fixture:
+  utils.py: |
+    """Order helpers."""
+
+
+    def calc_total(items):
+        """Return the sum of price * qty for each item."""
+        return sum(item["price"] * item["qty"] for item in items)
+  report.py: |
+    """Order report."""
+
+    from utils import calc_total
+
+
+    def render(items):
+        return f"Total: {calc_total(items):.2f}"
+  tests/__init__.py: ""
+  tests/test_accept.py: |
+    import pathlib
+    import unittest
+
+    import report
+    import utils
+
+
+    class RenameTest(unittest.TestCase):
+        def test_new_name(self):
+            items = [{"price": 2.5, "qty": 2}, {"price": 1.0, "qty": 3}]
+            self.assertEqual(utils.compute_total(items), 8.0)
+            self.assertEqual(report.render(items), "Total: 8.00")
+
+        def test_old_name_gone(self):
+            self.assertFalse(hasattr(utils, "calc_total"))
+            for name in ("utils.py", "report.py"):
+                self.assertNotIn("calc_total", pathlib.Path(name).read_text(encoding="utf-8"))
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*", "python *.py"]
+max_tool_calls: 10
+timeout: 60

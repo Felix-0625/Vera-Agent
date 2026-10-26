@@ -1,0 +1,33 @@
+id: train-feature-csv-export
+split: train
+tags: [feature, python, csv]
+task: |
+  在 export.py 中实现 `to_csv(rows, columns)`，返回 CSV 文本字符串：
+  - 第一行是表头（columns 的顺序）；之后每个 dict 一行，只输出 columns 中的字段，缺失字段输出空字符串；
+  - 包含逗号、双引号或换行的值必须按标准 CSV 规则加引号转义；
+  - 行分隔符使用 "\n"。
+  可以使用标准库。
+fixture:
+  export.py: |
+    """Export report rows."""
+
+
+    def to_csv(rows, columns):
+        """Render ``rows`` (list of dicts) as CSV text with a header row of ``columns``."""
+        raise NotImplementedError
+accept: |
+  python -c '
+  import csv, io
+  from export import to_csv
+  rows = [{"name": "张三", "note": "a, b", "x": 1}, {"name": "say \"hi\"", "note": "line1\nline2"}, {"name": "王五"}]
+  out = to_csv(rows, ["name", "note"])
+  assert isinstance(out, str)
+  assert out.startswith("name,note\n"), repr(out)
+  assert "\r" not in out, repr(out)
+  parsed = list(csv.reader(io.StringIO(out)))
+  assert parsed == [["name", "note"], ["张三", "a, b"], ["say \"hi\"", "line1\nline2"], ["王五", ""]], parsed
+  assert to_csv([], ["a"]).strip() == "a"
+  print("ok")'
+allowed_commands: ["python *.py", "python -c *"]
+max_tool_calls: 8
+timeout: 60

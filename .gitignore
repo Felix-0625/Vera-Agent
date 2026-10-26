@@ -5,6 +5,8 @@
 
 # Temporary experiments, local test workspaces, and downloaded reference repositories
 scratch/
+.bug-hunter/
+.claude/
 mini-coding-agent/
 pi-agent/
 piagent/

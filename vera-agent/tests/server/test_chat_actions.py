@@ -5,6 +5,7 @@ import json
 from types import SimpleNamespace
 
 from vera_agent.server.chat.actions import ActionBatchResult, run_actions
+from vera_agent.server.chat.control import AutoApprovalPolicy, TurnControl
 
 
 class _FakeMcpSession:
@@ -29,7 +30,8 @@ def _run(actions, **overrides):
         "activity_log": [],
         "subagent_runs": [],
         "update_activity": lambda *_args: None,
-        "wait_if_paused": _no_wait,
+        "control": TurnControl.standalone("th_test"),
+        "approval_policy": AutoApprovalPolicy(),
         **overrides,
     }
     result = ActionBatchResult()
@@ -38,10 +40,6 @@ def _run(actions, **overrides):
         return [event async for event in run_actions(actions, result, **deps)]
 
     return asyncio.run(collect()), result
-
-
-async def _no_wait():
-    return None
 
 
 def _events(raw, name):

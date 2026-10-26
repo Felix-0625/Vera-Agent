@@ -1,0 +1,61 @@
+id: train-feature-inventory-remove
+split: train
+tags: [feature, python]
+task: |
+  给 inventory.py 的 Inventory 类新增方法 `remove(name, qty=1)`：
+  - 从库存中减去 qty；减到 0 时把该商品从 `items` 中删除；
+  - 商品不存在时抛出 KeyError；
+  - 库存不足（qty 大于现有数量）时抛出 ValueError，且库存保持不变；
+  - qty 必须为正整数，否则抛出 ValueError。
+  现有行为不能改变，现有测试必须继续通过。
+fixture:
+  inventory.py: |
+    """In-memory inventory."""
+
+
+    class Inventory:
+        def __init__(self):
+            self.items = {}
+
+        def add(self, name, qty=1):
+            if qty <= 0:
+                raise ValueError("qty must be positive")
+            self.items[name] = self.items.get(name, 0) + qty
+
+        def count(self, name):
+            return self.items.get(name, 0)
+  tests/__init__.py: ""
+  tests/test_inventory.py: |
+    import unittest
+
+    from inventory import Inventory
+
+
+    class InventoryTest(unittest.TestCase):
+        def test_add(self):
+            inv = Inventory()
+            inv.add("apple", 3)
+            inv.add("apple")
+            self.assertEqual(inv.count("apple"), 4)
+            with self.assertRaises(ValueError):
+                inv.add("pear", 0)
+accept: |
+  python -m unittest discover -s tests -t . -q && python -c '
+  from inventory import Inventory
+  inv = Inventory(); inv.add("a", 3)
+  inv.remove("a"); assert inv.count("a") == 2
+  inv.remove("a", 2); assert "a" not in inv.items
+  for args, exc in [(("missing",), KeyError), (("b", 0), ValueError), (("b", -1), ValueError), (("b", 5), ValueError)]:
+      inv.add("b", 2)
+      try:
+          inv.remove(*args)
+      except exc:
+          pass
+      else:
+          raise AssertionError(args)
+      assert inv.count("b") == 2, (args, inv.items)
+      inv.items.pop("b")
+  print("ok")'
+allowed_commands: ["python -m unittest*", "python *.py"]
+max_tool_calls: 10
+timeout: 60

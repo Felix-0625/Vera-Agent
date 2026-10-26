@@ -18,6 +18,9 @@
 - mcp.py: MCP server registry and Registry market install
 - skills.py: Skill discovery, enable/disable, market install
 - analytics.py: usage dashboard derived from persisted conversation events
+- traces.py: local turn traces, span trees, outcome scores, telemetry settings
+- memories.py: scoped versioned memories, pending changes, version history
+- evolution.py: improvement proposals, eval gate results, adoption and rollback
 
 The API has no authentication and is meant to listen on loopback only. CORS is
 currently open (`*`) so the Vite dev server and the desktop shell can call it.
@@ -37,10 +40,12 @@ from starlette.routing import Route
 
 from vera_agent.server.routes.analytics import analytics_routes
 from vera_agent.server.routes.chat import chat_routes
+from vera_agent.server.routes.evolution import evolution_routes
 from vera_agent.server.routes.files import file_routes
 from vera_agent.server.routes.gitflow import gitflow_routes
 from vera_agent.server.routes.groups import group_routes
 from vera_agent.server.routes.mcp import mcp_routes
+from vera_agent.server.routes.memories import memory_routes
 from vera_agent.server.routes.projects import project_routes
 from vera_agent.server.routes.sessions import session_routes
 from vera_agent.server.routes.settings import settings_routes
@@ -49,6 +54,7 @@ from vera_agent.server.routes.taskboard import taskboard_routes
 from vera_agent.server.routes.tasks import start_scheduler, stop_scheduler, task_routes
 from vera_agent.server.routes.terminal import terminal_routes
 from vera_agent.server.routes.threads import thread_routes
+from vera_agent.server.routes.traces import trace_routes
 from vera_agent.server.routes.worktrees import worktree_routes
 from vera_agent.server.state import ServerState
 from vera_agent.session.graph import GitFlowGraph
@@ -79,6 +85,9 @@ def create_app(
         *mcp_routes,
         *skill_routes,
         *analytics_routes,
+        *trace_routes,
+        *memory_routes,
+        *evolution_routes,
     ]
 
     middleware = [

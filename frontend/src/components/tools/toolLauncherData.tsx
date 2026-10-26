@@ -8,6 +8,9 @@ import {
   Sparkles,
   GitBranch,
   Users,
+  Brain,
+  FlaskConical,
+  GitCommitVertical,
 } from 'lucide-react';
 import { ToolTabId } from '../../types/tool';
 
@@ -85,5 +88,29 @@ export const TOOL_LAUNCHER_ITEMS: ToolLauncherItem[] = [
     iconColor: 'var(--accent-cyan)',
     iconBg: 'var(--bg-info-soft)',
     borderColor: 'var(--border-info-soft)',
+  },
+  {
+    id: 'traces',
+    title: '执行记录',
+    icon: <GitCommitVertical size={17} color="var(--accent-cyan)" />,
+    iconColor: 'var(--accent-cyan)',
+    iconBg: 'var(--bg-info-soft)',
+    borderColor: 'var(--border-info-soft)',
+  },
+  {
+    id: 'memory',
+    title: '长期记忆',
+    icon: <Brain size={17} color="var(--accent-emerald)" />,
+    iconColor: 'var(--accent-emerald)',
+    iconBg: 'var(--bg-success-soft)',
+    borderColor: 'var(--border-success-soft)',
+  },
+  {
+    id: 'evolution',
+    title: '改进提案',
+    icon: <FlaskConical size={17} color="var(--accent-amber)" />,
+    iconColor: 'var(--accent-amber)',
+    iconBg: 'var(--bg-warning-soft)',
+    borderColor: 'var(--border-warning-soft)',
   },
 ];

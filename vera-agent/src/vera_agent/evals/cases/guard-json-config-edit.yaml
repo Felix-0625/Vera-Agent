@@ -1,0 +1,23 @@
+id: guard-json-config-edit
+split: guard
+tags: [guard, edit, json]
+task: |
+  修改 config.json：把 logging.level 改为 "debug"，并在 features 列表末尾追加 "export"。
+  其他字段保持不变，文件必须仍然是合法 JSON。
+fixture:
+  config.json: |
+    {
+      "name": "inventory",
+      "version": "1.4.0",
+      "logging": {
+        "level": "info",
+        "file": "logs/app.log"
+      },
+      "features": ["search", "import"],
+      "limits": {"max_items": 500, "page_size": 50}
+    }
+accept: |
+  python -c 'import json; c = json.load(open("config.json", encoding="utf-8")); assert c == {"name": "inventory", "version": "1.4.0", "logging": {"level": "debug", "file": "logs/app.log"}, "features": ["search", "import", "export"], "limits": {"max_items": 500, "page_size": 50}}, c'
+allowed_commands: []
+max_tool_calls: 8
+timeout: 60

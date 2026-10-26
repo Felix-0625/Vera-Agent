@@ -1,8 +1,16 @@
 """Built-in multi-agent topology templates.
 
-Templates: supervisor (one coordinator dispatching to workers), sequential
-pipeline, critic/actor review loop, and peer mesh. Node prompts are product
-content in Chinese and use `{{goal}}` as the placeholder for the project goal.
+Every template must be runnable by the run scheduler: organizations
+(`topology_type == "architecture"`) are reporting trees, workflows are acyclic
+graphs with a single start node (checked by tests/server/test_builtin_templates.py).
+
+- supervisor_dev: organization, a lead managing an implementer and a reviewer
+- sequential_workflow: workflow, research -> design -> implement -> test
+- adversarial_audit: workflow, implement -> red-team review
+- swarm_mesh: workflow, backend contract first, then frontend and QA; QA joins both
+
+Node prompts are product content in Chinese and use `{{goal}}` as the
+placeholder for the project goal.
 Custom templates saved by users are plain JSON (see server/routes/groups.py).
 """
 
@@ -47,8 +55,8 @@ BUILTIN_TEMPLATES: dict[str, TopologyTemplate] = {
     "supervisor_dev": TopologyTemplate(
         template_id="supervisor_dev",
         name="Supervisor 主管敏捷研发架构",
-        description="由 1 位技术主管统筹需求与分派任务，实施员编写业务逻辑，测试员进行质检验收。",
-        topology_type="supervisor",
+        description="组织架构：1 位技术主管统筹需求并向实施员、测试员分派任务，下级完成后由主管复核汇总。",
+        topology_type="architecture",
         nodes=[
             NodeBlueprint(
                 role_key="supervisor",
@@ -62,9 +70,9 @@ BUILTIN_TEMPLATES: dict[str, TopologyTemplate] = {
                 prompt_template=(
                     "你是技术架构主管。当前团队总业务目标为：\n{{goal}}\n\n"
                     "你的核心职责是：分析总体架构、制定技术路线，将实施任务派发给实施员，并汇总验收测试结果。\n"
-                    "请使用 send_message 与 handoff 与同组工程师协作。"
+                    "你的输出会作为任务交给实施员和测试审查员。"
                 ),
-                allowed_tools=["read", "symbol_search", "send_message", "handoff"],
+                allowed_tools=["read", "symbol_search"],
             ),
             NodeBlueprint(
                 role_key="implementer",
@@ -94,15 +102,14 @@ BUILTIN_TEMPLATES: dict[str, TopologyTemplate] = {
                 prompt_template=(
                     "你是质量与测试审查员。当前团队总业务目标为：\n{{goal}}\n\n"
                     "你的核心职责是：对实施员提交的代码改动进行严格质检，运行单测与 check_syntax，"
-                    "确保零测试失败和零语法错误。发现问题立即打回，全部通过后向主管汇报交付。"
+                    "确保零测试失败和零语法错误，列出明确的整改清单或放行结论。"
                 ),
                 allowed_tools=["read", "check_syntax", "symbol_search", "bash"],
             ),
         ],
         edges=[
-            EdgeBlueprint(source_role="supervisor", target_role="implementer", relation="dispatches_to"),
-            EdgeBlueprint(source_role="implementer", target_role="reviewer", relation="submits_for_review"),
-            EdgeBlueprint(source_role="reviewer", target_role="supervisor", relation="reports_to"),
+            EdgeBlueprint(source_role="supervisor", target_role="implementer", relation="manages"),
+            EdgeBlueprint(source_role="supervisor", target_role="reviewer", relation="manages"),
         ],
     ),
     "sequential_workflow": TopologyTemplate(
@@ -179,8 +186,8 @@ BUILTIN_TEMPLATES: dict[str, TopologyTemplate] = {
     "adversarial_audit": TopologyTemplate(
         template_id="adversarial_audit",
         name="Adversarial 对抗审查与安全博弈架构",
-        description="双元博弈：主干实施员与红队安全审查员对立运行，代码需经受住极限挑刺后方可放行。",
-        topology_type="adversarial",
+        description="工作流：实施员先完成修改，再由红队审查员做一轮对抗审查；需要多轮返工时可在编辑器中加入循环节点。",
+        topology_type="workflow",
         nodes=[
             NodeBlueprint(
                 role_key="implementer",
@@ -192,7 +199,7 @@ BUILTIN_TEMPLATES: dict[str, TopologyTemplate] = {
                 ],
                 prompt_template=(
                     "你是特性实施工程师。当前重构目标：\n{{goal}}\n\n"
-                    "编写代码修改，提交审查后虚心接受对抗审查员的纠错建议并完成修复。"
+                    "完成代码修改并说明改动点与自测结果，结果会交给红队审查员。"
                 ),
                 allowed_tools=["read", "write", "edit", "bash", "symbol_search"],
             ),
@@ -213,30 +220,29 @@ BUILTIN_TEMPLATES: dict[str, TopologyTemplate] = {
         ],
         edges=[
             EdgeBlueprint(source_role="implementer", target_role="critic", relation="submits_code"),
-            EdgeBlueprint(source_role="critic", target_role="implementer", relation="rejection_feedback"),
         ],
     ),
     "swarm_mesh": TopologyTemplate(
         template_id="swarm_mesh",
-        name="Swarm 对等协同网状总线架构",
-        description="去中心化专家团队：各领域专家平权接入，通过 SessionRouter 总线自由广播与协作。",
-        topology_type="swarm",
+        name="全栈协同工作流",
+        description="工作流：后端先确定接口契约，前端据此实现，测试专家汇合前后端结果做全链路验证。",
+        topology_type="workflow",
         nodes=[
-            NodeBlueprint(
-                role_key="frontend_dev",
-                title="前端界面专家",
-                role="frontend",
-                responsibilities=["负责前端 UI/UX 与客户端接口联调"],
-                prompt_template="你是前端专家。当前目标：{{goal}}。配合后端制定交互协议并编写前端界面。",
-                allowed_tools=["read", "write", "edit", "bash"],
-            ),
             NodeBlueprint(
                 role_key="backend_dev",
                 title="后端服务专家",
                 role="backend",
                 responsibilities=["负责后端核心 API、业务逻辑与数据存储"],
-                prompt_template="你是后端专家。当前目标：{{goal}}。实现 REST/SSE 接口与持久化层。",
+                prompt_template="你是后端专家。当前目标：{{goal}}。先给出接口契约，再实现 REST/SSE 接口与持久化层。",
                 allowed_tools=["read", "write", "edit", "bash", "symbol_search"],
+            ),
+            NodeBlueprint(
+                role_key="frontend_dev",
+                title="前端界面专家",
+                role="frontend",
+                responsibilities=["负责前端 UI/UX 与客户端接口联调"],
+                prompt_template="你是前端专家。当前目标：{{goal}}。按后端给出的接口契约编写前端界面。",
+                allowed_tools=["read", "write", "edit", "bash"],
             ),
             NodeBlueprint(
                 role_key="qa_dev",
@@ -248,10 +254,9 @@ BUILTIN_TEMPLATES: dict[str, TopologyTemplate] = {
             ),
         ],
         edges=[
-            EdgeBlueprint(source_role="frontend_dev", target_role="backend_dev", relation="collaborates_with"),
-            EdgeBlueprint(source_role="backend_dev", target_role="frontend_dev", relation="collaborates_with"),
+            EdgeBlueprint(source_role="backend_dev", target_role="frontend_dev", relation="api_contract"),
             EdgeBlueprint(source_role="backend_dev", target_role="qa_dev", relation="submits_to"),
-            EdgeBlueprint(source_role="qa_dev", target_role="backend_dev", relation="feedback_to"),
+            EdgeBlueprint(source_role="frontend_dev", target_role="qa_dev", relation="submits_to"),
         ],
     ),
 }

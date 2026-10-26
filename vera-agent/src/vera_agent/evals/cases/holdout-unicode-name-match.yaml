@@ -1,0 +1,40 @@
+id: holdout-unicode-name-match
+split: holdout
+tags: [fix, python, unicode]
+task: |
+  Customer search misses matches: "José" typed on macOS (decomposed accents) does not match the
+  stored "José", and "STRASSE" does not match "straße". Fix `same_name` in names.py so the tests in
+  tests/test_names.py pass. Do not modify tests/.
+fixture:
+  names.py: |
+    """Name matching for customer search."""
+
+
+    def same_name(a, b):
+        """Return True if two names are equal ignoring case, surrounding whitespace and
+        Unicode normalization differences (composed vs decomposed characters)."""
+        return a.strip().lower() == b.strip().lower()
+  tests/__init__.py: ""
+  tests/test_names.py: |
+    import unittest
+
+    from names import same_name
+
+
+    class NamesTest(unittest.TestCase):
+        def test_normalization(self):
+            # Decomposed (macOS input) vs composed (stored) spellings.
+            self.assertTrue(same_name("José", "José"))
+            self.assertTrue(same_name(" ÅNGSTRÖM ", "Ångström"))
+
+        def test_casefold(self):
+            self.assertTrue(same_name("STRASSE", "straße"))
+            self.assertTrue(same_name("王小明", " 王小明"))
+
+        def test_different(self):
+            self.assertFalse(same_name("José", "Jose"))
+            self.assertFalse(same_name("王小明", "王晓明"))
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 8
+timeout: 60

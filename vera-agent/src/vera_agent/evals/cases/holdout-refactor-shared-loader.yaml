@@ -1,0 +1,77 @@
+id: holdout-refactor-shared-loader
+split: holdout
+tags: [refactor, python]
+task: |
+  products.py 和 customers.py 各自复制了一份"读取 JSON Lines 文件、跳过空行和 # 注释行"的代码。
+  请把它提取到新模块 jsonl.py 中的 `read_jsonl(path)` 函数（返回 dict 列表），
+  并让两个文件都改为调用它、删除各自的重复实现。行为保持不变，现有测试必须继续通过。不要修改 tests/ 目录。
+fixture:
+  products.py: |
+    """Product catalogue."""
+
+    import json
+
+
+    def load_products(path):
+        records = []
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                records.append(json.loads(line))
+        return [r for r in records if r.get("active", True)]
+  customers.py: |
+    """Customer list."""
+
+    import json
+
+
+    def load_customers(path):
+        records = []
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
+                records.append(json.loads(line))
+        return {r["id"]: r for r in records}
+  tests/__init__.py: ""
+  tests/test_loaders.py: |
+    import pathlib
+    import tempfile
+    import unittest
+
+    from customers import load_customers
+    from products import load_products
+
+
+    class LoadersTest(unittest.TestCase):
+        def write(self, text):
+            tmp = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False, encoding="utf-8")
+            tmp.write(text)
+            tmp.close()
+            self.addCleanup(pathlib.Path(tmp.name).unlink)
+            return tmp.name
+
+        def test_products(self):
+            path = self.write('# header\n{"sku": "a"}\n\n{"sku": "b", "active": false}\n')
+            self.assertEqual(load_products(path), [{"sku": "a"}])
+
+        def test_customers(self):
+            path = self.write('{"id": 1, "name": "张三"}\n  \n{"id": 2, "name": "李四"}\n')
+            self.assertEqual(load_customers(path)[2]["name"], "李四")
+accept: |
+  git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q && python -c '
+  import pathlib, tempfile
+  from jsonl import read_jsonl
+  f = pathlib.Path(tempfile.mkdtemp()) / "x.jsonl"
+  f.write_text("# c\n{\"a\": 1}\n\n {\"b\": \"二\"} \n", encoding="utf-8")
+  assert read_jsonl(str(f)) == [{"a": 1}, {"b": "二"}], read_jsonl(str(f))
+  for name in ("products.py", "customers.py"):
+      src = pathlib.Path(name).read_text(encoding="utf-8")
+      assert "read_jsonl" in src and "json.loads" not in src and "startswith(" not in src, name
+  print("ok")'
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 12
+timeout: 60

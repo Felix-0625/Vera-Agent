@@ -13,6 +13,9 @@ const TerminalTab = React.lazy(() => import('./TerminalTab').then((module) => ({
 const SideChatTab = React.lazy(() => import('./SideChatTab').then((module) => ({ default: module.SideChatTab })));
 const SubagentsTab = React.lazy(() => import('./SubagentsTab').then((module) => ({ default: module.SubagentsTab })));
 const MetricsTab = React.lazy(() => import('./MetricsTab').then((module) => ({ default: module.MetricsTab })));
+const TracesTab = React.lazy(() => import('./TracesTab').then((module) => ({ default: module.TracesTab })));
+const MemoryTab = React.lazy(() => import('./MemoryTab').then((module) => ({ default: module.MemoryTab })));
+const EvolutionTab = React.lazy(() => import('./EvolutionTab').then((module) => ({ default: module.EvolutionTab })));
 const GitFlowTab = React.lazy(() => import('./GitFlowTab').then((module) => ({ default: module.GitFlowTab })));
 const WorkflowTab = React.lazy(() => import('./WorkflowTab').then((module) => ({ default: module.WorkflowTab })));
 
@@ -69,6 +72,12 @@ export const RightToolsContainer: React.FC = () => {
         return <Suspense fallback={<PanelLoading />}><SubagentsTab /></Suspense>;
       case 'metrics':
         return <Suspense fallback={<PanelLoading />}><MetricsTab projectId={panelProjectId} /></Suspense>;
+      case 'traces':
+        return <Suspense fallback={<PanelLoading />}><TracesTab projectId={panelProjectId} /></Suspense>;
+      case 'memory':
+        return <Suspense fallback={<PanelLoading />}><MemoryTab /></Suspense>;
+      case 'evolution':
+        return <Suspense fallback={<PanelLoading />}><EvolutionTab /></Suspense>;
       case 'gitflow':
         return <Suspense fallback={<PanelLoading />}><GitFlowTab projectId={panelProjectId} /></Suspense>;
       case 'workflow':

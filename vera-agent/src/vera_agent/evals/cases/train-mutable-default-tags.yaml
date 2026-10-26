@@ -1,0 +1,45 @@
+id: train-mutable-default-tags
+split: train
+tags: [fix, python, mutable-default]
+task: |
+  Tags leak between unrelated Article objects. Find and fix the bug in article.py so that
+  tests/test_article.py passes. Keep the constructor signature compatible. Do not modify tests/.
+fixture:
+  article.py: |
+    """Blog articles."""
+
+
+    class Article:
+        def __init__(self, title, tags=[]):
+            self.title = title
+            self.tags = tags
+
+        def tag(self, name):
+            if name not in self.tags:
+                self.tags.append(name)
+            return self
+  tests/__init__.py: ""
+  tests/test_article.py: |
+    import unittest
+
+    from article import Article
+
+
+    class ArticleTest(unittest.TestCase):
+        def test_independent_tags(self):
+            a = Article("a").tag("python")
+            b = Article("b")
+            self.assertEqual(a.tags, ["python"])
+            self.assertEqual(b.tags, [])
+
+        def test_explicit_tags_kept(self):
+            self.assertEqual(Article("c", ["x"]).tag("y").tags, ["x", "y"])
+
+        def test_caller_list_not_mutated(self):
+            mine = ["x"]
+            Article("d", mine).tag("y")
+            self.assertEqual(mine, ["x"])
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 8
+timeout: 60

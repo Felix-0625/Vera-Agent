@@ -1,0 +1,30 @@
+id: guard-read-and-answer
+split: guard
+tags: [guard, read]
+task: |
+  在没有设置任何环境变量的情况下，server.py 默认监听哪个端口？
+  请阅读代码后把答案写入仓库根目录的 ANSWER.md（只写端口号即可）。不要修改其他文件。
+fixture:
+  constants.py: |
+    """Shared constants."""
+
+    BASE_PORT = 7340
+    APP_NAME = "inventory"
+  server.py: |
+    """Tiny HTTP server entry point."""
+
+    import os
+
+    from constants import BASE_PORT
+
+    # The admin console uses BASE_PORT + 1, the public API takes the next one.
+    DEFAULT_PORT = BASE_PORT + 2
+
+
+    def resolve_port():
+        return int(os.environ.get("APP_PORT", DEFAULT_PORT))
+accept: |
+  git diff --quiet HEAD && python -c 'import pathlib, re; t = pathlib.Path("ANSWER.md").read_text(encoding="utf-8"); assert re.search(r"\b7342\b", t), t'
+allowed_commands: []
+max_tool_calls: 8
+timeout: 60

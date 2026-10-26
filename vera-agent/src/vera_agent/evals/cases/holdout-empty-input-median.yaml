@@ -1,0 +1,45 @@
+id: holdout-empty-input-median
+split: holdout
+tags: [fix, python, edge-case]
+task: |
+  `median([])` 会抛出 IndexError，而偶数个元素时结果也不对。请按文档字符串修复 metrics.py，
+  让 tests/ 中的测试通过。不要修改 tests/ 目录。
+fixture:
+  metrics.py: |
+    """Latency metrics."""
+
+
+    def median(values):
+        """Return the median of ``values`` (any iterable of numbers).
+
+        Even-length input returns the mean of the two middle values. Empty input returns ``None``.
+        The input is not modified.
+        """
+        values.sort()
+        return values[len(values) // 2]
+  tests/__init__.py: ""
+  tests/test_metrics.py: |
+    import unittest
+
+    from metrics import median
+
+
+    class MedianTest(unittest.TestCase):
+        def test_odd(self):
+            self.assertEqual(median([5, 1, 3]), 3)
+
+        def test_even(self):
+            self.assertEqual(median([4, 1, 3, 2]), 2.5)
+
+        def test_empty(self):
+            self.assertIsNone(median([]))
+            self.assertIsNone(median(iter([])))
+
+        def test_not_mutated(self):
+            data = [3, 1, 2]
+            median(data)
+            self.assertEqual(data, [3, 1, 2])
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 8
+timeout: 60

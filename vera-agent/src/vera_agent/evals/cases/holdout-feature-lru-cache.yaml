@@ -1,0 +1,47 @@
+id: holdout-feature-lru-cache
+split: holdout
+tags: [feature, python]
+task: |
+  Implement the `LRUCache` class in lru.py according to its docstring. Standard library only.
+fixture:
+  lru.py: |
+    """A small LRU cache."""
+
+
+    class LRUCache:
+        """Fixed-capacity least-recently-used cache.
+
+        - ``LRUCache(capacity)``: capacity must be an int >= 1, otherwise ``ValueError``.
+        - ``get(key, default=None)``: return the value and mark the key as most recently used;
+          return ``default`` for a missing key.
+        - ``put(key, value)``: insert or update the key (it becomes most recently used); when the
+          cache is over capacity, evict the least recently used key.
+        - ``len(cache)`` returns the number of stored keys; ``key in cache`` works and does NOT
+          change the usage order.
+        """
+
+        def __init__(self, capacity):
+            raise NotImplementedError
+accept: |
+  python -c '
+  from lru import LRUCache
+  c = LRUCache(2)
+  c.put("a", 1); c.put("b", 2)
+  assert c.get("a") == 1
+  c.put("c", 3)
+  assert "b" not in c and "a" in c and "c" in c and len(c) == 2
+  c.put("a", 10)
+  assert "c" in c
+  c.put("d", 4)
+  assert "c" not in c and c.get("a") == 10 and c.get("zz", "x") == "x"
+  for bad in (0, -1):
+      try:
+          LRUCache(bad)
+      except ValueError:
+          pass
+      else:
+          raise AssertionError(bad)
+  print("ok")'
+allowed_commands: ["python *.py", "python -c *"]
+max_tool_calls: 8
+timeout: 60

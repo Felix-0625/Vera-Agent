@@ -1,0 +1,18 @@
+id: guard-simple-edit
+split: guard
+tags: [guard, edit]
+task: |
+  把 settings.py 里的 TIMEOUT_SECONDS 从 30 改成 45，其他配置保持不变。
+fixture:
+  settings.py: |
+    """Service settings."""
+
+    HOST = "127.0.0.1"
+    PORT = 8080
+    TIMEOUT_SECONDS = 30
+    RETRIES = 3
+accept: |
+  python -c 'import settings as s; assert s.TIMEOUT_SECONDS == 45, s.TIMEOUT_SECONDS; assert (s.HOST, s.PORT, s.RETRIES) == ("127.0.0.1", 8080, 3)'
+allowed_commands: []
+max_tool_calls: 8
+timeout: 60

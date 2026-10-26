@@ -1,0 +1,50 @@
+id: train-fix-code-not-test-merge
+split: train
+tags: [fix, python, failing-test]
+task: |
+  CI 上 tests/test_config.py 失败了。测试是正确的、描述的是期望行为，问题出在 config.py。
+  请修复代码让测试通过，不要修改 tests/ 目录。
+fixture:
+  config.py: |
+    """Layered configuration."""
+
+    DEFAULTS = {
+        "server": {"host": "0.0.0.0", "port": 8000},
+        "log": {"level": "info"},
+    }
+
+
+    def merge(base, override):
+        """Recursively merge ``override`` into a copy of ``base``; neither input is modified."""
+        result = dict(base)
+        result.update(override)
+        return result
+
+
+    def load(override):
+        return merge(DEFAULTS, override)
+  tests/__init__.py: ""
+  tests/test_config.py: |
+    import unittest
+
+    from config import DEFAULTS, load, merge
+
+
+    class ConfigTest(unittest.TestCase):
+        def test_nested_override_keeps_siblings(self):
+            cfg = load({"server": {"port": 9000}})
+            self.assertEqual(cfg["server"], {"host": "0.0.0.0", "port": 9000})
+            self.assertEqual(cfg["log"], {"level": "info"})
+
+        def test_defaults_untouched(self):
+            load({"server": {"port": 1}, "log": {"level": "debug"}})
+            self.assertEqual(DEFAULTS["server"]["port"], 8000)
+            self.assertEqual(DEFAULTS["log"]["level"], "info")
+
+        def test_non_dict_replaces(self):
+            self.assertEqual(merge({"a": {"b": 1}}, {"a": 5}), {"a": 5})
+            self.assertEqual(merge({"a": 1}, {"b": {"c": 2}}), {"a": 1, "b": {"c": 2}})
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 8
+timeout: 60

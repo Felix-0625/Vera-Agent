@@ -1,0 +1,45 @@
+id: train-wrong-comparison-grade
+split: train
+tags: [fix, python, comparison]
+task: |
+  成绩等级换算有 bug：刚好 90 分应该是 "A"，刚好 60 分应该是 "C"（及格）。
+  请修复 grade.py，让 tests/ 中的测试全部通过。不要修改 tests/ 目录。
+fixture:
+  grade.py: |
+    """Score to letter grade."""
+
+
+    def letter(score):
+        """Map a 0-100 score to A (>= 90), B (>= 75), C (>= 60) or F."""
+        if not 0 <= score <= 100:
+            raise ValueError("score out of range")
+        if score > 90:
+            return "A"
+        if score >= 75:
+            return "B"
+        if score > 60:
+            return "C"
+        return "F"
+  tests/__init__.py: ""
+  tests/test_grade.py: |
+    import unittest
+
+    from grade import letter
+
+
+    class GradeTest(unittest.TestCase):
+        def test_boundaries(self):
+            self.assertEqual(letter(100), "A")
+            self.assertEqual(letter(90), "A")
+            self.assertEqual(letter(89.5), "B")
+            self.assertEqual(letter(75), "B")
+            self.assertEqual(letter(60), "C")
+            self.assertEqual(letter(59.9), "F")
+
+        def test_range(self):
+            with self.assertRaises(ValueError):
+                letter(101)
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 8
+timeout: 60

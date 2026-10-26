@@ -1,0 +1,35 @@
+id: guard-argparse-flag
+split: guard
+tags: [guard, feature, cli]
+task: |
+  Add a `--upper` flag to the argparse CLI in greet.py. When given, the printed greeting is
+  upper-cased. Without the flag, behaviour stays exactly the same.
+  Example: `python greet.py Ann --upper` prints `HELLO, ANN!`.
+fixture:
+  greet.py: |
+    """Print a greeting."""
+
+    import argparse
+
+
+    def build_parser():
+        parser = argparse.ArgumentParser(description="Greet someone.")
+        parser.add_argument("name")
+        parser.add_argument("--times", type=int, default=1)
+        return parser
+
+
+    def main(argv=None):
+        args = build_parser().parse_args(argv)
+        message = f"Hello, {args.name}!"
+        for _ in range(args.times):
+            print(message)
+
+
+    if __name__ == "__main__":
+        main()
+accept: |
+  test "$(python greet.py Ann --upper | tr -d '\r')" = "HELLO, ANN!" && test "$(python greet.py Bo | tr -d '\r')" = "Hello, Bo!" &&test "$(python greet.py Cy --times 2 --upper | tr -d '\r')" = "$(printf 'HELLO, CY!\nHELLO, CY!')"
+allowed_commands: ["python greet.py*"]
+max_tool_calls: 8
+timeout: 60

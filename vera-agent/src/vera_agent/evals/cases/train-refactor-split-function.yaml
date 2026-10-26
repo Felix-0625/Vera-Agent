@@ -1,0 +1,72 @@
+id: train-refactor-split-function
+split: train
+tags: [refactor, python]
+task: |
+  `process_order` in orders.py is too long. Refactor it by extracting two module-level helpers:
+  `validate_order(order)` (raises ValueError exactly as today) and `order_total(order)` (returns
+  the total including discount and shipping, as today). `process_order` must call both and keep
+  its current behaviour. The existing tests must keep passing. Do not modify tests/.
+fixture:
+  orders.py: |
+    """Order processing."""
+
+    FREE_SHIPPING_FROM = 100
+    SHIPPING = 8
+
+
+    def process_order(order):
+        if not order.get("lines"):
+            raise ValueError("order has no lines")
+        for line in order["lines"]:
+            if line["qty"] <= 0:
+                raise ValueError("qty must be positive")
+            if line["price"] < 0:
+                raise ValueError("price must not be negative")
+        total = 0
+        for line in order["lines"]:
+            total += line["price"] * line["qty"]
+        if order.get("coupon") == "SAVE10":
+            total = total * 0.9
+        if total < FREE_SHIPPING_FROM:
+            total += SHIPPING
+        return {"id": order["id"], "total": round(total, 2), "status": "accepted"}
+  tests/__init__.py: ""
+  tests/test_orders.py: |
+    import unittest
+
+    from orders import process_order
+
+
+    class OrdersTest(unittest.TestCase):
+        def test_small_order(self):
+            order = {"id": 1, "lines": [{"price": 10, "qty": 2}]}
+            self.assertEqual(process_order(order), {"id": 1, "total": 28, "status": "accepted"})
+
+        def test_coupon_free_shipping(self):
+            order = {"id": 2, "lines": [{"price": 60, "qty": 2}], "coupon": "SAVE10"}
+            self.assertEqual(process_order(order)["total"], 108.0)
+
+        def test_invalid(self):
+            for order in ({"id": 3, "lines": []}, {"id": 4, "lines": [{"price": 1, "qty": 0}]}):
+                with self.assertRaises(ValueError):
+                    process_order(order)
+accept: |
+  git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q && python -c '
+  from unittest import mock
+  import orders
+  o = {"id": 9, "lines": [{"price": 30, "qty": 1}], "coupon": "SAVE10"}
+  assert orders.order_total(o) == 35.0, orders.order_total(o)
+  try:
+      orders.validate_order({"id": 1, "lines": [{"price": -1, "qty": 1}]})
+  except ValueError:
+      pass
+  else:
+      raise AssertionError("validate_order did not raise")
+  assert orders.validate_order(o) is None
+  with mock.patch.object(orders, "validate_order") as v, mock.patch.object(orders, "order_total", return_value=12.5) as t:
+      assert orders.process_order(o) == {"id": 9, "total": 12.5, "status": "accepted"}
+      v.assert_called_once_with(o); t.assert_called_once_with(o)
+  print("ok")'
+allowed_commands: ["python -m unittest*"]
+max_tool_calls: 10
+timeout: 60

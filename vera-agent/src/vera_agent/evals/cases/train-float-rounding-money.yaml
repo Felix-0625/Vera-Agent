@@ -1,0 +1,40 @@
+id: train-float-rounding-money
+split: train
+tags: [fix, python, float]
+task: |
+  账单金额四舍五入有问题：2.675 元应该显示为 "2.68"，1.005 应为 "1.01"（财务要求"四舍五入、逢五进一"）。
+  请修复 money.py，让 tests/ 中的测试通过。不要修改 tests/ 目录。
+fixture:
+  money.py: |
+    """Money formatting for invoices."""
+
+
+    def round_yuan(amount):
+        """Round ``amount`` (float or str) to 2 decimals, half-up, and return it as a string."""
+        return f"{round(float(amount), 2):.2f}"
+
+
+    def total(amounts):
+        """Return the half-up rounded sum of ``amounts`` as a string."""
+        return round_yuan(sum(float(a) for a in amounts))
+  tests/__init__.py: ""
+  tests/test_money.py: |
+    import unittest
+
+    from money import round_yuan, total
+
+
+    class MoneyTest(unittest.TestCase):
+        def test_half_up(self):
+            self.assertEqual(round_yuan(2.675), "2.68")
+            self.assertEqual(round_yuan("1.005"), "1.01")
+            self.assertEqual(round_yuan(0.125), "0.13")
+            self.assertEqual(round_yuan(3), "3.00")
+
+        def test_total(self):
+            self.assertEqual(total(["0.1", "0.2"]), "0.30")
+            self.assertEqual(total([1.004, 0.001]), "1.01")
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*", "python -c *"]
+max_tool_calls: 10
+timeout: 60

@@ -10,6 +10,9 @@ export type ToolTabId =
   | 'sidechat'
   | 'subagents'
   | 'metrics'
+  | 'traces'
+  | 'memory'
+  | 'evolution'
   | 'gitflow'
   | 'workflow';
 

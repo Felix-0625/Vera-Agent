@@ -75,14 +75,18 @@ def test_list_topology_templates(temp_git_repo: Path):
 
     # Check supervisor structure
     sup_tpl = templates["supervisor_dev"]
-    assert sup_tpl["topology_type"] == "supervisor"
+    assert sup_tpl["topology_type"] == "architecture"
     roles = [n["role_key"] for n in sup_tpl["nodes"]]
     assert "supervisor" in roles
     assert "implementer" in roles
     assert "reviewer" in roles
     assert all(node.get("id") and node.get("type") == "agent" for node in sup_tpl["nodes"])
     assert all(edge.get("source") and edge.get("target") for edge in sup_tpl["edges"])
-    assert len(sup_tpl["edges"]) == 3
+    # A reporting tree: the supervisor manages both workers.
+    assert {(edge["source"], edge["target"]) for edge in sup_tpl["edges"]} == {
+        ("supervisor", "implementer"),
+        ("supervisor", "reviewer"),
+    }
 
 
 def test_one_click_provisioning_supervisor(temp_git_repo: Path):
@@ -108,7 +112,7 @@ def test_one_click_provisioning_supervisor(temp_git_repo: Path):
 
     group_info = res_data["group"]
     gid = group_info["group_id"]
-    assert group_info["topology_type"] == "supervisor"
+    assert group_info["topology_type"] == "architecture"
     assert group_info["goal"] == goal_text
 
     # 1. Verify physical worktree exists
@@ -138,14 +142,14 @@ def test_one_click_provisioning_supervisor(temp_git_repo: Path):
     assert registry_file.exists()
     reg_content = json.loads(registry_file.read_text(encoding="utf-8"))
     assert reg_content["group_id"] == gid
-    assert reg_content["topology_type"] == "supervisor"
+    assert reg_content["topology_type"] == "architecture"
     assert len(reg_content["agents"]) == 3
-    assert len(reg_content["edges"]) == 3
+    assert len(reg_content["edges"]) == 2
 
     # Check agent registry entries have responsibilities and tools
     lead_entry = next(a for a in reg_content["agents"] if a["role"] == "supervisor")
     assert len(lead_entry["responsibilities"]) > 0
-    assert "send_message" in lead_entry["allowed_tools"]
+    assert "read" in lead_entry["allowed_tools"]
     assert lead_entry["status"] == "idle"
 
     # 5. Test GET /api/groups/{group_id}/registry

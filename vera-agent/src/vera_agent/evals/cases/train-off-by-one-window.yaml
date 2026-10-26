@@ -1,0 +1,41 @@
+id: train-off-by-one-window
+split: train
+tags: [fix, python, off-by-one]
+task: |
+  The tests in tests/test_window.py fail. Fix the bug in window.py. Do not modify tests/.
+fixture:
+  window.py: |
+    """Sliding-window helpers."""
+
+
+    def last(items, n):
+        """Return the last ``n`` items of ``items`` (all of them if there are fewer)."""
+        if n <= 0:
+            return []
+        return items[-n - 1:]
+
+
+    def windows(items, size):
+        """Return every contiguous window of length ``size``."""
+        return [items[i:i + size] for i in range(len(items) - size)]
+  tests/__init__.py: ""
+  tests/test_window.py: |
+    import unittest
+
+    from window import last, windows
+
+
+    class WindowTest(unittest.TestCase):
+        def test_last(self):
+            self.assertEqual(last([1, 2, 3, 4], 2), [3, 4])
+            self.assertEqual(last([1, 2], 5), [1, 2])
+            self.assertEqual(last([1, 2], 0), [])
+
+        def test_windows(self):
+            self.assertEqual(windows([1, 2, 3], 2), [[1, 2], [2, 3]])
+            self.assertEqual(windows([1, 2], 2), [[1, 2]])
+            self.assertEqual(windows([1], 2), [])
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*", "python *.py"]
+max_tool_calls: 10
+timeout: 60

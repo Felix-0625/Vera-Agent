@@ -1,0 +1,41 @@
+id: holdout-off-by-one-range-sum
+split: holdout
+tags: [fix, python, off-by-one]
+task: |
+  The tests in tests/test_prefix.py fail. Fix the bug in prefix.py. Do not modify tests/.
+fixture:
+  prefix.py: |
+    """Prefix sums for fast range queries."""
+
+
+    class PrefixSum:
+        def __init__(self, values):
+            self.sums = [0]
+            for value in values:
+                self.sums.append(self.sums[-1] + value)
+
+        def range_sum(self, start, end):
+            """Return the sum of ``values[start:end + 1]`` (both ends inclusive, 0-based)."""
+            return self.sums[end] - self.sums[start]
+  tests/__init__.py: ""
+  tests/test_prefix.py: |
+    import unittest
+
+    from prefix import PrefixSum
+
+
+    class PrefixSumTest(unittest.TestCase):
+        def setUp(self):
+            self.ps = PrefixSum([3, 1, 4, 1, 5, 9])
+
+        def test_single(self):
+            self.assertEqual(self.ps.range_sum(0, 0), 3)
+            self.assertEqual(self.ps.range_sum(5, 5), 9)
+
+        def test_ranges(self):
+            self.assertEqual(self.ps.range_sum(1, 3), 6)
+            self.assertEqual(self.ps.range_sum(0, 5), 23)
+accept: git diff --quiet HEAD -- tests && python -m unittest discover -s tests -t . -q
+allowed_commands: ["python -m unittest*", "python *.py"]
+max_tool_calls: 8
+timeout: 60
