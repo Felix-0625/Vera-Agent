@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+<title id="title">03  Template, instance, and run</title><desc id="desc">Blueprints, instance threads, and run threads are separate persisted objects</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#52657d"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g font-family="Segoe UI, Microsoft YaHei, Arial, sans-serif" fill="#172b46">
+<text x="40" y="57" font-size="30" font-weight="600" text-anchor="start">03  Template, instance, and run</text>
+<text x="40" y="94" font-size="17" font-weight="400" text-anchor="start">Blueprints, instance threads, and run threads are separate persisted objects</text>
+<polyline points="400,235 530,235" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="225.0" font-size="16" font-weight="400" text-anchor="middle">Instantiate</text></g>
+<polyline points="870,235 1000,235" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="225.0" font-size="16" font-weight="400" text-anchor="middle">Repeatable</text></g>
+<polyline points="1170,305 1170,455" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="1170.0" y="370.0" font-size="16" font-weight="400" text-anchor="middle">Call run_turn per node</text></g>
+<polyline points="1000,520 870,520" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="510.0" font-size="16" font-weight="400" text-anchor="middle">Nodes complete</text></g>
+<polyline points="530,520 400,520" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="510.0" font-size="16" font-weight="400" text-anchor="middle">Final result</text></g>
+<rect x="60" y="170" width="340" height="135" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="230.0" y="219.5" font-size="20" font-weight="600" text-anchor="middle">Template</text>
+<text x="230.0" y="249.5" font-size="15" font-weight="400" text-anchor="middle">BUILTIN_TEMPLATES / custom JSON</text>
+<text x="230.0" y="274.5" font-size="15" font-weight="400" text-anchor="middle">Nodes and edges; no conversations</text>
+<rect x="530" y="170" width="340" height="135" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="700.0" y="219.5" font-size="20" font-weight="600" text-anchor="middle">Project instance</text>
+<text x="700.0" y="249.5" font-size="15" font-weight="400" text-anchor="middle">POST /api/groups/instances</text>
+<text x="700.0" y="274.5" font-size="15" font-weight="400" text-anchor="middle">Copy blueprint + persistent node threads</text>
+<rect x="1000" y="170" width="340" height="135" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="1170.0" y="219.5" font-size="20" font-weight="600" text-anchor="middle">New run · explicit confirmation Y</text>
+<text x="1170.0" y="249.5" font-size="15" font-weight="400" text-anchor="middle">POST /api/groups/{id}/runs</text>
+<text x="1170.0" y="274.5" font-size="15" font-weight="400" text-anchor="middle">Create separate threads for this run</text>
+<rect x="1000" y="455" width="340" height="130" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="1170.0" y="502.0" font-size="20" font-weight="600" text-anchor="middle">Serial UI scheduling</text>
+<text x="1170.0" y="532.0" font-size="15" font-weight="400" text-anchor="middle">agent / condition / loop</text>
+<text x="1170.0" y="557.0" font-size="15" font-weight="400" text-anchor="middle">Active upstream output → next node</text>
+<rect x="530" y="455" width="340" height="130" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="700.0" y="502.0" font-size="20" font-weight="600" text-anchor="middle">Supervisor review</text>
+<text x="700.0" y="532.0" font-size="15" font-weight="400" text-anchor="middle">supervisor_review</text>
+<text x="700.0" y="557.0" font-size="15" font-weight="400" text-anchor="middle">Review node results and errors</text>
+<rect x="60" y="455" width="340" height="130" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="230.0" y="502.0" font-size="20" font-weight="600" text-anchor="middle">Deliver to initiating thread</text>
+<text x="230.0" y="532.0" font-size="15" font-weight="400" text-anchor="middle">POST /api/threads/{id}/</text>
+<text x="230.0" y="557.0" font-size="15" font-weight="400" text-anchor="middle">messages/deliver</text>
+<rect x="60" y="675" width="1280" height="120" rx="12" fill="#f3f5f8" stroke="#8897aa" stroke-width="1.6"/>
+<text x="700.0" y="717.0" font-size="20" font-weight="600" text-anchor="middle">Constraints</text>
+<text x="700.0" y="747.0" font-size="15" font-weight="400" text-anchor="middle">Organization: one root, one parent, acyclic, agent-only. Condition: true/false. Loop: repeat/exit, max 20.</text>
+<text x="700.0" y="772.0" font-size="15" font-weight="400" text-anchor="middle">Runs do not share chat history; scoped long-term memory may still be recalled. Closing the UI interrupts scheduling; no resume.</text>
+</g></svg>

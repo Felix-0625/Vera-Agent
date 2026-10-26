@@ -5,6 +5,8 @@
 | Layer | Location | What it covers |
 | --- | --- | --- |
 | Backend | `vera-agent/tests/` | API routes (`server/`), agents, configuration, environments, models, sessions, tools, multi-agent flows. Optional ConTree/Modal adapter tests are skipped without their extras. |
+| Chat turn characterization | `vera-agent/tests/server/test_chat_stream_events.py` | The ordered SSE event sequence of a turn (plain reply, tool call, approve, reject, `O:` correction, interrupt during approval, tool limit, model error). Any refactor of `run_turn` must keep these passing. |
+| Learning loop | `vera-agent/tests/telemetry/`, `memory/`, `evals/`, `evolution/` | Scoring rules, trace store, secret redaction, scoped/versioned memory and Chinese recall, consolidation, the eval runner over the real pipeline with scripted models and real acceptance scripts, the gate, and the full failure → proposal → gate → adoption → online gain → rollback path. No model API is called. |
 | Frontend | `frontend/src/**/*.test.ts` (Vitest) | Pure logic and frontend/backend contracts. There are no React component/DOM tests yet; the TypeScript build checks compilation, not screen behavior. |
 | Repository | `tests/` | Workflow quickstart dry run through the real API, template validity, Markdown links, API index freshness, env-var documentation, secrets/residue, tracked lockfiles, English comments, LF storage. |
 | MCP example | `examples/mcp-server/test_client.py` | Real stdio handshake, tool discovery, and the read-only fixture. It does not test the MCP settings UI or third-party servers. |
@@ -44,8 +46,28 @@ The top-level script stops on the first failing command. It does not call model 
 - A workflow template saved in storage does not prove a full workflow run, visible stage trace, and result return path.
 - MCP protocol smoke tests do not certify a package’s safety.
 - Passing tests do not establish performance or benchmark results. Publish only measured results with the exact dataset, command, and environment.
+- The learning-loop tests use scripted models. They prove the runner, gate and adoption logic, not that a real model improves; that needs `vera-eval run` with a configured model (it costs money and is never part of `check-all.ps1`).
 
 For a release candidate, also perform a clean Windows install, a real configured-model conversation, project binding, file operation permission checks, one tool call, one MCP call, one Skill activation, and an update/backup check. Record model/provider and whether any external service was used.
+
+## Pre-push verification (2026-10-27)
+
+| Check | Result |
+| --- | --- |
+| Full backend suite (`python -m pytest tests`) | 800 passed, 69 skipped; one existing Pydantic `ReadOnly` warning |
+| Repository tests | 39 passed: docs/links, generated API index, examples, source size and hygiene |
+| Frontend | 44 tests passed; Oxlint and TypeScript/Vite web and desktop production builds passed |
+| Python style | Backend and repository Ruff lint/format checks passed |
+| MCP example | Stdio handshake, tool discovery, and four read-only calls passed |
+| Static website | Four page entry points and assets passed validation |
+| Dependency lock | `uv lock --check --offline` passed |
+| Browser | Chinese/English design pages each loaded five diagrams; twelve desktop/mobile route checks and ten SVG bounds checks passed; no page script errors |
+
+The regression suite includes the last acceptance issue: `python -m pytest -q --version`
+must not overwrite an earlier failed verification score. This pass did not call a real model,
+record a new product video, trigger hosted CI, or deploy the website. Existing demo footage
+remains labeled as a preset flow. Use [the recording script](DEMO_RECORDING.md) for the new video.
+Editable diagrams and SVG exports are indexed in [the diagram library](../website/diagrams/README.md).
 
 ## Workflow and Task Board acceptance (2026-10-16)
 

@@ -6,6 +6,13 @@ The npm section includes every package in the lockfile, including development-on
 License strings come from distribution metadata, license files, classifiers, or npm lock metadata. `UNKNOWN` requires maintainer review.
 This inventory is not legal advice and does not replace retaining upstream notices in redistributed artifacts.
 
+## Vendored website dependency
+
+The static documentation viewer vendors Marked v18.1.1 at
+`website/assets/vendor/marked.umd.js`. Its MIT copyright and license notices are retained in
+[marked-LICENSE.txt](../website/assets/vendor/marked-LICENSE.txt). This vendored browser asset is
+separate from the generated Python/npm inventories below.
+
 ## Regenerate on Windows
 
 Run these commands from the repository root after changing a dependency lockfile:

@@ -32,7 +32,20 @@ lives in `VERA_GLOBAL_CONFIG_DIR` (see [CONFIGURATION.md](CONFIGURATION.md)).
 ├── templates/topology/<template_id>.json   # custom topology templates
 ├── taskboard.sqlite             # task board work items (WAL mode)
 ├── user_context.json            # user rules and context settings
-└── user_memories.json           # user profile memories
+├── user_memories.json           # legacy profile memories; imported once into memory.db, then unused
+├── memory.db                    # scoped memories, versions, pending changes, embeddings (SQLite + FTS5)
+├── memory_config.json           # memory backend, consolidation, recall budgets
+├── traces.db                    # turn traces, spans and scores (SQLite)
+├── telemetry_config.json        # local tracing and optional Langfuse export (may hold a Langfuse key)
+├── evolution_config.json        # Critic/eval models, low-score threshold, gate repeats
+├── evals/
+│   ├── cases/<id>.yaml          # project eval cases (built-in cases ship in vera_agent/evals/cases/)
+│   ├── drafts/<trace_id>.yaml   # case drafts from low-score traces (accept: TODO)
+│   ├── profiles/<id>.json       # immutable agent profiles
+│   └── reports/<report_id>.json # vera-eval reports
+└── evolution/
+    ├── proposals/<id>/proposal.json, diff.md
+    └── rolled_back/<id>/        # Skills moved out on rollback
 
 <project>/.agents/
 ├── sessions/<thread_id>.json    # one ThreadSession per conversation
@@ -51,7 +64,14 @@ Never commit or share `.agents/`.
 
 Built-in templates are `TopologyTemplate` objects in
 [`session/templates.py`](../vera-agent/src/vera_agent/session/templates.py)
-(`supervisor_dev`, `sequential_workflow`, `adversarial_audit`, `swarm_mesh`).
+(`supervisor_dev` is an organization; `sequential_workflow`, `adversarial_audit`, and
+`swarm_mesh` are workflows).
+
+Organizations (`topology_type: "architecture"`) must be reporting trees: one top role,
+one direct superior per role, no cycles, agent nodes only. The API rejects other shapes
+when creating or updating an instance and when saving an organization template, and the
+editor only builds reporting lines through "add subordinate / add peer". Workflows need a
+single start node; cycles are expressed with a loop node.
 `GET /api/templates/topology` serializes them and adds `id = role_key`,
 `type = "agent"` to nodes and `source`/`target` to edges, then merges custom
 templates. A custom template with the same `template_id` overrides a built-in one.

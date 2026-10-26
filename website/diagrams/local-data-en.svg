@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+<title id="title">04  Local data and configuration roots</title><desc id="desc">SQLite records use project/scope filters; project files remain in their original directory</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#52657d"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g font-family="Segoe UI, Microsoft YaHei, Arial, sans-serif" fill="#172b46">
+<text x="40" y="57" font-size="30" font-weight="600" text-anchor="start">04  Local data and configuration roots</text>
+<text x="40" y="94" font-size="17" font-weight="400" text-anchor="start">SQLite records use project/scope filters; project files remain in their original directory</text>
+<rect x="40" y="135" width="635" height="620" rx="16" fill="#fff" stroke="#9badc2" stroke-dasharray="7 5"/>
+<text x="60" y="169" font-size="20" font-weight="600" text-anchor="start">Application config root · &lt;config root&gt;/.agents/</text>
+<rect x="725" y="135" width="635" height="620" rx="16" fill="#fff" stroke="#9badc2" stroke-dasharray="7 5"/>
+<text x="745" y="169" font-size="20" font-weight="600" text-anchor="start">Project directory · &lt;project&gt;/</text>
+<rect x="75" y="215" width="565" height="125" rx="12" fill="#fff7e8" stroke="#aa762a" stroke-width="1.6"/>
+<text x="357.5" y="247.0" font-size="20" font-weight="600" text-anchor="middle">Settings and credentials</text>
+<text x="357.5" y="277.0" font-size="15" font-weight="400" text-anchor="middle">models_config.json · permissions_config.json</text>
+<text x="357.5" y="302.0" font-size="15" font-weight="400" text-anchor="middle">user_context.json · memory_config.json</text>
+<text x="357.5" y="327.0" font-size="15" font-weight="400" text-anchor="middle">telemetry_config.json · evolution_config.json</text>
+<rect x="75" y="385" width="565" height="125" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="357.5" y="429.5" font-size="20" font-weight="600" text-anchor="middle">SQLite</text>
+<text x="357.5" y="459.5" font-size="15" font-weight="400" text-anchor="middle">taskboard.sqlite · traces.db · memory.db</text>
+<text x="357.5" y="484.5" font-size="15" font-weight="400" text-anchor="middle">Memory versions, FTS5, pending changes, traces, scores</text>
+<rect x="75" y="555" width="565" height="125" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="357.5" y="599.5" font-size="20" font-weight="600" text-anchor="middle">Evals, proposals, and extensions</text>
+<text x="357.5" y="629.5" font-size="15" font-weight="400" text-anchor="middle">evals/{cases,profiles,reports,drafts}/</text>
+<text x="357.5" y="654.5" font-size="15" font-weight="400" text-anchor="middle">evolution/{proposals,rolled_back}/ · skills/</text>
+<rect x="760" y="215" width="565" height="125" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="1042.5" y="247.0" font-size="20" font-weight="600" text-anchor="middle">Chats and instances</text>
+<text x="1042.5" y="277.0" font-size="15" font-weight="400" text-anchor="middle">.agents/sessions/&lt;thread_id&gt;.json</text>
+<text x="1042.5" y="302.0" font-size="15" font-weight="400" text-anchor="middle">.agents/groups/&lt;group_id&gt;.json</text>
+<text x="1042.5" y="327.0" font-size="15" font-weight="400" text-anchor="middle">.agents/registries/&lt;group_id&gt;.json</text>
+<rect x="760" y="385" width="565" height="125" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="1042.5" y="429.5" font-size="20" font-weight="600" text-anchor="middle">Run records and scheduled tasks</text>
+<text x="1042.5" y="459.5" font-size="15" font-weight="400" text-anchor="middle">.agents/runs/&lt;group_id&gt;/&lt;run_id&gt;.json</text>
+<text x="1042.5" y="484.5" font-size="15" font-weight="400" text-anchor="middle">.agents/scheduled_tasks.json</text>
+<rect x="760" y="555" width="565" height="125" rx="12" fill="#f3f5f8" stroke="#8897aa" stroke-width="1.6"/>
+<text x="1042.5" y="599.5" font-size="20" font-weight="600" text-anchor="middle">Actual code outside .agents/</text>
+<text x="1042.5" y="629.5" font-size="15" font-weight="400" text-anchor="middle">Project sources and .git/ stay in place</text>
+<text x="1042.5" y="654.5" font-size="15" font-weight="400" text-anchor="middle">Binding records a path; it does not copy files</text>
+<rect x="80" y="780" width="1240" height="60" rx="12" fill="#fff7e8" stroke="#aa762a" stroke-width="1.6"/>
+<text x="700.0" y="817.0" font-size="20" font-weight="600" text-anchor="middle">Model keys are plaintext locally; Git ignores .agents/; close the app before backup</text>
+</g></svg>

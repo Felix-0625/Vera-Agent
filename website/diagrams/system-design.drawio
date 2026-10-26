@@ -1,0 +1,891 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="runtime-architecture" name="01  运行架构">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="900" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="01  运行架构" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="Windows 本机进程、外部模型与本地存储的边界" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="panel0" parent="1" vertex="1" value="VeraAgent 应用与内部存储" style="rounded=1;html=0;verticalAlign=top;align=left;spacing=18;fontSize=20;fillColor=#ffffff;strokeColor=#9badc2;dashed=1;">
+          <mxGeometry as="geometry" x="35" y="120" width="980" height="710" />
+        </mxCell>
+        <mxCell id="edge0" parent="1" edge="1" value="HTTP / WS" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="375" y="245" />
+            <mxPoint as="targetPoint" x="535" y="245" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" parent="1" edge="1" value="SSE / WS" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="535" y="300" />
+            <mxPoint as="targetPoint" x="375" y="300" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" parent="1" edge="1" value="HTTPS" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="935" y="265" />
+            <mxPoint as="targetPoint" x="1070" y="265" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" parent="1" edge="1" value="审批后执行" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="735" y="335" />
+            <mxPoint as="targetPoint" x="735" y="455" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" parent="1" edge="1" value="读写 / 执行" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="935" y="510" />
+            <mxPoint as="targetPoint" x="1070" y="510" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge5" parent="1" edge="1" value="轨迹、记忆、配置" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="575" y="335" />
+            <mxPoint as="targetPoint" x="265" y="660" />
+            <Array as="points">
+              <mxPoint x="575" y="385" />
+              <mxPoint x="265" y="385" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge6" parent="1" edge="1" value="持久化" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="735" y="565" />
+            <mxPoint as="targetPoint" x="735" y="660" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ui" parent="1" vertex="1" value="桌面 UI&#10;React / TypeScript / WebView2&#10;对话、编排、执行记录、记忆、提案" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="195" width="300" height="140" />
+        </mxCell>
+        <mxCell id="api" parent="1" vertex="1" value="本地 API · Starlette / Uvicorn&#10;127.0.0.1 · TurnContext&#10;run_turn：模型 → 审批 → 工具 → 观察" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="535" y="195" width="400" height="140" />
+        </mxCell>
+        <mxCell id="tools" parent="1" vertex="1" value="工具与集成&#10;Files / Terminal / Git / MCP / Skills" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="535" y="455" width="400" height="110" />
+        </mxCell>
+        <mxCell id="app" parent="1" vertex="1" value="应用级 .agents/&#10;配置、traces.db、memory.db&#10;evals/ · evolution/ · skills/" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="660" width="380" height="120" />
+        </mxCell>
+        <mxCell id="proj" parent="1" vertex="1" value="项目级 .agents/&#10;会话、实例、运行、注册表" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="545" y="660" width="390" height="120" />
+        </mxCell>
+        <mxCell id="llm" parent="1" vertex="1" value="外部模型服务&#10;HTTPS&#10;接收提示词与选定上下文" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1070" y="195" width="285" height="140" />
+        </mxCell>
+        <mxCell id="files" parent="1" vertex="1" value="项目文件与 Git&#10;原目录 · 当前用户权限" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1070" y="455" width="285" height="110" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="chat-sequence" name="02  单轮对话与 SSE 时序">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="1150" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="02  单轮对话与 SSE 时序" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="HTTP 路由组装上下文；桌面与评测共用 run_turn" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="edge0" parent="1" edge="1" value="" style="html=0;endArrow=none;strokeColor=#bbc7d5;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="165" y="196" />
+            <mxPoint as="targetPoint" x="165" y="1050" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" parent="1" edge="1" value="" style="html=0;endArrow=none;strokeColor=#bbc7d5;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="196" />
+            <mxPoint as="targetPoint" x="515" y="1050" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" parent="1" edge="1" value="" style="html=0;endArrow=none;strokeColor=#bbc7d5;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="865" y="196" />
+            <mxPoint as="targetPoint" x="865" y="1050" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" parent="1" edge="1" value="" style="html=0;endArrow=none;strokeColor=#bbc7d5;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1215" y="196" />
+            <mxPoint as="targetPoint" x="1215" y="1050" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" parent="1" edge="1" value="POST /api/chat/stream → TurnContext" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="165" y="235" />
+            <mxPoint as="targetPoint" x="515" y="235" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge5" parent="1" edge="1" value="SSE thinking" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="290" />
+            <mxPoint as="targetPoint" x="165" y="290" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge6" parent="1" edge="1" value="提示词 + 历史 + 活跃规则" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="345" />
+            <mxPoint as="targetPoint" x="865" y="345" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge7" parent="1" edge="1" value="流式文本 / 工具动作" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="865" y="400" />
+            <mxPoint as="targetPoint" x="515" y="400" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge8" parent="1" edge="1" value="SSE text_chunk × N / tool_call" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="455" />
+            <mxPoint as="targetPoint" x="165" y="455" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge9" parent="1" edge="1" value="ApprovalPolicy 检查" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="510" />
+            <mxPoint as="targetPoint" x="1215" y="510" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge10" parent="1" edge="1" value="SSE approval_required（按需）" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="565" />
+            <mxPoint as="targetPoint" x="165" y="565" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge11" parent="1" edge="1" value="POST /api/chat/confirm · Y / N / O" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="165" y="620" />
+            <mxPoint as="targetPoint" x="515" y="620" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge12" parent="1" edge="1" value="允许时执行工具" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="675" />
+            <mxPoint as="targetPoint" x="1215" y="675" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge13" parent="1" edge="1" value="output + returncode" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1215" y="730" />
+            <mxPoint as="targetPoint" x="515" y="730" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge14" parent="1" edge="1" value="SSE tool_result" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="785" />
+            <mxPoint as="targetPoint" x="165" y="785" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge15" parent="1" edge="1" value="观察结果 → 下一步模型调用" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="840" />
+            <mxPoint as="targetPoint" x="865" y="840" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge16" parent="1" edge="1" value="SSE context_management（发生压缩时）" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="895" />
+            <mxPoint as="targetPoint" x="165" y="895" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge17" parent="1" edge="1" value="SSE finish · trace_id" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="950" />
+            <mxPoint as="targetPoint" x="165" y="950" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ui" parent="1" vertex="1" value="前端 / 用户&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="25" y="130" width="280" height="66" />
+        </mxCell>
+        <mxCell id="turn" parent="1" vertex="1" value="API / run_turn&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="375" y="130" width="280" height="66" />
+        </mxCell>
+        <mxCell id="model" parent="1" vertex="1" value="模型服务&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="725" y="130" width="280" height="66" />
+        </mxCell>
+        <mxCell id="tool" parent="1" vertex="1" value="审批策略 / 工具&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1075" y="130" width="280" height="66" />
+        </mxCell>
+        <mxCell id="notes" parent="1" vertex="1" value="工具循环可重复；finish 固定最后&#10;桌面审批超时 300 秒拒绝；评测使用命令白名单自动审批" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="280" y="1025" width="840" height="85" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="workflow-lifecycle" name="03  模板、实例与运行">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="860" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="03  模板、实例与运行" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="声明式蓝图、项目会话与运行会话分别持久化" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="edge0" parent="1" edge="1" value="实例化" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="400" y="235" />
+            <mxPoint as="targetPoint" x="530" y="235" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" parent="1" edge="1" value="可重复运行" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="870" y="235" />
+            <mxPoint as="targetPoint" x="1000" y="235" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" parent="1" edge="1" value="逐节点调用 run_turn" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1170" y="305" />
+            <mxPoint as="targetPoint" x="1170" y="455" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" parent="1" edge="1" value="所有节点完成" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1000" y="520" />
+            <mxPoint as="targetPoint" x="870" y="520" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" parent="1" edge="1" value="最终结论" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="530" y="520" />
+            <mxPoint as="targetPoint" x="400" y="520" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="template" parent="1" vertex="1" value="模板&#10;BUILTIN_TEMPLATES / custom JSON&#10;只有节点与连线，不含会话" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="170" width="340" height="135" />
+        </mxCell>
+        <mxCell id="instance" parent="1" vertex="1" value="项目实例&#10;POST /api/groups/instances&#10;复制蓝图 + 创建持久节点会话" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="170" width="340" height="135" />
+        </mxCell>
+        <mxCell id="run" parent="1" vertex="1" value="新运行 · 显式确认 Y&#10;POST /api/groups/{id}/runs&#10;创建本次独立的运行会话" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="170" width="340" height="135" />
+        </mxCell>
+        <mxCell id="schedule" parent="1" vertex="1" value="前端串行调度&#10;agent / condition / loop&#10;活动上游输出传入下一节点" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="455" width="340" height="130" />
+        </mxCell>
+        <mxCell id="review" parent="1" vertex="1" value="Supervisor 复核&#10;supervisor_review&#10;汇总节点结果与错误" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="455" width="340" height="130" />
+        </mxCell>
+        <mxCell id="deliver" parent="1" vertex="1" value="回传原对话&#10;POST /api/threads/{id}/&#10;messages/deliver" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="455" width="340" height="130" />
+        </mxCell>
+        <mxCell id="constraints" parent="1" vertex="1" value="约束&#10;组织：唯一根节点、唯一直接上级、无环、全为 agent。条件：true / false；循环：repeat / exit，最多 20 次。&#10;运行之间不共享对话历史；作用域允许的长期记忆仍可召回。关闭或刷新界面会中断调度，没有恢复执行入口。" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="675" width="1280" height="120" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="local-data" name="04  本地数据与配置根目录">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="860" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="04  本地数据与配置根目录" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="配置根目录的 SQLite 记录按 project_id / scope 隔离；项目文件留在原目录" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="panel0" parent="1" vertex="1" value="应用配置根 · &lt;config root&gt;/.agents/" style="rounded=1;html=0;verticalAlign=top;align=left;spacing=18;fontSize=20;fillColor=#ffffff;strokeColor=#9badc2;dashed=1;">
+          <mxGeometry as="geometry" x="40" y="135" width="635" height="620" />
+        </mxCell>
+        <mxCell id="panel1" parent="1" vertex="1" value="项目目录 · &lt;project&gt;/" style="rounded=1;html=0;verticalAlign=top;align=left;spacing=18;fontSize=20;fillColor=#ffffff;strokeColor=#9badc2;dashed=1;">
+          <mxGeometry as="geometry" x="725" y="135" width="635" height="620" />
+        </mxCell>
+        <mxCell id="config" parent="1" vertex="1" value="配置与凭据&#10;models_config.json · permissions_config.json&#10;user_context.json · memory_config.json&#10;telemetry_config.json · evolution_config.json" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="215" width="565" height="125" />
+        </mxCell>
+        <mxCell id="sqlite" parent="1" vertex="1" value="SQLite&#10;taskboard.sqlite · traces.db · memory.db&#10;记忆版本、FTS5、待确认变更、轨迹与评分" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="385" width="565" height="125" />
+        </mxCell>
+        <mxCell id="profiles" parent="1" vertex="1" value="评测、提案与扩展&#10;evals/{cases,profiles,reports,drafts}/&#10;evolution/{proposals,rolled_back}/ · skills/" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="555" width="565" height="125" />
+        </mxCell>
+        <mxCell id="sessions" parent="1" vertex="1" value="对话与项目实例&#10;.agents/sessions/&lt;thread_id&gt;.json&#10;.agents/groups/&lt;group_id&gt;.json&#10;.agents/registries/&lt;group_id&gt;.json" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="760" y="215" width="565" height="125" />
+        </mxCell>
+        <mxCell id="runs" parent="1" vertex="1" value="运行状态与计划任务&#10;.agents/runs/&lt;group_id&gt;/&lt;run_id&gt;.json&#10;.agents/scheduled_tasks.json" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="760" y="385" width="565" height="125" />
+        </mxCell>
+        <mxCell id="files" parent="1" vertex="1" value=".agents/ 外的实际代码&#10;项目源文件与 .git/ 保持原位置&#10;绑定项目只记录路径，不复制文件" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="760" y="555" width="565" height="125" />
+        </mxCell>
+        <mxCell id="boundary" parent="1" vertex="1" value="模型 Key 明文存于本机；Git 忽略 .agents/；备份前关闭应用&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="80" y="780" width="1240" height="60" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="learning-loop" name="05  记录、记忆与受控改进">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="1110" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="05  记录、记忆与受控改进" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="评测共用真实 run_turn；采纳必须经过门禁与用户确认；监控由用户触发" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="edge0" parent="1" edge="1" value="记录" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="400" y="217" />
+            <mxPoint as="targetPoint" x="530" y="217" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" parent="1" edge="1" value="回合摘要" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="870" y="217" />
+            <mxPoint as="targetPoint" x="1000" y="217" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" parent="1" edge="1" value="按作用域与预算召回" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1170" y="160" />
+            <mxPoint as="targetPoint" x="230" y="160" />
+            <Array as="points">
+              <mxPoint x="1170" y="125" />
+              <mxPoint x="230" y="125" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" parent="1" edge="1" value="低分轨迹" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="620" y="275" />
+            <mxPoint as="targetPoint" x="230" y="425" />
+            <Array as="points">
+              <mxPoint x="620" y="340" />
+              <mxPoint x="230" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" parent="1" edge="1" value="候选提案" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="400" y="490" />
+            <mxPoint as="targetPoint" x="530" y="490" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge5" parent="1" edge="1" value="全部通过" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="870" y="490" />
+            <mxPoint as="targetPoint" x="1000" y="490" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge6" parent="1" edge="1" value="生效" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1170" y="555" />
+            <mxPoint as="targetPoint" x="1170" y="720" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge7" parent="1" edge="1" value="观察线上评分" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1000" y="785" />
+            <mxPoint as="targetPoint" x="870" y="785" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge8" parent="1" edge="1" value="达到回滚阈值" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="530" y="785" />
+            <mxPoint as="targetPoint" x="400" y="785" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge9" parent="1" edge="1" value="活跃配置用于后续回合" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1170" y="850" />
+            <mxPoint as="targetPoint" x="60" y="217" />
+            <Array as="points">
+              <mxPoint x="1170" y="910" />
+              <mxPoint x="25" y="910" />
+              <mxPoint x="25" y="217" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="turn" parent="1" vertex="1" value="单轮执行 run_turn&#10;模型、审批、工具、退出码" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="160" width="340" height="115" />
+        </mxCell>
+        <mxCell id="trace" parent="1" vertex="1" value="轨迹与评分&#10;traces.db · spans / scores&#10;outcome = verification | turn_signal" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="160" width="340" height="115" />
+        </mxCell>
+        <mxCell id="memory" parent="1" vertex="1" value="长期记忆&#10;user / project / session&#10;版本历史、待确认变更、按预算召回" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="160" width="340" height="115" />
+        </mxCell>
+        <mxCell id="critic" parent="1" vertex="1" value="Critic 分析低分轨迹&#10;用户点击分析 · 调用模型&#10;工具输出标记为不可信数据" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="425" width="340" height="130" />
+        </mxCell>
+        <mxCell id="gate" parent="1" vertex="1" value="评测门禁 · 调用模型&#10;train 不退化 → holdout 显著更好&#10;→ guard 零回归，否则不推荐" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="425" width="340" height="130" />
+        </mxCell>
+        <mxCell id="adopt" parent="1" vertex="1" value="推荐后，用户确认采纳&#10;规则 / prompt overlay / Skill&#10;基线包含已采纳的改进" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="425" width="340" height="130" />
+        </mxCell>
+        <mxCell id="active" parent="1" vertex="1" value="活跃配置应用到后续回合&#10;与门禁使用同一套渲染函数&#10;采纳规则不占记忆召回预算" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="720" width="340" height="130" />
+        </mxCell>
+        <mxCell id="monitor" parent="1" vertex="1" value="在线监控 · 用户触发&#10;前后 14 天；采纳后至少 10 条&#10;平均 outcome 下降 ≥0.15 → 回滚" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="720" width="340" height="130" />
+        </mxCell>
+        <mxCell id="rollback" parent="1" vertex="1" value="回滚并保留审计记录&#10;规则软删除 / Skill 移出活跃目录&#10;后续回合不再应用该提案" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="720" width="340" height="130" />
+        </mxCell>
+        <mxCell id="limits" parent="1" vertex="1" value="默认与证据边界&#10;Langfuse 导出、Mem0 适配与自动整理默认关闭；consolidation 的 UPDATE / DELETE 通常等待用户确认。&#10;守护集通过只证明该次用例结果；在线前后对比是观察信号，不能证明因果或保证持续变强。" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="960" width="1280" height="105" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="runtime-architecture-en" name="01  Runtime architecture">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="900" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="01  Runtime architecture" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="Local processes, external model provider, and persistence boundaries" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="panel0" parent="1" vertex="1" value="VeraAgent application and internal storage" style="rounded=1;html=0;verticalAlign=top;align=left;spacing=18;fontSize=20;fillColor=#ffffff;strokeColor=#9badc2;dashed=1;">
+          <mxGeometry as="geometry" x="35" y="120" width="980" height="710" />
+        </mxCell>
+        <mxCell id="edge0" parent="1" edge="1" value="HTTP / WS" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="375" y="245" />
+            <mxPoint as="targetPoint" x="535" y="245" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" parent="1" edge="1" value="SSE / WS" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="535" y="300" />
+            <mxPoint as="targetPoint" x="375" y="300" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" parent="1" edge="1" value="HTTPS" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="935" y="265" />
+            <mxPoint as="targetPoint" x="1070" y="265" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" parent="1" edge="1" value="After approval" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="735" y="335" />
+            <mxPoint as="targetPoint" x="735" y="455" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" parent="1" edge="1" value="Read / execute" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="935" y="510" />
+            <mxPoint as="targetPoint" x="1070" y="510" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge5" parent="1" edge="1" value="Traces, memory, settings" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="575" y="335" />
+            <mxPoint as="targetPoint" x="265" y="660" />
+            <Array as="points">
+              <mxPoint x="575" y="385" />
+              <mxPoint x="265" y="385" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge6" parent="1" edge="1" value="Persist" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="735" y="565" />
+            <mxPoint as="targetPoint" x="735" y="660" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ui" parent="1" vertex="1" value="Desktop UI&#10;React / TypeScript / WebView2&#10;Chat, workflows, traces, memory, proposals" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="195" width="300" height="140" />
+        </mxCell>
+        <mxCell id="api" parent="1" vertex="1" value="Local API · Starlette / Uvicorn&#10;127.0.0.1 · TurnContext&#10;run_turn: model → approval → tool → observation" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="535" y="195" width="400" height="140" />
+        </mxCell>
+        <mxCell id="tools" parent="1" vertex="1" value="Tools and integrations&#10;Files / Terminal / Git / MCP / Skills" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="535" y="455" width="400" height="110" />
+        </mxCell>
+        <mxCell id="app" parent="1" vertex="1" value="Application .agents/&#10;Settings, traces.db, memory.db&#10;evals/ · evolution/ · skills/" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="660" width="380" height="120" />
+        </mxCell>
+        <mxCell id="proj" parent="1" vertex="1" value="Project .agents/&#10;Sessions, instances, runs, registries" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="545" y="660" width="390" height="120" />
+        </mxCell>
+        <mxCell id="llm" parent="1" vertex="1" value="External model provider&#10;HTTPS&#10;Receives prompts and selected context" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1070" y="195" width="285" height="140" />
+        </mxCell>
+        <mxCell id="files" parent="1" vertex="1" value="Project files and Git&#10;Original directory · current user" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1070" y="455" width="285" height="110" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="chat-sequence-en" name="02  Chat turn and SSE sequence">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="1150" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="02  Chat turn and SSE sequence" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="HTTP assembles context; desktop and evals share run_turn" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="edge0" parent="1" edge="1" value="" style="html=0;endArrow=none;strokeColor=#bbc7d5;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="165" y="196" />
+            <mxPoint as="targetPoint" x="165" y="1050" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" parent="1" edge="1" value="" style="html=0;endArrow=none;strokeColor=#bbc7d5;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="196" />
+            <mxPoint as="targetPoint" x="515" y="1050" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" parent="1" edge="1" value="" style="html=0;endArrow=none;strokeColor=#bbc7d5;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="865" y="196" />
+            <mxPoint as="targetPoint" x="865" y="1050" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" parent="1" edge="1" value="" style="html=0;endArrow=none;strokeColor=#bbc7d5;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1215" y="196" />
+            <mxPoint as="targetPoint" x="1215" y="1050" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" parent="1" edge="1" value="POST /api/chat/stream → TurnContext" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="165" y="235" />
+            <mxPoint as="targetPoint" x="515" y="235" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge5" parent="1" edge="1" value="SSE thinking" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="290" />
+            <mxPoint as="targetPoint" x="165" y="290" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge6" parent="1" edge="1" value="Prompt + history + active rules" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="345" />
+            <mxPoint as="targetPoint" x="865" y="345" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge7" parent="1" edge="1" value="Stream text / tool action" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="865" y="400" />
+            <mxPoint as="targetPoint" x="515" y="400" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge8" parent="1" edge="1" value="SSE text_chunk × N / tool_call" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="455" />
+            <mxPoint as="targetPoint" x="165" y="455" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge9" parent="1" edge="1" value="ApprovalPolicy check" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="510" />
+            <mxPoint as="targetPoint" x="1215" y="510" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge10" parent="1" edge="1" value="SSE approval_required (if required)" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="565" />
+            <mxPoint as="targetPoint" x="165" y="565" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge11" parent="1" edge="1" value="POST /api/chat/confirm · Y / N / O" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="165" y="620" />
+            <mxPoint as="targetPoint" x="515" y="620" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge12" parent="1" edge="1" value="Execute tool when approved" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="675" />
+            <mxPoint as="targetPoint" x="1215" y="675" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge13" parent="1" edge="1" value="output + returncode" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1215" y="730" />
+            <mxPoint as="targetPoint" x="515" y="730" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge14" parent="1" edge="1" value="SSE tool_result" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="785" />
+            <mxPoint as="targetPoint" x="165" y="785" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge15" parent="1" edge="1" value="Observation → next model step" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="840" />
+            <mxPoint as="targetPoint" x="865" y="840" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge16" parent="1" edge="1" value="SSE context_management (on compression)" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="895" />
+            <mxPoint as="targetPoint" x="165" y="895" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge17" parent="1" edge="1" value="SSE finish · trace_id" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="515" y="950" />
+            <mxPoint as="targetPoint" x="165" y="950" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ui" parent="1" vertex="1" value="UI / user&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="25" y="130" width="280" height="66" />
+        </mxCell>
+        <mxCell id="turn" parent="1" vertex="1" value="API / run_turn&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="375" y="130" width="280" height="66" />
+        </mxCell>
+        <mxCell id="model" parent="1" vertex="1" value="Model provider&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="725" y="130" width="280" height="66" />
+        </mxCell>
+        <mxCell id="tool" parent="1" vertex="1" value="Approval policy / tool&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1075" y="130" width="280" height="66" />
+        </mxCell>
+        <mxCell id="notes" parent="1" vertex="1" value="Tool cycle may repeat; finish is always last&#10;Desktop approval timeout: reject at 300 s; evals use allow-listed commands" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="280" y="1025" width="840" height="85" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="workflow-lifecycle-en" name="03  Template, instance, and run">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="860" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="03  Template, instance, and run" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="Blueprints, instance threads, and run threads are separate persisted objects" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="edge0" parent="1" edge="1" value="Instantiate" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="400" y="235" />
+            <mxPoint as="targetPoint" x="530" y="235" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" parent="1" edge="1" value="Repeatable" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="870" y="235" />
+            <mxPoint as="targetPoint" x="1000" y="235" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" parent="1" edge="1" value="Call run_turn per node" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1170" y="305" />
+            <mxPoint as="targetPoint" x="1170" y="455" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" parent="1" edge="1" value="Nodes complete" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1000" y="520" />
+            <mxPoint as="targetPoint" x="870" y="520" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" parent="1" edge="1" value="Final result" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="530" y="520" />
+            <mxPoint as="targetPoint" x="400" y="520" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="template" parent="1" vertex="1" value="Template&#10;BUILTIN_TEMPLATES / custom JSON&#10;Nodes and edges; no conversations" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="170" width="340" height="135" />
+        </mxCell>
+        <mxCell id="instance" parent="1" vertex="1" value="Project instance&#10;POST /api/groups/instances&#10;Copy blueprint + persistent node threads" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="170" width="340" height="135" />
+        </mxCell>
+        <mxCell id="run" parent="1" vertex="1" value="New run · explicit confirmation Y&#10;POST /api/groups/{id}/runs&#10;Create separate threads for this run" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="170" width="340" height="135" />
+        </mxCell>
+        <mxCell id="schedule" parent="1" vertex="1" value="Serial UI scheduling&#10;agent / condition / loop&#10;Active upstream output → next node" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="455" width="340" height="130" />
+        </mxCell>
+        <mxCell id="review" parent="1" vertex="1" value="Supervisor review&#10;supervisor_review&#10;Review node results and errors" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="455" width="340" height="130" />
+        </mxCell>
+        <mxCell id="deliver" parent="1" vertex="1" value="Deliver to initiating thread&#10;POST /api/threads/{id}/&#10;messages/deliver" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="455" width="340" height="130" />
+        </mxCell>
+        <mxCell id="constraints" parent="1" vertex="1" value="Constraints&#10;Organization: one root, one parent, acyclic, agent-only. Condition: true/false. Loop: repeat/exit, max 20.&#10;Runs do not share chat history; scoped long-term memory may still be recalled. Closing the UI interrupts scheduling; no resume." style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="675" width="1280" height="120" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="local-data-en" name="04  Local data and configuration roots">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="860" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="04  Local data and configuration roots" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="SQLite records use project/scope filters; project files remain in their original directory" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="panel0" parent="1" vertex="1" value="Application config root · &lt;config root&gt;/.agents/" style="rounded=1;html=0;verticalAlign=top;align=left;spacing=18;fontSize=20;fillColor=#ffffff;strokeColor=#9badc2;dashed=1;">
+          <mxGeometry as="geometry" x="40" y="135" width="635" height="620" />
+        </mxCell>
+        <mxCell id="panel1" parent="1" vertex="1" value="Project directory · &lt;project&gt;/" style="rounded=1;html=0;verticalAlign=top;align=left;spacing=18;fontSize=20;fillColor=#ffffff;strokeColor=#9badc2;dashed=1;">
+          <mxGeometry as="geometry" x="725" y="135" width="635" height="620" />
+        </mxCell>
+        <mxCell id="config" parent="1" vertex="1" value="Settings and credentials&#10;models_config.json · permissions_config.json&#10;user_context.json · memory_config.json&#10;telemetry_config.json · evolution_config.json" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="215" width="565" height="125" />
+        </mxCell>
+        <mxCell id="sqlite" parent="1" vertex="1" value="SQLite&#10;taskboard.sqlite · traces.db · memory.db&#10;Memory versions, FTS5, pending changes, traces, scores" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="385" width="565" height="125" />
+        </mxCell>
+        <mxCell id="profiles" parent="1" vertex="1" value="Evals, proposals, and extensions&#10;evals/{cases,profiles,reports,drafts}/&#10;evolution/{proposals,rolled_back}/ · skills/" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="75" y="555" width="565" height="125" />
+        </mxCell>
+        <mxCell id="sessions" parent="1" vertex="1" value="Chats and instances&#10;.agents/sessions/&lt;thread_id&gt;.json&#10;.agents/groups/&lt;group_id&gt;.json&#10;.agents/registries/&lt;group_id&gt;.json" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="760" y="215" width="565" height="125" />
+        </mxCell>
+        <mxCell id="runs" parent="1" vertex="1" value="Run records and scheduled tasks&#10;.agents/runs/&lt;group_id&gt;/&lt;run_id&gt;.json&#10;.agents/scheduled_tasks.json" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="760" y="385" width="565" height="125" />
+        </mxCell>
+        <mxCell id="files" parent="1" vertex="1" value="Actual code outside .agents/&#10;Project sources and .git/ stay in place&#10;Binding records a path; it does not copy files" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="760" y="555" width="565" height="125" />
+        </mxCell>
+        <mxCell id="boundary" parent="1" vertex="1" value="Model keys are plaintext locally; Git ignores .agents/; close the app before backup&#10;" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="80" y="780" width="1240" height="60" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="learning-loop-en" name="05  Tracing, memory, and controlled improvement">
+    <mxGraphModel page="1" pageScale="1" pageWidth="1400" pageHeight="1110" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" vertex="1" value="05  Tracing, memory, and controlled improvement" style="text;html=0;fontSize=30;fontStyle=1;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="24" width="1320" height="42" />
+        </mxCell>
+        <mxCell id="subtitle" parent="1" vertex="1" value="Evals share run_turn; adoption requires gate and user confirmation; monitoring is user-triggered" style="text;html=0;fontSize=17;align=left;strokeColor=none;fillColor=none;">
+          <mxGeometry as="geometry" x="40" y="75" width="1320" height="35" />
+        </mxCell>
+        <mxCell id="edge0" parent="1" edge="1" value="Record" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="400" y="217" />
+            <mxPoint as="targetPoint" x="530" y="217" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge1" parent="1" edge="1" value="Episode" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="870" y="217" />
+            <mxPoint as="targetPoint" x="1000" y="217" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge2" parent="1" edge="1" value="Recall by scope and budget" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1170" y="160" />
+            <mxPoint as="targetPoint" x="230" y="160" />
+            <Array as="points">
+              <mxPoint x="1170" y="125" />
+              <mxPoint x="230" y="125" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge3" parent="1" edge="1" value="Low scores" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="620" y="275" />
+            <mxPoint as="targetPoint" x="230" y="425" />
+            <Array as="points">
+              <mxPoint x="620" y="340" />
+              <mxPoint x="230" y="340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge4" parent="1" edge="1" value="Proposal" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="400" y="490" />
+            <mxPoint as="targetPoint" x="530" y="490" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge5" parent="1" edge="1" value="All gates pass" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="870" y="490" />
+            <mxPoint as="targetPoint" x="1000" y="490" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge6" parent="1" edge="1" value="Apply" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1170" y="555" />
+            <mxPoint as="targetPoint" x="1170" y="720" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge7" parent="1" edge="1" value="Observe scores" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1000" y="785" />
+            <mxPoint as="targetPoint" x="870" y="785" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge8" parent="1" edge="1" value="Drop threshold" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=0;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="530" y="785" />
+            <mxPoint as="targetPoint" x="400" y="785" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge9" parent="1" edge="1" value="Active profile feeds later turns" style="html=0;endArrow=block;strokeColor=#52657d;strokeWidth=2;dashed=1;fontSize=16;labelBackgroundColor=#ffffff;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1170" y="850" />
+            <mxPoint as="targetPoint" x="60" y="217" />
+            <Array as="points">
+              <mxPoint x="1170" y="910" />
+              <mxPoint x="25" y="910" />
+              <mxPoint x="25" y="217" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="turn" parent="1" vertex="1" value="One turn: run_turn&#10;Model, approval, tools, exit codes" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#eef4ff;strokeColor=#3569b6;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="160" width="340" height="115" />
+        </mxCell>
+        <mxCell id="trace" parent="1" vertex="1" value="Trace and scores&#10;traces.db · spans / scores&#10;outcome = verification | turn_signal" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="160" width="340" height="115" />
+        </mxCell>
+        <mxCell id="memory" parent="1" vertex="1" value="Long-term memory&#10;user / project / session&#10;Versions, pending changes, budgeted recall" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="160" width="340" height="115" />
+        </mxCell>
+        <mxCell id="critic" parent="1" vertex="1" value="Critic analyzes low-score traces&#10;User starts analysis · model cost&#10;Tool output marked untrusted" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="425" width="340" height="130" />
+        </mxCell>
+        <mxCell id="gate" parent="1" vertex="1" value="Eval gate · model cost&#10;train: not worse → holdout: better&#10;→ guard: no regressions, else stop" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#fff7e8;strokeColor=#aa762a;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="425" width="340" height="130" />
+        </mxCell>
+        <mxCell id="adopt" parent="1" vertex="1" value="Recommended → user confirms&#10;Rule / prompt overlay / Skill&#10;Baseline includes adopted changes" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="425" width="340" height="130" />
+        </mxCell>
+        <mxCell id="active" parent="1" vertex="1" value="Active profile on later turns&#10;Same rendering function as the gate&#10;Adopted rules bypass recall budget" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f4f0fb;strokeColor=#8460b3;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="1000" y="720" width="340" height="130" />
+        </mxCell>
+        <mxCell id="monitor" parent="1" vertex="1" value="Online monitor · user-triggered&#10;14 days before/after; ≥10 post traces&#10;Mean outcome drop ≥0.15 → rollback" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#edf8f3;strokeColor=#26806b;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="530" y="720" width="340" height="130" />
+        </mxCell>
+        <mxCell id="rollback" parent="1" vertex="1" value="Rollback with audit history&#10;Soft-delete rule / move Skill out&#10;Later turns stop applying proposal" style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="720" width="340" height="130" />
+        </mxCell>
+        <mxCell id="limits" parent="1" vertex="1" value="Defaults and evidence limits&#10;Langfuse, Mem0, and consolidation are off by default; consolidation UPDATE/DELETE normally await confirmation.&#10;A guard pass describes that run; online before/after scores are observational, not a guarantee of improvement." style="rounded=1;html=0;whiteSpace=wrap;fillColor=#f3f5f8;strokeColor=#8897aa;fontSize=18;fontFamily=Microsoft YaHei;spacing=15;">
+          <mxGeometry as="geometry" x="60" y="960" width="1280" height="105" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

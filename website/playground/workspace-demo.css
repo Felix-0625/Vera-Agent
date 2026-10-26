@@ -1,0 +1,115 @@
+/* The preview follows the current desktop WorkspaceShell: sidebar, conversation, tools. */
+.playground-shell .playground-page{padding:14px 24px 52px;background:#f7f7f8}
+.playground-shell .playground-wrap{width:min(1440px,100%)}
+.playground-shell .playground-heading{align-items:center;margin:0 0 12px}
+.playground-shell .playground-heading h1{font-size:27px;font-weight:700;letter-spacing:-.035em}
+.playground-shell .playground-heading p{font-size:13px}
+.playground-shell .mock-label{gap:8px;padding:7px 12px;border-color:#d9dde4;background:#fff;color:#5f6368;font-size:12px;font-weight:600;white-space:nowrap}
+.playground-shell .mock-label i{width:7px;height:7px;background:#a96100}
+.playground-shell .playground-note{margin:0 0 16px;padding:10px 14px;border:1px solid #d9dde4;border-radius:8px;background:#fff;color:#5f6368;font-size:12px;line-height:1.65}
+.playground-shell .playground-note strong{color:#202124}
+.playground-shell .playground-note a,.playground-shell .playground-footnote a{color:#2873e6;text-decoration:underline;text-underline-offset:3px}
+.playground-shell .playground-app{height:690px;min-height:0;grid-template-columns:236px minmax(420px,1fr) min(38vw,560px);border:1px solid #d9dde4;border-radius:12px;background:#f7f7f8;box-shadow:0 20px 50px #20212412}
+.playground-shell .demo-sidebar{position:relative;display:flex;flex-direction:column;min-width:0;padding:0;border-right:1px solid #e7e9ed;background:#f0f1f3}
+.demo-brand{height:52px;display:flex;align-items:center;gap:9px;padding:0 14px;flex:none}
+.demo-brand img{object-fit:contain}
+.demo-brand b,.demo-brand small{display:block;line-height:1.1}
+.demo-brand b{font-size:13px;font-weight:700;color:#202124}
+.demo-brand small{margin-top:2px;color:#777d86;font-size:8px;font-weight:700;letter-spacing:.12em}
+.demo-sidebar-collapse{margin-left:auto;color:#777d86;font-size:20px}
+.demo-sidebar-nav{display:grid;gap:2px;padding:0 12px 9px;border-bottom:1px solid #e7e9ed}
+.demo-sidebar-nav>span{height:31px;display:flex;align-items:center;padding:0 11px;border-radius:7px;color:#5f6368;font-size:11px;font-weight:550}
+.demo-sidebar-nav .demo-new-conversation{height:36px;margin:2px 0 6px;border:1px solid #aac8f7;background:#fff;color:#202124;font-weight:650;box-shadow:0 1px 2px #2021240c}
+.playground-shell .demo-list-head{padding:17px 16px 7px;font-size:10px;font-weight:650;color:#777d86}
+.playground-shell .demo-project{gap:7px;margin:0 11px;padding:5px 7px 7px;border:0}
+.playground-shell .project-glyph{width:22px;height:22px;border-color:#d9dde4;border-radius:5px;background:#fff;color:#3a83f7;font-size:12px}
+.playground-shell .demo-project b{font-size:11px}
+.playground-shell .demo-project small{font-size:9px}
+.playground-shell .scenario-list{display:grid;gap:3px;padding:3px 11px;overflow:auto}
+.playground-shell .scenario-button{padding:9px 10px;border:1px solid transparent;border-radius:7px;background:transparent;min-height:65px}
+.playground-shell .scenario-button:hover:not(:disabled){background:#e8ebf0}
+.playground-shell .scenario-button.is-selected{border-color:#c5d8f6;background:#e5eefc;color:#202124}
+.playground-shell .scenario-title{font-size:11px;color:#202124}
+.playground-shell .scenario-meta{margin-top:2px;font:9px/1.5 "Segoe UI",sans-serif;color:#777d86}
+.playground-shell .task-status{margin-top:2px;font-size:9px}
+.demo-sidebar-bottom{margin-top:auto;height:50px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-top:1px solid #e7e9ed;color:#5f6368;font-size:11px}
+.demo-sidebar-bottom span:last-child{font-size:18px;color:#3a83f7}
+.playground-shell .demo-chat{min-width:0;min-height:0;background:#f7f7f8}
+.playground-shell .demo-chat-head{height:44px;min-height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 13px;border-bottom:1px solid #e7e9ed;background:#f7f7f8}
+.demo-context{padding:4px 9px;border:1px solid #e7e9ed;border-radius:6px;background:#fff;color:#5f6368;font-size:10px}
+.demo-panel-controls{display:flex;gap:8px;color:#777d86;font-size:16px}
+.demo-panel-controls span:first-child,.demo-panel-controls span:last-child{color:#3a83f7}
+.demo-conversation-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px clamp(18px,3vw,38px) 10px}
+.demo-conversation-kicker{color:#777d86;font-size:10px}
+.demo-conversation-heading h2{margin:2px 0 0;color:#202124;font-size:17px;font-weight:700;line-height:1.35}
+.playground-shell .chat-status{font-size:10px}
+.playground-shell .demo-messages{flex:1;min-height:0;max-height:none;overflow:auto;padding:12px clamp(18px,3vw,38px);background:transparent}
+.demo-welcome{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 16px 40px;text-align:center}
+.demo-welcome img{object-fit:contain}
+.demo-welcome h3{margin:12px 0 14px;color:#202124;font-size:21px;font-weight:750;letter-spacing:.22em}
+.demo-welcome p{max-width:340px;margin:0;color:#777d86;font-size:11px;line-height:1.7}
+.playground-shell .demo-message{margin-bottom:17px}
+.playground-shell .demo-message.system{margin:0 auto 13px}
+.playground-shell .demo-message.system .message-content{font-size:11px;line-height:1.55}
+.playground-shell .message-avatar{width:28px;height:28px;border-radius:8px;border-color:#d9dde4;background:#fff;font-weight:700}
+.playground-shell .demo-message.assistant .message-avatar{color:#3a83f7}
+.playground-shell .demo-message.user .message-avatar{background:#e5eefc}
+.playground-shell .message-content{border-color:#e7e9ed;border-radius:10px;background:#fff;box-shadow:0 1px 2px #20212406;color:#202124;font-size:12px;line-height:1.65}
+.playground-shell .message-meta{font-size:10px;color:#777d86}
+.demo-composer-wrap{padding:8px clamp(16px,3vw,38px) 20px}
+.demo-project-capsule{display:inline-flex;align-items:center;margin-bottom:7px;padding:5px 10px;border:1px solid #e7e9ed;border-radius:7px;background:#fff;color:#5f6368;font-size:10px}
+.playground-shell .demo-composer{margin:0;padding:11px 12px 9px;border:1px solid #d9dde4;border-radius:14px;background:#fff;box-shadow:0 10px 30px #20212413}
+.playground-shell .demo-composer textarea{min-height:55px;max-height:130px;padding:0;border:0;font:12px/1.55 "Segoe UI","Microsoft YaHei",sans-serif}
+.playground-shell .composer-actions{gap:8px;flex-wrap:wrap}
+.demo-composer-tools{color:#777d86;font-size:15px;white-space:nowrap}
+.demo-composer-tools span{margin-left:3px;padding:5px 8px;border-radius:6px;background:#f8f9fb;color:#5f6368;font-size:10px}
+.playground-shell .composer-hint{max-width:none;margin-left:auto;font-size:9px}
+.playground-shell .send-button{height:31px;min-width:110px;padding:0 11px;border-color:#3a83f7;border-radius:8px;background:#3a83f7;font-size:11px;font-weight:650}
+.playground-shell .send-button span{font-size:14px}
+.playground-shell .demo-inspector{display:flex;flex-direction:column;min-width:0;min-height:0;padding:0;border-top:0;border-left:1px solid #e7e9ed;background:#fff}
+.playground-shell .inspector-tabs{height:44px;min-height:44px;display:flex;align-items:center;gap:5px;padding:0 10px;border-bottom:1px solid #e7e9ed;background:#fff}
+.playground-shell .inspector-tabs button{flex:none;min-height:27px;padding:0 9px;border:1px solid transparent;border-radius:6px;font-size:10px;color:#5f6368;white-space:nowrap}
+.playground-shell .inspector-tabs button.is-active{border-color:#d9dde4;background:#f8f9fb;color:#202124}
+.demo-tool-add,.demo-tool-expand{color:#777d86;font-size:17px;line-height:1}
+.demo-tool-expand{margin-left:auto}
+.playground-shell .inspector-panel{min-height:0;max-width:none;overflow:auto;padding:22px 18px}
+.playground-shell .panel-description{margin:0 0 17px;color:#777d86;font-size:11px;line-height:1.6}
+.playground-shell .team-preview{gap:10px}
+.playground-shell .team-member,.playground-shell .team-member:first-of-type,.playground-shell .team-member:last-of-type{margin:0;padding:12px;border:1px solid #e7e9ed;border-radius:9px;background:#f8f9fb}
+.playground-shell .team-member b{font-size:12px}
+.playground-shell .team-member span{font-size:11px}
+.playground-shell .team-member small{font-size:10px}
+.playground-shell .team-running{border-color:#b6d1fa;background:#f2f7ff}
+.playground-shell .team-completed{border-color:#c8e3d9;background:#f1faf6}
+.playground-shell .workflow-preview{padding:0}
+.playground-shell .workflow-node{padding:10px 12px;border-color:#d9dde4;border-radius:8px;background:#f8f9fb}
+.playground-shell .workflow-node span{font-size:11px}
+.playground-shell .workflow-node small{font-size:10px}
+.playground-shell .workflow-connector{height:16px;margin-left:18px;background:#b8c0cc}
+.playground-shell .workflow-running{border-color:#3a83f7;background:#f1f6ff}
+.playground-shell .workflow-completed{border-color:#a6d9c7;background:#f1faf6}
+.playground-shell .playground-footnote{margin-top:13px;color:#777d86;font-size:11px}
+@media(max-width:1140px){
+  .playground-shell .playground-app{grid-template-columns:220px minmax(0,1fr)}
+  .playground-shell .demo-inspector{grid-column:1/-1;min-height:250px;border-left:0;border-top:1px solid #e7e9ed}
+  .playground-shell .playground-app{height:auto}
+  .playground-shell .demo-sidebar,.playground-shell .demo-chat{min-height:620px}
+}
+@media(max-width:700px){
+  .playground-shell .playground-page{padding:15px 12px 32px}
+  .playground-shell .playground-heading{align-items:flex-start;gap:10px}
+  .playground-shell .playground-heading h1{font-size:22px}
+  .playground-shell .playground-heading p{font-size:12px}
+  .playground-shell .playground-app{display:flex;flex-direction:column}
+  .playground-shell .demo-sidebar{min-height:0;padding-bottom:8px;border-right:0;border-bottom:1px solid #e7e9ed}
+  .demo-sidebar-nav,.demo-sidebar-bottom{display:none}
+  .playground-shell .demo-list-head{padding-top:6px}
+  .playground-shell .scenario-list{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px}
+  .playground-shell .scenario-list{scrollbar-width:none}
+  .playground-shell .scenario-list::-webkit-scrollbar{display:none}
+  .playground-shell .scenario-button{flex:none;width:190px}
+  .playground-shell .demo-chat{min-height:540px}
+  .playground-shell .demo-messages{min-height:260px;max-height:none}
+  .playground-shell .demo-inspector{min-height:220px}
+  .playground-shell .composer-hint{order:3;width:100%;margin:2px 0 0}
+}

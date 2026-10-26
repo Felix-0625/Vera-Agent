@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1150" viewBox="0 0 1400 1150" role="img" aria-labelledby="title desc">
+<title id="title">02  Chat turn and SSE sequence</title><desc id="desc">HTTP assembles context; desktop and evals share run_turn</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#52657d"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g font-family="Segoe UI, Microsoft YaHei, Arial, sans-serif" fill="#172b46">
+<text x="40" y="57" font-size="30" font-weight="600" text-anchor="start">02  Chat turn and SSE sequence</text>
+<text x="40" y="94" font-size="17" font-weight="400" text-anchor="start">HTTP assembles context; desktop and evals share run_turn</text>
+<polyline points="165,196 165,1050" fill="none" stroke="#bbc7d5" stroke-width="2" stroke-dasharray="6 5"/>
+<polyline points="515,196 515,1050" fill="none" stroke="#bbc7d5" stroke-width="2" stroke-dasharray="6 5"/>
+<polyline points="865,196 865,1050" fill="none" stroke="#bbc7d5" stroke-width="2" stroke-dasharray="6 5"/>
+<polyline points="1215,196 1215,1050" fill="none" stroke="#bbc7d5" stroke-width="2" stroke-dasharray="6 5"/>
+<polyline points="165,235 515,235" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="340.0" y="223" font-size="16" font-weight="400" text-anchor="middle">POST /api/chat/stream → TurnContext</text></g>
+<polyline points="515,290 165,290" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="340.0" y="278" font-size="16" font-weight="400" text-anchor="middle">SSE thinking</text></g>
+<polyline points="515,345 865,345" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="690.0" y="333" font-size="16" font-weight="400" text-anchor="middle">Prompt + history + active rules</text></g>
+<polyline points="865,400 515,400" fill="none" stroke="#52657d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="690.0" y="388" font-size="16" font-weight="400" text-anchor="middle">Stream text / tool action</text></g>
+<polyline points="515,455 165,455" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="340.0" y="443" font-size="16" font-weight="400" text-anchor="middle">SSE text_chunk × N / tool_call</text></g>
+<polyline points="515,510 1215,510" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="865.0" y="498" font-size="16" font-weight="400" text-anchor="middle">ApprovalPolicy check</text></g>
+<polyline points="515,565 165,565" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="340.0" y="553" font-size="16" font-weight="400" text-anchor="middle">SSE approval_required (if required)</text></g>
+<polyline points="165,620 515,620" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="340.0" y="608" font-size="16" font-weight="400" text-anchor="middle">POST /api/chat/confirm · Y / N / O</text></g>
+<polyline points="515,675 1215,675" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="865.0" y="663" font-size="16" font-weight="400" text-anchor="middle">Execute tool when approved</text></g>
+<polyline points="1215,730 515,730" fill="none" stroke="#52657d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="865.0" y="718" font-size="16" font-weight="400" text-anchor="middle">output + returncode</text></g>
+<polyline points="515,785 165,785" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="340.0" y="773" font-size="16" font-weight="400" text-anchor="middle">SSE tool_result</text></g>
+<polyline points="515,840 865,840" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="690.0" y="828" font-size="16" font-weight="400" text-anchor="middle">Observation → next model step</text></g>
+<polyline points="515,895 165,895" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="340.0" y="883" font-size="16" font-weight="400" text-anchor="middle">SSE context_management (on compression)</text></g>
+<polyline points="515,950 165,950" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="340.0" y="938" font-size="16" font-weight="400" text-anchor="middle">SSE finish · trace_id</text></g>
+<rect x="25" y="130" width="280" height="66" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="165.0" y="170.0" font-size="20" font-weight="600" text-anchor="middle">UI / user</text>
+<rect x="375" y="130" width="280" height="66" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="515.0" y="170.0" font-size="20" font-weight="600" text-anchor="middle">API / run_turn</text>
+<rect x="725" y="130" width="280" height="66" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="865.0" y="170.0" font-size="20" font-weight="600" text-anchor="middle">Model provider</text>
+<rect x="1075" y="130" width="280" height="66" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="1215.0" y="170.0" font-size="20" font-weight="600" text-anchor="middle">Approval policy / tool</text>
+<rect x="280" y="1025" width="840" height="85" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="700.0" y="1062.0" font-size="20" font-weight="600" text-anchor="middle">Tool cycle may repeat; finish is always last</text>
+<text x="700.0" y="1092.0" font-size="15" font-weight="400" text-anchor="middle">Desktop approval timeout: reject at 300 s; evals use allow-listed commands</text>
+</g></svg>

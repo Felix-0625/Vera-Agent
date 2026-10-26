@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1110" viewBox="0 0 1400 1110" role="img" aria-labelledby="title desc">
+<title id="title">05  Tracing, memory, and controlled improvement</title><desc id="desc">Evals share run_turn; adoption requires gate and user confirmation; monitoring is user-triggered</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#52657d"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g font-family="Segoe UI, Microsoft YaHei, Arial, sans-serif" fill="#172b46">
+<text x="40" y="57" font-size="30" font-weight="600" text-anchor="start">05  Tracing, memory, and controlled improvement</text>
+<text x="40" y="94" font-size="17" font-weight="400" text-anchor="start">Evals share run_turn; adoption requires gate and user confirmation; monitoring is user-triggered</text>
+<polyline points="400,217 530,217" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="207.0" font-size="16" font-weight="400" text-anchor="middle">Record</text></g>
+<polyline points="870,217 1000,217" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="207.0" font-size="16" font-weight="400" text-anchor="middle">Episode</text></g>
+<polyline points="1170,160 1170,125 230,125 230,160" fill="none" stroke="#52657d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="700" y="119" font-size="16" font-weight="400" text-anchor="middle">Recall by scope and budget</text></g>
+<polyline points="620,275 620,340 230,340 230,425" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="350" y="328" font-size="16" font-weight="400" text-anchor="middle">Low scores</text></g>
+<polyline points="400,490 530,490" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="480.0" font-size="16" font-weight="400" text-anchor="middle">Proposal</text></g>
+<polyline points="870,490 1000,490" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="480.0" font-size="16" font-weight="400" text-anchor="middle">All gates pass</text></g>
+<polyline points="1170,555 1170,720" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="1170.0" y="627.5" font-size="16" font-weight="400" text-anchor="middle">Apply</text></g>
+<polyline points="1000,785 870,785" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="775.0" font-size="16" font-weight="400" text-anchor="middle">Observe scores</text></g>
+<polyline points="530,785 400,785" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="775.0" font-size="16" font-weight="400" text-anchor="middle">Drop threshold</text></g>
+<polyline points="1170,850 1170,910 25,910 25,217 60,217" fill="none" stroke="#52657d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="700" y="900" font-size="16" font-weight="400" text-anchor="middle">Active profile feeds later turns</text></g>
+<rect x="60" y="160" width="340" height="115" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="230.0" y="212.0" font-size="20" font-weight="600" text-anchor="middle">One turn: run_turn</text>
+<text x="230.0" y="242.0" font-size="15" font-weight="400" text-anchor="middle">Model, approval, tools, exit codes</text>
+<rect x="530" y="160" width="340" height="115" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="700.0" y="199.5" font-size="20" font-weight="600" text-anchor="middle">Trace and scores</text>
+<text x="700.0" y="229.5" font-size="15" font-weight="400" text-anchor="middle">traces.db · spans / scores</text>
+<text x="700.0" y="254.5" font-size="15" font-weight="400" text-anchor="middle">outcome = verification | turn_signal</text>
+<rect x="1000" y="160" width="340" height="115" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="1170.0" y="199.5" font-size="20" font-weight="600" text-anchor="middle">Long-term memory</text>
+<text x="1170.0" y="229.5" font-size="15" font-weight="400" text-anchor="middle">user / project / session</text>
+<text x="1170.0" y="254.5" font-size="15" font-weight="400" text-anchor="middle">Versions, pending changes, budgeted recall</text>
+<rect x="60" y="425" width="340" height="130" rx="12" fill="#fff7e8" stroke="#aa762a" stroke-width="1.6"/>
+<text x="230.0" y="472.0" font-size="20" font-weight="600" text-anchor="middle">Critic analyzes low-score traces</text>
+<text x="230.0" y="502.0" font-size="15" font-weight="400" text-anchor="middle">User starts analysis · model cost</text>
+<text x="230.0" y="527.0" font-size="15" font-weight="400" text-anchor="middle">Tool output marked untrusted</text>
+<rect x="530" y="425" width="340" height="130" rx="12" fill="#fff7e8" stroke="#aa762a" stroke-width="1.6"/>
+<text x="700.0" y="472.0" font-size="20" font-weight="600" text-anchor="middle">Eval gate · model cost</text>
+<text x="700.0" y="502.0" font-size="15" font-weight="400" text-anchor="middle">train: not worse → holdout: better</text>
+<text x="700.0" y="527.0" font-size="15" font-weight="400" text-anchor="middle">→ guard: no regressions, else stop</text>
+<rect x="1000" y="425" width="340" height="130" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="1170.0" y="472.0" font-size="20" font-weight="600" text-anchor="middle">Recommended → user confirms</text>
+<text x="1170.0" y="502.0" font-size="15" font-weight="400" text-anchor="middle">Rule / prompt overlay / Skill</text>
+<text x="1170.0" y="527.0" font-size="15" font-weight="400" text-anchor="middle">Baseline includes adopted changes</text>
+<rect x="1000" y="720" width="340" height="130" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="1170.0" y="767.0" font-size="20" font-weight="600" text-anchor="middle">Active profile on later turns</text>
+<text x="1170.0" y="797.0" font-size="15" font-weight="400" text-anchor="middle">Same rendering function as the gate</text>
+<text x="1170.0" y="822.0" font-size="15" font-weight="400" text-anchor="middle">Adopted rules bypass recall budget</text>
+<rect x="530" y="720" width="340" height="130" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="700.0" y="767.0" font-size="20" font-weight="600" text-anchor="middle">Online monitor · user-triggered</text>
+<text x="700.0" y="797.0" font-size="15" font-weight="400" text-anchor="middle">14 days before/after; ≥10 post traces</text>
+<text x="700.0" y="822.0" font-size="15" font-weight="400" text-anchor="middle">Mean outcome drop ≥0.15 → rollback</text>
+<rect x="60" y="720" width="340" height="130" rx="12" fill="#f3f5f8" stroke="#8897aa" stroke-width="1.6"/>
+<text x="230.0" y="767.0" font-size="20" font-weight="600" text-anchor="middle">Rollback with audit history</text>
+<text x="230.0" y="797.0" font-size="15" font-weight="400" text-anchor="middle">Soft-delete rule / move Skill out</text>
+<text x="230.0" y="822.0" font-size="15" font-weight="400" text-anchor="middle">Later turns stop applying proposal</text>
+<rect x="60" y="960" width="1280" height="105" rx="12" fill="#f3f5f8" stroke="#8897aa" stroke-width="1.6"/>
+<text x="700.0" y="994.5" font-size="20" font-weight="600" text-anchor="middle">Defaults and evidence limits</text>
+<text x="700.0" y="1024.5" font-size="15" font-weight="400" text-anchor="middle">Langfuse, Mem0, and consolidation are off by default; consolidation UPDATE/DELETE normally await confirmation.</text>
+<text x="700.0" y="1049.5" font-size="15" font-weight="400" text-anchor="middle">A guard pass describes that run; online before/after scores are observational, not a guarantee of improvement.</text>
+</g></svg>

@@ -5,6 +5,7 @@
 | What | Where | How to change |
 | --- | --- | --- |
 | Model providers, API keys, permissions, MCP servers, Skills, rules | `.agents/` under the application data root (`<checkout>/vera-agent/.agents/` for the desktop launcher) | The desktop app's **设置** dialog |
+| Tracing, memory, eval and proposal settings | `telemetry_config.json`, `memory_config.json`, `evolution_config.json` in the same `.agents/` | `PUT /api/settings/telemetry`, `PUT /api/settings/memory`, or edit while the app is closed; see [LEARNING_LOOP.md](LEARNING_LOOP.md#configuration-files) |
 | Project data (conversations, workflow instances, runs, scheduled tasks) | `<project>/.agents/` | The app; never edit while it is running |
 | Python CLI compatibility settings | `.env` in `VERA_GLOBAL_CONFIG_DIR` (default `%LOCALAPPDATA%\vera-agent\vera-agent` via platformdirs) | Copy entries from [`.env.example`](../.env.example) |
 | Build-time frontend settings | `VITE_*` environment variables when running npm | Shell environment |
@@ -52,6 +53,9 @@ are documented in the upstream mini-swe-agent docs and are not used by the deskt
 - Model API keys entered in the app are stored **unencrypted** in `models_config.json`
   under the application `.agents/` folder. API responses never return them.
 - MCP server `env` and `headers` values may contain secrets and are stored in `mcp_servers.json`.
+- An optional Langfuse key pair is stored unencrypted in `telemetry_config.json`; the API never returns the secret key.
+- `traces.db` and `memory.db` hold conversation excerpts and tool arguments. Secret-looking values
+  (`api_key=…`, `sk-…`) are masked before they are stored, but treat both files as private.
 - Never commit `.env`, `.agents/`, provider keys, or exported conversations.
   `.env.example` contains only empty values and non-secret defaults.
 

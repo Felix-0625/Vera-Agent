@@ -7,7 +7,37 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 SITE_ROOT = Path(__file__).resolve().parent
-PAGES = (Path("index.html"), Path("docs/index.html"), Path("playground/index.html"))
+PAGES = (Path("index.html"), Path("design/index.html"), Path("docs/index.html"), Path("playground/index.html"))
+DOCUMENT_SOURCES = (
+    Path("content/design/index.md"),
+    Path("content/docs/index.md"),
+    Path("content/docs/quick-start.md"),
+    Path("content/docs/usage.md"),
+    Path("content/docs/configuration.md"),
+    Path("content/docs/environment-variables.md"),
+    Path("content/docs/api.md"),
+    Path("content/docs/troubleshooting.md"),
+    Path("content/en/design/index.md"),
+    Path("content/en/docs/index.md"),
+    Path("content/en/docs/quick-start.md"),
+    Path("content/en/docs/usage.md"),
+    Path("content/en/docs/configuration.md"),
+    Path("content/en/docs/environment-variables.md"),
+    Path("content/en/docs/api.md"),
+    Path("content/en/docs/troubleshooting.md"),
+)
+DYNAMIC_ANCHORS = {
+    Path("design/index.html"): {
+        "overview",
+        "architecture",
+        "decisions",
+        "chat-flow",
+        "organization",
+        "data-model",
+        "quality",
+        "limitations",
+    },
+}
 
 
 class PageInspector(HTMLParser):
@@ -46,11 +76,16 @@ def main() -> int:
         inspector.feed(file_path.read_text(encoding="utf-8"))
         pages[file_path] = inspector
 
+    for source in DOCUMENT_SOURCES:
+        if not (SITE_ROOT / source).is_file():
+            failures.append(f"missing document source: {source.as_posix()}")
+
     for file_path, inspector in list(pages.items()):
         for _tag, raw_url in inspector.links:
             parsed = urlsplit(raw_url)
             if parsed.scheme or parsed.netloc or raw_url.startswith("#"):
-                if raw_url.startswith("#") and unquote(parsed.fragment) not in inspector.ids:
+                dynamic_ids = DYNAMIC_ANCHORS.get(file_path.relative_to(SITE_ROOT), set())
+                if raw_url.startswith("#") and unquote(parsed.fragment) not in inspector.ids | dynamic_ids:
                     failures.append(f"{file_path.relative_to(SITE_ROOT)}: missing anchor {raw_url}")
                 continue
 
@@ -69,7 +104,8 @@ def main() -> int:
                     target_inspector.feed(target.read_text(encoding="utf-8"))
                     pages[target] = target_inspector
                 anchor = unquote(parsed.fragment)
-                if anchor not in target_inspector.ids:
+                dynamic_ids = DYNAMIC_ANCHORS.get(target.relative_to(SITE_ROOT), set())
+                if anchor not in target_inspector.ids | dynamic_ids:
                     failures.append(f"{file_path.relative_to(SITE_ROOT)}: missing anchor {raw_url}")
 
     if failures:

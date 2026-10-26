@@ -27,10 +27,14 @@ Backend package `vera-agent/src/vera_agent/`:
 | `server/state.py` | `ServerState`: storage roots, JSON config helpers, in-memory sessions and approval flags |
 | `server/routes/*.py` | One module per API domain; each module docstring lists its routes ([API.md](API.md)) |
 | `server/routes/groups.py`, `runs.py`, `templates.py`, `group_store.py` | Groups and instances; run state validation; topology templates; shared persistence helpers |
-| `server/chat/` | Building blocks of the chat route: `request.py` (validation), `prompt.py` (system prompt), `actions.py` (tool execution and approvals), `mcp_session.py` (MCP connections), `subagents.py` (subagent progress relay) |
+| `server/chat/` | One chat turn: `turn_setup.py` (`prepare_turn` → `TurnContext`), `turn.py` (`run_turn`, the single execution path), `model_step.py` (compaction, history, model call), `actions.py` (tool execution and approvals), `control.py` (`TurnControl`, `ApprovalPolicy`), `request.py` (validation), `prompt.py` (system prompt), `mcp_session.py`, `subagents.py` |
+| `telemetry/` | Traces, spans and outcome scores in `.agents/traces.db`; optional Langfuse export ([LEARNING_LOOP.md](LEARNING_LOOP.md)) |
+| `memory/` | Scoped, versioned long-term memory with budgeted recall and Mem0-style consolidation |
+| `evals/` | Eval cases, profiles, sandboxes, the headless runner over `run_turn`, comparisons, `vera-eval` CLI |
+| `evolution/` | Critic proposals, the train/holdout/guard gate, adoption, the active profile every turn renders, online monitor and rollback |
 | `server/permissions.py` | Permission policy: modes, categories, safe-command detection |
 | `server/model_profile.py` | Resolves the model profile used by chat and context inspection |
-| `server/user_context.py` | User rules, context settings, user memories |
+| `server/user_context.py` | User rules, context settings, and the legacy user-memory API on top of `memory/` |
 | `agents/default.py` | `DefaultAgent` loop inherited from mini-swe-agent: query model → parse actions → execute → observe |
 | `models/` | Model adapters (LiteLLM, OpenRouter, Portkey, Requesty) and tool-call parsing (`models/utils/`) |
 | `environments/` | Command execution backends; the desktop uses `local.py` (Git Bash on Windows) |
@@ -46,7 +50,9 @@ Frontend: see [frontend/README.md](../frontend/README.md) for the `src/` map and
 
 ## Request and tool cycle
 
-The chat route receives the selected thread/project and model configuration, appends the user turn, calls the configured model, executes returned tool actions through registered handlers, and returns streamed events to the UI. The persisted conversation and event records are the observable execution evidence. Internal model reasoning is not a supported trace contract and should not be represented as an execution log.
+The chat route validates the request and builds a `TurnContext` (session, working directory, permission policy, model, system prompt with recalled memories), then forwards the events of `run_turn`: append the user turn, call the model, execute returned tool actions through registered handlers and the injected `ApprovalPolicy`, repeat until the model stops or the tool budget runs out, persist the session. The eval runner drives the same `run_turn` with an automatic approval policy in a sandbox. The persisted conversation, event records and the local trace (spans and scores) are the observable execution evidence. Internal model reasoning is not a supported trace contract and should not be represented as an execution log.
+
+Traces, scoring, memory, evals and the proposal loop are described in [LEARNING_LOOP.md](LEARNING_LOOP.md).
 
 The implementation has multiple layers of state: process-local active objects in `ServerState`, project/application configuration in `.agents`, and project files/Git state in the selected workspace. Restart behavior and project ownership must be checked against the specific route; not every in-memory object is a durable database record.
 

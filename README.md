@@ -29,6 +29,10 @@ data; they do not connect to a model, the backend, or your files.
   return to the originating conversation after a Supervisor review.
 - **Tools**: file explorer, diff/stage/checkpoint, Git branches, terminal, MCP servers,
   Skills, scheduled prompts, and usage analytics.
+- **Evaluation and learning**: every turn is traced and scored locally; scoped, versioned long-term
+  memory with budgeted recall; an eval runner over the real chat pipeline (`vera-eval`); and
+  improvement proposals that take effect only after an eval gate and your approval
+  ([details](docs/LEARNING_LOOP.md)).
 - **Permissions**: per-category approval (edit, terminal, search, MCP, delegation)
   with every tool call shown in the conversation.
 
@@ -95,6 +99,9 @@ website/        Static project website (landing page, docs, playground)
 | Data model and local storage | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) |
 | Configuration and environment variables | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
 | Tools, permissions, MCP, Skills | [docs/TOOLS_AND_MCP.md](docs/TOOLS_AND_MCP.md) |
+| Traces, memory, evals, self-improvement | [docs/LEARNING_LOOP.md](docs/LEARNING_LOOP.md) |
+| System diagrams and editable source | [website/diagrams/README.md](website/diagrams/README.md) |
+| Product video recording script | [docs/DEMO_RECORDING.md](docs/DEMO_RECORDING.md) |
 | Testing and verification records | [docs/TESTING.md](docs/TESTING.md), [tests/README.md](tests/README.md) |
 | Website and deployment | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md), [website/README.md](website/README.md) |
 | Licenses | [docs/LICENSES.md](docs/LICENSES.md) |

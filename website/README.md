@@ -1,12 +1,15 @@
 # VeraAgent website
 
-The dependency-free static site keeps three experiences on separate routes:
+The static site keeps four experiences on separate routes:
 
-- `index.html`: product/design landing page. It shows a scripted workstation illustration and a lightweight CSS animation; it does not claim to be a recording of live Agent execution.
-- `docs/index.html`: documentation with a left-side section index.
-- `playground/index.html`: interactive mock built from local JavaScript fixtures. It does not call the desktop app, a model provider, or the visitor's files.
+- `index.html`: product introduction, a desktop-workspace screenshot, and a lightweight CSS animation.
+- `design/index.html`: system design documentation rendered from `content/design/index.md`.
+- `docs/index.html`: usage and maintenance documentation rendered from `content/docs/*.md`. The overview is the route index; six guides and references are selected from the left sidebar.
+- `playground/index.html`: the existing video recorded from a preset demo. It does not call the desktop app, a model provider, or the visitor's files. A new real-model recording is planned using [the recording script](../docs/DEMO_RECORDING.md).
 
-All pages share `assets/site.css`, `assets/site.js`, and `assets/favicon.svg`. Run `python website/check_site.py` to verify the three page entry points, local links, fragment anchors, scripts, styles, and images. The root page remains free of build dependencies.
+All pages share `assets/site.css`, `assets/site.js`, and `assets/favicon.svg`. Documentation pages use a locally vendored MIT-licensed copy of Marked to render the checked-in Markdown; no build step or CDN is required. Open the site through a local HTTP server so the pages can fetch those Markdown files. Run `python website/check_site.py` to verify page entry points, document sources, local links, fragment anchors, scripts, styles, and images.
+
+The design page includes five diagrams in Chinese and English: runtime architecture, chat/SSE sequence, template-instance-run lifecycle, local data, and the learning loop. SVG exports and a ten-page editable draw.io source live in [diagrams/](diagrams/README.md). Usage/configuration/API references include the traces, scoped memory, evals, and proposal lifecycle.
 
 ## GitHub Pages
 

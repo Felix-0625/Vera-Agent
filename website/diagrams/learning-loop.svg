@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1110" viewBox="0 0 1400 1110" role="img" aria-labelledby="title desc">
+<title id="title">05  记录、记忆与受控改进</title><desc id="desc">评测共用真实 run_turn；采纳必须经过门禁与用户确认；监控由用户触发</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#52657d"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g font-family="Segoe UI, Microsoft YaHei, Arial, sans-serif" fill="#172b46">
+<text x="40" y="57" font-size="30" font-weight="600" text-anchor="start">05  记录、记忆与受控改进</text>
+<text x="40" y="94" font-size="17" font-weight="400" text-anchor="start">评测共用真实 run_turn；采纳必须经过门禁与用户确认；监控由用户触发</text>
+<polyline points="400,217 530,217" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="207.0" font-size="16" font-weight="400" text-anchor="middle">记录</text></g>
+<polyline points="870,217 1000,217" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="207.0" font-size="16" font-weight="400" text-anchor="middle">回合摘要</text></g>
+<polyline points="1170,160 1170,125 230,125 230,160" fill="none" stroke="#52657d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="700" y="119" font-size="16" font-weight="400" text-anchor="middle">按作用域与预算召回</text></g>
+<polyline points="620,275 620,340 230,340 230,425" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="350" y="328" font-size="16" font-weight="400" text-anchor="middle">低分轨迹</text></g>
+<polyline points="400,490 530,490" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="480.0" font-size="16" font-weight="400" text-anchor="middle">候选提案</text></g>
+<polyline points="870,490 1000,490" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="480.0" font-size="16" font-weight="400" text-anchor="middle">全部通过</text></g>
+<polyline points="1170,555 1170,720" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="1170.0" y="627.5" font-size="16" font-weight="400" text-anchor="middle">生效</text></g>
+<polyline points="1000,785 870,785" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="775.0" font-size="16" font-weight="400" text-anchor="middle">观察线上评分</text></g>
+<polyline points="530,785 400,785" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="775.0" font-size="16" font-weight="400" text-anchor="middle">达到回滚阈值</text></g>
+<polyline points="1170,850 1170,910 25,910 25,217 60,217" fill="none" stroke="#52657d" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="700" y="900" font-size="16" font-weight="400" text-anchor="middle">活跃配置用于后续回合</text></g>
+<rect x="60" y="160" width="340" height="115" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="230.0" y="212.0" font-size="20" font-weight="600" text-anchor="middle">单轮执行 run_turn</text>
+<text x="230.0" y="242.0" font-size="15" font-weight="400" text-anchor="middle">模型、审批、工具、退出码</text>
+<rect x="530" y="160" width="340" height="115" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="700.0" y="199.5" font-size="20" font-weight="600" text-anchor="middle">轨迹与评分</text>
+<text x="700.0" y="229.5" font-size="15" font-weight="400" text-anchor="middle">traces.db · spans / scores</text>
+<text x="700.0" y="254.5" font-size="15" font-weight="400" text-anchor="middle">outcome = verification | turn_signal</text>
+<rect x="1000" y="160" width="340" height="115" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="1170.0" y="199.5" font-size="20" font-weight="600" text-anchor="middle">长期记忆</text>
+<text x="1170.0" y="229.5" font-size="15" font-weight="400" text-anchor="middle">user / project / session</text>
+<text x="1170.0" y="254.5" font-size="15" font-weight="400" text-anchor="middle">版本历史、待确认变更、按预算召回</text>
+<rect x="60" y="425" width="340" height="130" rx="12" fill="#fff7e8" stroke="#aa762a" stroke-width="1.6"/>
+<text x="230.0" y="472.0" font-size="20" font-weight="600" text-anchor="middle">Critic 分析低分轨迹</text>
+<text x="230.0" y="502.0" font-size="15" font-weight="400" text-anchor="middle">用户点击分析 · 调用模型</text>
+<text x="230.0" y="527.0" font-size="15" font-weight="400" text-anchor="middle">工具输出标记为不可信数据</text>
+<rect x="530" y="425" width="340" height="130" rx="12" fill="#fff7e8" stroke="#aa762a" stroke-width="1.6"/>
+<text x="700.0" y="472.0" font-size="20" font-weight="600" text-anchor="middle">评测门禁 · 调用模型</text>
+<text x="700.0" y="502.0" font-size="15" font-weight="400" text-anchor="middle">train 不退化 → holdout 显著更好</text>
+<text x="700.0" y="527.0" font-size="15" font-weight="400" text-anchor="middle">→ guard 零回归，否则不推荐</text>
+<rect x="1000" y="425" width="340" height="130" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="1170.0" y="472.0" font-size="20" font-weight="600" text-anchor="middle">推荐后，用户确认采纳</text>
+<text x="1170.0" y="502.0" font-size="15" font-weight="400" text-anchor="middle">规则 / prompt overlay / Skill</text>
+<text x="1170.0" y="527.0" font-size="15" font-weight="400" text-anchor="middle">基线包含已采纳的改进</text>
+<rect x="1000" y="720" width="340" height="130" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="1170.0" y="767.0" font-size="20" font-weight="600" text-anchor="middle">活跃配置应用到后续回合</text>
+<text x="1170.0" y="797.0" font-size="15" font-weight="400" text-anchor="middle">与门禁使用同一套渲染函数</text>
+<text x="1170.0" y="822.0" font-size="15" font-weight="400" text-anchor="middle">采纳规则不占记忆召回预算</text>
+<rect x="530" y="720" width="340" height="130" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="700.0" y="767.0" font-size="20" font-weight="600" text-anchor="middle">在线监控 · 用户触发</text>
+<text x="700.0" y="797.0" font-size="15" font-weight="400" text-anchor="middle">前后 14 天；采纳后至少 10 条</text>
+<text x="700.0" y="822.0" font-size="15" font-weight="400" text-anchor="middle">平均 outcome 下降 ≥0.15 → 回滚</text>
+<rect x="60" y="720" width="340" height="130" rx="12" fill="#f3f5f8" stroke="#8897aa" stroke-width="1.6"/>
+<text x="230.0" y="767.0" font-size="20" font-weight="600" text-anchor="middle">回滚并保留审计记录</text>
+<text x="230.0" y="797.0" font-size="15" font-weight="400" text-anchor="middle">规则软删除 / Skill 移出活跃目录</text>
+<text x="230.0" y="822.0" font-size="15" font-weight="400" text-anchor="middle">后续回合不再应用该提案</text>
+<rect x="60" y="960" width="1280" height="105" rx="12" fill="#f3f5f8" stroke="#8897aa" stroke-width="1.6"/>
+<text x="700.0" y="994.5" font-size="20" font-weight="600" text-anchor="middle">默认与证据边界</text>
+<text x="700.0" y="1024.5" font-size="15" font-weight="400" text-anchor="middle">Langfuse 导出、Mem0 适配与自动整理默认关闭；consolidation 的 UPDATE / DELETE 通常等待用户确认。</text>
+<text x="700.0" y="1049.5" font-size="15" font-weight="400" text-anchor="middle">守护集通过只证明该次用例结果；在线前后对比是观察信号，不能证明因果或保证持续变强。</text>
+</g></svg>

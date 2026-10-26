@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+<title id="title">03  模板、实例与运行</title><desc id="desc">声明式蓝图、项目会话与运行会话分别持久化</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10Z" fill="#52657d"/></marker></defs>
+<rect width="100%" height="100%" fill="#fff"/>
+<g font-family="Segoe UI, Microsoft YaHei, Arial, sans-serif" fill="#172b46">
+<text x="40" y="57" font-size="30" font-weight="600" text-anchor="start">03  模板、实例与运行</text>
+<text x="40" y="94" font-size="17" font-weight="400" text-anchor="start">声明式蓝图、项目会话与运行会话分别持久化</text>
+<polyline points="400,235 530,235" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="225.0" font-size="16" font-weight="400" text-anchor="middle">实例化</text></g>
+<polyline points="870,235 1000,235" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="225.0" font-size="16" font-weight="400" text-anchor="middle">可重复运行</text></g>
+<polyline points="1170,305 1170,455" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="1170.0" y="370.0" font-size="16" font-weight="400" text-anchor="middle">逐节点调用 run_turn</text></g>
+<polyline points="1000,520 870,520" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="935.0" y="510.0" font-size="16" font-weight="400" text-anchor="middle">所有节点完成</text></g>
+<polyline points="530,520 400,520" fill="none" stroke="#52657d" stroke-width="2" marker-end="url(#arrow)"/>
+<g paint-order="stroke" stroke="#ffffff" stroke-width="7" stroke-linejoin="round"><text x="465.0" y="510.0" font-size="16" font-weight="400" text-anchor="middle">最终结论</text></g>
+<rect x="60" y="170" width="340" height="135" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="230.0" y="219.5" font-size="20" font-weight="600" text-anchor="middle">模板</text>
+<text x="230.0" y="249.5" font-size="15" font-weight="400" text-anchor="middle">BUILTIN_TEMPLATES / custom JSON</text>
+<text x="230.0" y="274.5" font-size="15" font-weight="400" text-anchor="middle">只有节点与连线，不含会话</text>
+<rect x="530" y="170" width="340" height="135" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="700.0" y="219.5" font-size="20" font-weight="600" text-anchor="middle">项目实例</text>
+<text x="700.0" y="249.5" font-size="15" font-weight="400" text-anchor="middle">POST /api/groups/instances</text>
+<text x="700.0" y="274.5" font-size="15" font-weight="400" text-anchor="middle">复制蓝图 + 创建持久节点会话</text>
+<rect x="1000" y="170" width="340" height="135" rx="12" fill="#eef4ff" stroke="#3569b6" stroke-width="1.6"/>
+<text x="1170.0" y="219.5" font-size="20" font-weight="600" text-anchor="middle">新运行 · 显式确认 Y</text>
+<text x="1170.0" y="249.5" font-size="15" font-weight="400" text-anchor="middle">POST /api/groups/{id}/runs</text>
+<text x="1170.0" y="274.5" font-size="15" font-weight="400" text-anchor="middle">创建本次独立的运行会话</text>
+<rect x="1000" y="455" width="340" height="130" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="1170.0" y="502.0" font-size="20" font-weight="600" text-anchor="middle">前端串行调度</text>
+<text x="1170.0" y="532.0" font-size="15" font-weight="400" text-anchor="middle">agent / condition / loop</text>
+<text x="1170.0" y="557.0" font-size="15" font-weight="400" text-anchor="middle">活动上游输出传入下一节点</text>
+<rect x="530" y="455" width="340" height="130" rx="12" fill="#f4f0fb" stroke="#8460b3" stroke-width="1.6"/>
+<text x="700.0" y="502.0" font-size="20" font-weight="600" text-anchor="middle">Supervisor 复核</text>
+<text x="700.0" y="532.0" font-size="15" font-weight="400" text-anchor="middle">supervisor_review</text>
+<text x="700.0" y="557.0" font-size="15" font-weight="400" text-anchor="middle">汇总节点结果与错误</text>
+<rect x="60" y="455" width="340" height="130" rx="12" fill="#edf8f3" stroke="#26806b" stroke-width="1.6"/>
+<text x="230.0" y="502.0" font-size="20" font-weight="600" text-anchor="middle">回传原对话</text>
+<text x="230.0" y="532.0" font-size="15" font-weight="400" text-anchor="middle">POST /api/threads/{id}/</text>
+<text x="230.0" y="557.0" font-size="15" font-weight="400" text-anchor="middle">messages/deliver</text>
+<rect x="60" y="675" width="1280" height="120" rx="12" fill="#f3f5f8" stroke="#8897aa" stroke-width="1.6"/>
+<text x="700.0" y="717.0" font-size="20" font-weight="600" text-anchor="middle">约束</text>
+<text x="700.0" y="747.0" font-size="15" font-weight="400" text-anchor="middle">组织：唯一根节点、唯一直接上级、无环、全为 agent。条件：true / false；循环：repeat / exit，最多 20 次。</text>
+<text x="700.0" y="772.0" font-size="15" font-weight="400" text-anchor="middle">运行之间不共享对话历史；作用域允许的长期记忆仍可召回。关闭或刷新界面会中断调度，没有恢复执行入口。</text>
+</g></svg>
