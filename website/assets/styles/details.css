@@ -1,0 +1,606 @@
+@media (max-width: 700px) {
+  .penpot-landing .topbar {
+    height: 75px;
+  }
+  .penpot-landing main {
+    padding-top: 75px;
+  }
+  .penpot-landing .nav-shell {
+    margin-top: 15px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .penpot-landing .topbar.is-docked .nav-shell {
+    width: calc(100% - 24px);
+    height: 58px;
+    margin-top: 8px;
+    padding: 0 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    border-radius: 30px;
+  }
+  .penpot-landing .topbar.is-docked .header-actions {
+    display: flex;
+  }
+  .penpot-landing .topbar.is-docked .brand {
+    font-size: 16px;
+  }
+  .penpot-landing .topbar.is-docked .brand img {
+    width: 32px;
+    height: 32px;
+  }
+  .penpot-landing .brand {
+    font-size: 17px;
+  }
+  .penpot-landing .brand img {
+    width: 38px;
+    height: 38px;
+  }
+  .penpot-landing .language-switch {
+    width: 105px;
+    height: 36px;
+  }
+  .penpot-landing .language-switch button {
+    width: 47px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .penpot-landing .menu-toggle {
+    display: flex;
+  }
+  .penpot-landing .main-nav {
+    display: none;
+    width: auto;
+    height: auto;
+    position: absolute;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    top: 59px;
+    margin: 0;
+    padding: 12px 18px;
+    border-radius: 0 0 16px 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .penpot-landing .main-nav.is-open {
+    display: flex;
+  }
+  .penpot-landing .topbar.is-docked .main-nav.is-open {
+    width: calc(100% - 24px);
+    height: auto;
+    left: 12px;
+    right: 12px;
+    top: 64px;
+    padding: 12px;
+    border: 1px solid #ffffffed;
+    border-radius: 18px;
+    background: #f6f8fbf8;
+    box-shadow: 0 18px 42px #405d7b26;
+    backdrop-filter: blur(26px);
+    -webkit-backdrop-filter: blur(26px);
+  }
+  .penpot-landing .main-nav a,
+  .penpot-landing .main-nav .nav-link,
+  .penpot-landing .main-nav .nav-link:nth-child(3),
+  .penpot-landing .main-nav .nav-github {
+    width: 100%;
+    justify-content: flex-start;
+    margin: 0;
+    padding-inline: 16px;
+  }
+  .penpot-hero {
+    min-height: 780px;
+  }
+  .penpot-hero-copy {
+    left: 24px;
+    right: 24px;
+    top: 42px;
+  }
+  .penpot-hero h1 span {
+    font-size: 52px;
+  }
+  .penpot-hero h1 strong {
+    font-size: 38px;
+    margin-top: 4px;
+  }
+  .penpot-hero-copy > p {
+    font-size: 16px;
+    margin-top: 20px;
+  }
+  .penpot-hero-copy > p br {
+    display: none;
+  }
+  .penpot-hero .penpot-actions {
+    margin-top: 30px;
+    gap: 10px;
+  }
+  .penpot-button {
+    min-width: 0;
+    height: 48px;
+    padding: 0 18px;
+    font-size: 14px;
+  }
+  .penpot-button-secondary {
+    min-width: 0;
+  }
+  .penpot-hero-art {
+    left: calc(50% - 315px);
+    right: auto;
+    top: 300px;
+    transform: scale(0.55);
+    transform-origin: top center;
+    opacity: 1;
+  }
+  .penpot-video {
+    width: calc(100% - 32px);
+    height: 260px;
+    padding: 12px;
+    border-radius: 22px;
+  }
+  .penpot-video-inner {
+    gap: 12px;
+    border-radius: 13px;
+  }
+  .penpot-play {
+    width: 80px;
+    height: 80px;
+    font-size: 29px;
+  }
+  .penpot-video p {
+    font-size: 15px;
+  }
+  .penpot-collaboration {
+    min-height: 865px;
+    margin-top: 65px;
+  }
+  .collaboration-copy {
+    left: 24px;
+    right: 24px;
+    top: 0;
+  }
+  .collaboration-kicker {
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+  .collaboration-copy h2 {
+    font-size: 32px;
+    line-height: 1.35;
+  }
+  .collaboration-foot {
+    margin-top: 25px;
+  }
+  .collaboration-foot span {
+    width: 170px;
+  }
+  .collaboration-foot p {
+    font-size: 14px;
+    margin-top: 14px;
+  }
+  .collaboration-diagram {
+    left: calc(50% - 370px);
+    top: 245px;
+    transform: scale(0.48);
+    transform-origin: top center;
+  }
+  .penpot-templates {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding-inline: 16px;
+    margin-top: 0;
+  }
+  .template-card {
+    height: 300px;
+  }
+  .template-card h2 {
+    flex-basis: 58px;
+    height: 58px;
+    padding: 16px 20px;
+    font-size: 17px;
+  }
+  .penpot-final {
+    width: calc(100% - 32px);
+    min-height: 465px;
+    margin-top: 75px;
+    padding-top: 35px;
+  }
+  .penpot-final h2 span,
+  .penpot-final h2 strong {
+    font-size: clamp(32px, 9vw, 52px);
+  }
+  .penpot-final h2 strong {
+    margin-top: 20px;
+  }
+  .penpot-final > p {
+    margin-top: 35px;
+    font-size: 15px;
+  }
+  .penpot-final .penpot-actions {
+    gap: 10px;
+    margin-top: 30px;
+  }
+  .penpot-final .penpot-button {
+    min-width: 0;
+    height: 48px;
+    font-size: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-orbit,
+  .satellite-track,
+  .hero-orb-inner img,
+  .hero-orb-inner:after,
+  .collaboration-ring:after,
+  .collaboration-core img {
+    animation: none;
+  }
+  .collaboration-lines .flow-particle {
+    display: none;
+  }
+}
+
+/* Merge the logo into the docked navigation at the second screen. */
+
+.penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell {
+  width: min(1060px, calc(100% - 48px));
+  grid-template-columns: 185px minmax(0, 1fr) 128px;
+}
+
+.penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell:before {
+  right: 157px;
+}
+
+.penpot-landing .topbar.is-docked:not(.is-language-hidden) .header-actions {
+  display: flex;
+}
+
+.penpot-landing .topbar.is-docked:not(.is-language-hidden) .language-switch {
+  display: flex;
+  width: 128px;
+  height: 40px;
+}
+
+.penpot-landing
+  .topbar.is-docked:not(.is-language-hidden)
+  .language-switch
+  button {
+  width: 59px;
+  height: 32px;
+  font-size: 13px;
+}
+
+@media (max-width: 1050px) {
+  .penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell {
+    width: calc(100% - 32px);
+    grid-template-columns: 150px minmax(0, 1fr) 120px;
+  }
+  .penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell:before {
+    right: 145px;
+  }
+  .penpot-landing .topbar.is-docked:not(.is-language-hidden) .language-switch {
+    width: 120px;
+  }
+  .penpot-landing
+    .topbar.is-docked:not(.is-language-hidden)
+    .language-switch
+    button {
+    width: 55px;
+  }
+}
+
+@media (max-width: 700px) {
+  .penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell {
+    width: calc(100% - 24px);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell:before {
+    right: 0;
+  }
+  .penpot-landing .topbar.is-docked:not(.is-language-hidden) .language-switch {
+    width: 105px;
+    height: 36px;
+  }
+  .penpot-landing
+    .topbar.is-docked:not(.is-language-hidden)
+    .language-switch
+    button {
+    width: 47px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
+/* Design, usage docs and demo share the same header controls as the introduction. */
+
+:is(.content-page, .playground-shell) {
+  font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+:is(.content-page, .playground-shell) .topbar {
+  height: 132px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flow-root;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+
+.content-page .topbar {
+  visibility: visible;
+  transition:
+    transform 0.42s ease,
+    opacity 0.42s ease,
+    visibility 0s;
+}
+
+.content-page .topbar.is-content-hidden {
+  transform: translateY(-110%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 0.42s ease,
+    opacity 0.42s ease,
+    visibility 0s linear 0.42s;
+}
+
+:is(.content-page, .playground-shell) .nav-shell {
+  position: relative;
+  isolation: isolate;
+  width: calc(100% - 80px);
+  height: 64px;
+  margin: 18px auto 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 796px) minmax(0, 1fr);
+  align-items: center;
+  pointer-events: none;
+  transition:
+    width 0.4s ease,
+    margin 0.4s ease,
+    padding 0.4s ease,
+    grid-template-columns 0.4s ease;
+}
+
+:is(.content-page, .playground-shell) .nav-shell > .brand,
+:is(.content-page, .playground-shell) .nav-shell > .main-nav,
+:is(.content-page, .playground-shell) .nav-shell > .header-actions {
+  pointer-events: auto;
+}
+
+:is(.content-page, .playground-shell) .nav-shell:before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 1px solid #ffffffed;
+  border-radius: 999px;
+  background: #f8fafcf9;
+  box-shadow:
+    0 18px 42px #405d7b26,
+    inset 0 1px #fff;
+  backdrop-filter: blur(26px) saturate(150%);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+:is(.content-page, .playground-shell) .brand {
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+  transition: font-size 0.4s ease;
+}
+
+:is(.content-page, .playground-shell) .brand img {
+  display: block;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  transition:
+    width 0.4s ease,
+    height 0.4s ease;
+}
+
+:is(.content-page, .playground-shell) .main-nav {
+  width: 796px;
+  height: 64px;
+  padding: 9px 24px 9px 55px;
+  display: flex;
+  gap: 14px;
+  border: 1px solid #ffffffde;
+  border-radius: 999px;
+  background: #eff4f9a8;
+  box-shadow:
+    0 16px 38px #405d7b1c,
+    inset 0 1px #ffffffeb;
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  transition:
+    width 0.4s ease,
+    padding 0.4s ease,
+    gap 0.4s ease,
+    background 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+:is(.content-page, .playground-shell) .main-nav a {
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+:is(.content-page, .playground-shell) .main-nav .nav-link {
+  width: 96px;
+}
+
+:is(.content-page, .playground-shell) .main-nav .nav-link:nth-child(3) {
+  width: 100px;
+}
+
+:is(.content-page, .playground-shell) .main-nav .is-active,
+:is(.content-page, .playground-shell) .main-nav a:hover {
+  border-color: #d4ddeb;
+  background: #e3eaf5b8;
+  color: var(--text);
+  box-shadow: inset 0 1px #ffffffc9;
+}
+
+:is(.content-page, .playground-shell) .main-nav .nav-github {
+  width: 188px;
+  margin-left: auto;
+  gap: 9px;
+  border-color: #ffffffde;
+  background: #ffffff80;
+  color: var(--text);
+  box-shadow:
+    inset 0 1px #fff,
+    0 2px 9px #536a8310;
+}
+
+:is(.content-page, .playground-shell) .nav-github svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  display: block;
+  overflow: visible;
+}
+
+:is(.content-page, .playground-shell) .header-actions {
+  justify-self: end;
+}
+
+:is(.content-page, .playground-shell) .language-switch {
+  width: 144px;
+  height: 44px;
+  padding: 4px;
+  gap: 0;
+  justify-content: space-between;
+  background: #eff4f9a8;
+  border-color: #ffffffde;
+  box-shadow:
+    0 9px 22px #405d7b12,
+    inset 0 1px #ffffffeb;
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+}
+
+:is(.content-page, .playground-shell) .language-switch button {
+  width: 67px;
+  height: 36px;
+  padding: 0;
+  font-size: 15px;
+}
+
+:is(.content-page, .playground-shell) .language-switch button.is-active {
+  background: #e1e8f3c9;
+}
+
+.content-page .docs-aside {
+  top: 150px;
+  max-height: calc(100vh - 170px);
+}
+
+.content-page .docs-section {
+  scroll-margin-top: 150px;
+}
+
+.content-page .docs-layout {
+  width: 100%;
+  grid-template-columns: clamp(280px, 19vw, 360px) minmax(0, 1fr);
+  gap: clamp(40px, 4vw, 78px);
+  justify-content: stretch;
+  padding: 12px clamp(24px, 2.1vw, 42px) 110px;
+}
+
+.content-page .docs-main {
+  max-width: 1220px;
+}
+
+.content-page .docs-aside a {
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.content-page .markdown-document .docs-section p,
+.content-page .markdown-document .docs-section li {
+  font-size: 15px;
+}
+
+:is(.content-page, .playground-shell) .topbar.is-docked .nav-shell {
+  width: min(700px, calc(100% - 48px));
+  height: 64px;
+  margin-top: 10px;
+  padding: 0 14px;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 8px;
+}
+
+:is(.content-page, .playground-shell) .topbar.is-docked .nav-shell:before {
+  opacity: 1;
+}
+
+:is(.content-page, .playground-shell) .topbar.is-docked .brand {
+  font-size: 17px;
+}
+
+:is(.content-page, .playground-shell) .topbar.is-docked .brand img {
+  width: 34px;
+  height: 34px;
+}
+
+:is(.content-page, .playground-shell) .topbar.is-docked .main-nav {
+  width: 100%;
+  height: 56px;
+  padding: 5px 6px;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:is(.content-page, .playground-shell) .topbar.is-docked .main-nav .nav-link {
+  width: 84px;
+}
+
+:is(.content-page, .playground-shell)
+  .topbar.is-docked
+  .main-nav
+  .nav-link:nth-child(3) {
+  width: 88px;
+}
+
+:is(.content-page, .playground-shell) .topbar.is-docked .main-nav .nav-github {
+  width: 160px;
+}
+
+:is(.content-page, .playground-shell) .topbar.is-docked .header-actions {
+  display: none;
+}
+
+@media (max-width: 1390px) {
+  :is(.content-page, .playground-shell) .nav-shell {
+    grid-template-columns: minmax(170px, 1fr) minmax(510px, 796px) minmax(
+        120px,
+        1fr
+      );
+  }
+  :is(.content-page, .playground-shell) .main-nav {
+    width: 100%;
+  }
+  :is(.content-page, .playground-shell) .topbar.is-docked .nav-shell {
+    grid-template-columns: 170px minmax(0, 1fr);
+  }
+}

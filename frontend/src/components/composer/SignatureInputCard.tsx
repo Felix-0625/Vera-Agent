@@ -1,21 +1,20 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Plus, ArrowRight, ImagePlus, Pause, Play, Pencil, Trash2, CornerUpRight, Check, X } from 'lucide-react';
+import { ArrowRight, Check, CornerUpRight, ImagePlus, Pause, Pencil, Play, Plus, Trash2, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { fetchGroups } from '../../api/projectApi';
 import { useChatStore } from '../../stores/chatStore';
-import { PlusMenu } from './PlusMenu';
-import { ModelDropdown } from './ModelDropdown';
+import { useLayoutStore } from '../../stores/layoutStore';
+import { useOrchestrationInvokeStore } from '../../stores/orchestrationInvokeStore';
+import { ensureRightSidebarOpen } from '../../stores/rightSidebarLayout';
+import { useToolTabsStore } from '../../stores/toolTabsStore';
+import { Button } from '../common/Button';
+import { TextArea } from '../common/Field';
+import { IconButton } from '../common/IconButton';
 import { AttachedBadges } from './AttachedBadges';
 import { readImageFiles } from './imageAttachments';
 import { ImageAttachmentStrip } from './ImageAttachmentStrip';
-import { fetchGroups } from '../../api/projectApi';
-import { useToolTabsStore } from '../../stores/toolTabsStore';
-import { ensureRightSidebarOpen } from '../../stores/rightSidebarLayout';
-import { useLayoutStore } from '../../stores/layoutStore';
-import { useOrchestrationInvokeStore } from '../../stores/orchestrationInvokeStore';
-import { Button } from '../common/Button';
-import { IconButton } from '../common/IconButton';
-import { TextArea } from '../common/Field';
+import { ModelDropdown } from './ModelDropdown';
+import { PlusMenu } from './PlusMenu';
 import { extractWorkflowTaskInput } from './workflowInvocation';
-
 
 export const SignatureInputCard: React.FC = () => {
   const {
@@ -81,7 +80,10 @@ export const SignatureInputCard: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim() && draftImages.length === 0) return;
     const commandMatch = input.trim().match(/^\/(goal|plan|learn|grill-me|schedule)(?:\s+|$)([\s\S]*)$/i);
-    if (input.trim() === '/') { setPlusOpen(true); return; }
+    if (input.trim() === '/') {
+      setPlusOpen(true);
+      return;
+    }
     let message = input.trim();
     if (commandMatch) {
       const command = commandMatch[1].toLowerCase();
@@ -101,14 +103,20 @@ export const SignatureInputCard: React.FC = () => {
       }
     }
     const chat = useChatStore.getState();
-    const projectId = chat.activeThreadId ? chat.threads.find((thread) => thread.thread_id === chat.activeThreadId)?.project_id : chat.draftProjectId;
+    const projectId = chat.activeThreadId
+      ? chat.threads.find((thread) => thread.thread_id === chat.activeThreadId)?.project_id
+      : chat.draftProjectId;
     const explicitInvocation = /调用|运行|执行|启动|使用/.test(message) && /工作流|架构|流程/.test(message);
     if (projectId && explicitInvocation) {
       try {
         const { groups } = await fetchGroups(projectId);
-        const matched = groups.find((group) => (group.group_mode === 'workflow' || group.group_mode === 'architecture') && message.includes(group.name));
+        const matched = groups.find(
+          (group) =>
+            (group.group_mode === 'workflow' || group.group_mode === 'architecture') && message.includes(group.name),
+        );
         if (matched) {
-          const originThreadId = chat.activeThreadId || await chat.newThread(`流程任务 · ${matched.name}`, undefined, projectId);
+          const originThreadId =
+            chat.activeThreadId || (await chat.newThread(`流程任务 · ${matched.name}`, undefined, projectId));
           const conversationKey = `conversation:${originThreadId}`;
           ensureRightSidebarOpen(conversationKey);
           openTab('workflow', '流程编排', conversationKey, projectId);
@@ -119,9 +127,13 @@ export const SignatureInputCard: React.FC = () => {
             originThreadId,
             input: extractWorkflowTaskInput(message, matched.name),
           });
-          setInput(''); setPlusOpen(false); return;
+          setInput('');
+          setPlusOpen(false);
+          return;
         }
-      } catch { /* A normal message still works if the project flow list is unavailable. */ }
+      } catch {
+        /* A normal message still works if the project flow list is unavailable. */
+      }
     }
     sendMessage(message);
     setInput('');
@@ -149,12 +161,21 @@ export const SignatureInputCard: React.FC = () => {
           height: 1,
           width: '96%',
           margin: '0 auto',
-          background: 'linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent-primary) 9%, transparent) 50%, transparent 100%)',
+          background:
+            'linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--accent-primary) 9%, transparent) 50%, transparent 100%)',
         }}
       />
 
       {}
-      <PlusMenu isOpen={plusOpen} onClose={() => setPlusOpen(false)} requestText={input} onConsumeRequest={() => setInput('')} onSelectRuleTrigger={(trigger) => setInput((current) => current.replace(new RegExp(`^/${trigger}\\b\\s*`, 'i'), ''))} />
+      <PlusMenu
+        isOpen={plusOpen}
+        onClose={() => setPlusOpen(false)}
+        requestText={input}
+        onConsumeRequest={() => setInput('')}
+        onSelectRuleTrigger={(trigger) =>
+          setInput((current) => current.replace(new RegExp(`^/${trigger}\\b\\s*`, 'i'), ''))
+        }
+      />
 
       <ImageAttachmentStrip images={draftImages} onRemove={removeDraftImage} />
 
@@ -164,20 +185,92 @@ export const SignatureInputCard: React.FC = () => {
             {queuePaused ? <Pause size={13} /> : <span className="message-queue-live-dot" />}
             <span>{queuePaused ? '队列已暂停' : isStreaming ? '正在处理当前消息' : '消息队列'}</span>
             <span className="message-queue-count">{queuedPrompts.length} 条待处理</span>
-            {queuePaused || (!isStreaming && queuedPrompts.length > 0) ? <button type="button" className="message-queue-control" onClick={resumeQueue}><Play size={12} fill="currentColor" />继续</button> : isStreaming ? <button type="button" className="message-queue-control" onClick={() => void pauseQueue().catch(() => undefined)}><Pause size={12} />暂停</button> : null}
+            {queuePaused || (!isStreaming && queuedPrompts.length > 0) ? (
+              <button type="button" className="message-queue-control" onClick={resumeQueue}>
+                <Play size={12} fill="currentColor" />
+                继续
+              </button>
+            ) : isStreaming ? (
+              <button
+                type="button"
+                className="message-queue-control"
+                onClick={() => void pauseQueue().catch(() => undefined)}
+              >
+                <Pause size={12} />
+                暂停
+              </button>
+            ) : null}
           </div>
           {queuedPrompts.map((prompt) => (
             <div className="message-queue-item" key={prompt.id}>
-              {editingQueueId === prompt.id ? <TextArea autoFocus value={queueDraft} onChange={(event) => setQueueDraft(event.target.value)} aria-label="编辑排队消息" className="message-queue-edit-input" /> : <span className="message-queue-content">{prompt.content}</span>}
+              {editingQueueId === prompt.id ? (
+                <TextArea
+                  autoFocus
+                  value={queueDraft}
+                  onChange={(event) => setQueueDraft(event.target.value)}
+                  aria-label="编辑排队消息"
+                  className="message-queue-edit-input"
+                />
+              ) : (
+                <span className="message-queue-content">{prompt.content}</span>
+              )}
               <div className="message-queue-actions">
-                {editingQueueId === prompt.id ? <>
-                  <button type="button" title="保存修改" aria-label="保存修改" onClick={() => { editQueuedPrompt(prompt.id, queueDraft); setEditingQueueId(null); }}><Check size={13} /></button>
-                  <button type="button" title="取消编辑" aria-label="取消编辑" onClick={() => setEditingQueueId(null)}><X size={13} /></button>
-                </> : <>
-                  <button type="button" title="当前执行阶段结束后优先接收这条指令" aria-label="引导" onClick={() => void guideQueuedPrompt(prompt.id)}><CornerUpRight size={13} /><span>引导</span></button>
-                  {queuePaused && <button type="button" title="编辑排队消息" aria-label="编辑排队消息" onClick={() => { setQueueDraft(prompt.content); setEditingQueueId(prompt.id); }}><Pencil size={13} /></button>}
-                  <button type="button" title="移除排队消息" aria-label="移除排队消息" onClick={() => removeQueuedPrompt(prompt.id)}><Trash2 size={13} /></button>
-                </>}
+                {editingQueueId === prompt.id ? (
+                  <>
+                    <button
+                      type="button"
+                      title="保存修改"
+                      aria-label="保存修改"
+                      onClick={() => {
+                        editQueuedPrompt(prompt.id, queueDraft);
+                        setEditingQueueId(null);
+                      }}
+                    >
+                      <Check size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      title="取消编辑"
+                      aria-label="取消编辑"
+                      onClick={() => setEditingQueueId(null)}
+                    >
+                      <X size={13} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      title="当前执行阶段结束后优先接收这条指令"
+                      aria-label="引导"
+                      onClick={() => void guideQueuedPrompt(prompt.id)}
+                    >
+                      <CornerUpRight size={13} />
+                      <span>引导</span>
+                    </button>
+                    {queuePaused && (
+                      <button
+                        type="button"
+                        title="编辑排队消息"
+                        aria-label="编辑排队消息"
+                        onClick={() => {
+                          setQueueDraft(prompt.content);
+                          setEditingQueueId(prompt.id);
+                        }}
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      title="移除排队消息"
+                      aria-label="移除排队消息"
+                      onClick={() => removeQueuedPrompt(prompt.id)}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -185,11 +278,7 @@ export const SignatureInputCard: React.FC = () => {
       )}
 
       {}
-      <AttachedBadges
-        ruleTrigger={ruleTrigger}
-        attachedSkills={attachedSkills}
-        attachedMcps={attachedMcps}
-      />
+      <AttachedBadges ruleTrigger={ruleTrigger} attachedSkills={attachedSkills} attachedMcps={attachedMcps} />
 
       {}
       <TextArea
@@ -207,9 +296,26 @@ export const SignatureInputCard: React.FC = () => {
       />
 
       {}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 'var(--space-1) var(--space-3) var(--space-2-5)' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: 'var(--space-1) var(--space-3) var(--space-2-5)',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          <input ref={imageInputRef} type="file" accept="image/*" multiple hidden onChange={(e) => { if (e.target.files) void handleImageFiles(e.target.files); e.target.value = ''; }} />
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            onChange={(e) => {
+              if (e.target.files) void handleImageFiles(e.target.files);
+              e.target.value = '';
+            }}
+          />
           <IconButton onClick={() => setPlusOpen(!plusOpen)} label="添加 MCP 或 Skill" active={plusOpen} size="sm">
             <Plus size={16} />
           </IconButton>

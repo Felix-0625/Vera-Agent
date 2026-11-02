@@ -1,0 +1,575 @@
+.scenario-button {
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.team-member {
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+@media (max-width: 1080px) {
+  .demo-inspector {
+    border-top-color: var(--line-strong);
+  }
+}
+
+@media (max-width: 680px) {
+  .docs-layout {
+    padding-inline: 16px;
+  }
+}
+
+/* Penpot landing board: geometry and content follow the 1440px homepage design. */
+
+.penpot-landing {
+  font-family: Inter, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+}
+
+.penpot-landing .topbar {
+  height: 160px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  pointer-events: none;
+  border: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+.penpot-landing .nav-shell {
+  position: relative;
+  isolation: isolate;
+  width: min(1296px, calc(100% - 48px));
+  height: auto;
+  margin: 49px auto 0;
+  display: grid;
+  grid-template-columns: 303px 796px 1fr;
+  align-items: center;
+  pointer-events: auto;
+  transition:
+    width 0.45s ease,
+    margin 0.45s ease,
+    padding 0.45s ease;
+}
+
+.penpot-landing .nav-shell:before {
+  content: "";
+  position: absolute;
+  inset: 0 157px 0 0;
+  z-index: -1;
+  border: 1px solid #ffffffed;
+  border-radius: 999px;
+  background: #eff4f9d9;
+  box-shadow:
+    0 18px 42px #405d7b26,
+    inset 0 1px #fff;
+  backdrop-filter: blur(26px) saturate(150%);
+  -webkit-backdrop-filter: blur(26px) saturate(150%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+
+.penpot-landing .brand {
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+  transition: font-size 0.45s ease;
+}
+
+.penpot-landing .brand img {
+  display: block;
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  transition:
+    width 0.45s ease,
+    height 0.45s ease;
+}
+
+.penpot-landing .main-nav {
+  width: 796px;
+  height: 64px;
+  padding: 9px 24px 9px 55px;
+  display: flex;
+  gap: 14px;
+  border: 1px solid #ffffffde;
+  border-radius: 999px;
+  background: #eff4f9a8;
+  box-shadow:
+    0 16px 38px #405d7b1c,
+    inset 0 1px #ffffffeb;
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
+  transition:
+    width 0.45s ease,
+    padding 0.45s ease,
+    background 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+.penpot-landing .main-nav a {
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.penpot-landing .main-nav .nav-link {
+  width: 96px;
+}
+
+.penpot-landing .main-nav .nav-link:nth-child(3) {
+  width: 100px;
+}
+
+.penpot-landing .main-nav .is-active,
+.penpot-landing .main-nav a:hover {
+  border-color: #d4ddeb;
+  background: #e3eaf5b8;
+  color: var(--text);
+  box-shadow: inset 0 1px #ffffffc9;
+}
+
+.penpot-landing .main-nav .nav-github {
+  width: 188px;
+  margin-left: auto;
+  gap: 9px;
+  border-color: #ffffffde;
+  background: #ffffff80;
+  color: var(--text);
+  box-shadow:
+    inset 0 1px #fff,
+    0 2px 9px #536a8310;
+}
+
+.penpot-landing .nav-github svg {
+  width: 19px;
+  height: 19px;
+  flex: none;
+  display: block;
+  overflow: visible;
+}
+
+.penpot-landing .header-actions {
+  justify-self: end;
+}
+
+.penpot-landing .language-switch {
+  width: 144px;
+  height: 44px;
+  padding: 4px;
+  gap: 0;
+  justify-content: space-between;
+  background: #eff4f9a8;
+  border-color: #ffffffde;
+  box-shadow:
+    0 9px 22px #405d7b12,
+    inset 0 1px #ffffffeb;
+  backdrop-filter: blur(20px) saturate(145%);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+}
+
+.penpot-landing .language-switch button {
+  width: 67px;
+  height: 36px;
+  padding: 0;
+  font-size: 15px;
+}
+
+.penpot-landing .language-switch button.is-active {
+  background: #e1e8f3c9;
+}
+
+.penpot-landing .topbar.is-docked .nav-shell {
+  width: min(900px, calc(100% - 48px));
+  height: 72px;
+  margin-top: 15px;
+  padding: 0 18px;
+  grid-template-columns: 185px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.penpot-landing .topbar.is-docked .nav-shell:before {
+  right: 0;
+  opacity: 1;
+}
+
+.penpot-landing .topbar.is-docked .header-actions {
+  display: none;
+}
+
+.penpot-landing .topbar.is-docked .brand {
+  font-size: 17px;
+}
+
+.penpot-landing .topbar.is-docked .brand img {
+  width: 34px;
+  height: 34px;
+}
+
+.penpot-landing .topbar.is-docked .main-nav {
+  width: 100%;
+  height: 56px;
+  padding: 5px 6px;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.penpot-landing .topbar.is-docked .main-nav .nav-link {
+  width: 84px;
+}
+
+.penpot-landing .topbar.is-docked .main-nav .nav-link:nth-child(3) {
+  width: 88px;
+}
+
+.penpot-landing .topbar.is-docked .main-nav .nav-github {
+  width: 160px;
+}
+
+.penpot-landing .topbar.is-docked .language-switch {
+  display: none;
+}
+
+.penpot-landing main {
+  overflow: hidden;
+  padding-top: 160px;
+}
+
+.penpot-hero,
+.penpot-video,
+.penpot-collaboration,
+.penpot-templates,
+.penpot-final {
+  width: min(1440px, 100%);
+  margin-inline: auto;
+}
+
+.penpot-hero {
+  height: 710px;
+  position: relative;
+}
+
+.penpot-hero-copy {
+  position: absolute;
+  z-index: 2;
+  left: 100px;
+  top: 99px;
+}
+
+.penpot-hero h1 {
+  margin: 0;
+  line-height: 1.12;
+  letter-spacing: -0.055em;
+  color: var(--text);
+}
+
+.penpot-hero h1 span,
+.penpot-hero h1 strong {
+  display: block;
+  font-weight: 720;
+}
+
+.penpot-hero h1 span {
+  font-size: 86px;
+}
+
+.penpot-hero h1 strong {
+  margin-top: 12px;
+  font-size: 58px;
+  letter-spacing: -0.06em;
+}
+
+.penpot-hero-copy > p {
+  margin: 25px 0 0;
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1.52;
+}
+
+.penpot-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.penpot-hero .penpot-actions {
+  margin-top: 67px;
+}
+
+.penpot-button {
+  height: 60px;
+  min-width: 190px;
+  padding: 0 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 650;
+  transition:
+    transform 0.2s,
+    background 0.2s;
+}
+
+.penpot-button:hover {
+  transform: translateY(-2px);
+}
+
+.penpot-button-primary {
+  background: #263448;
+  border-color: #263448;
+  color: #fff;
+}
+
+.penpot-button-secondary {
+  min-width: 210px;
+  background: #ffffff9e;
+  color: var(--text);
+  box-shadow:
+    inset 0 1px #fff,
+    0 8px 22px #4b628216;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.penpot-button-secondary:hover {
+  background: var(--accent-soft);
+}
+
+.penpot-hero-art {
+  position: absolute;
+  left: 759px;
+  top: -5px;
+  width: 630px;
+  height: 630px;
+}
+
+.hero-orbit,
+.hero-orb,
+.hero-orb-inner,
+.hero-satellite {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+}
+
+.hero-orbit {
+  border: 1px solid #7895c441;
+  animation: penpot-breathe 7s ease-in-out infinite;
+}
+
+.satellite-track {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  animation: planet-orbit 32s linear infinite;
+  will-change: transform;
+}
+
+.satellite-track-two {
+  animation-duration: 43s;
+  animation-direction: reverse;
+}
+
+.satellite-track-three {
+  animation-duration: 37s;
+  animation-delay: -12s;
+}
+
+.orbit-one {
+  inset: 0;
+  background: #667db30a;
+}
+
+.orbit-two {
+  inset: 37px;
+  border-color: #507bb880;
+}
+
+.orbit-three {
+  inset: 68px;
+  border-color: #2cacca9c;
+  box-shadow:
+    0 0 0 9px #56a7d014,
+    0 0 28px #3674c52e;
+}
+
+.hero-orb {
+  inset: 130px;
+  padding: 19px;
+  background: #dce6f8b5;
+  border: 1px solid #a6c5f5;
+  box-shadow: 0 0 40px #7ea7d244;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.hero-orb-inner {
+  inset: 19px;
+  display: grid;
+  place-items: center;
+  background: #ffffff9c;
+  border: 1px solid #bfd3ed;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.hero-orb-inner:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 66px);
+  width: 105px;
+  height: 15px;
+  border-radius: 50%;
+  background: #4c6da782;
+  filter: blur(7px);
+  transform: translateX(-50%) scale(0.8);
+  animation: hero-shadow-float 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.hero-orb-inner img {
+  position: relative;
+  z-index: 1;
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  animation: hero-logo-float 3.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-satellite {
+  z-index: 2;
+  background: #bfe8f6;
+  border: 1px solid #5cbccf;
+  box-shadow: 0 0 0 6px #68b8d324;
+}
+
+.satellite-one {
+  width: 39px;
+  height: 39px;
+  left: 44px;
+  top: 273px;
+}
+
+.satellite-two {
+  width: 34px;
+  height: 34px;
+  left: 490px;
+  top: 85px;
+  background: #e3d5f2;
+  border-color: #a979d6;
+}
+
+.satellite-three {
+  width: 47px;
+  height: 47px;
+  left: 525px;
+  top: 409px;
+}
+
+.penpot-video {
+  width: min(1280px, calc(100% - 32px));
+  height: 535px;
+  padding: 23px;
+  border: 1px solid #ffffffdf;
+  border-radius: 34px;
+  background: #e8eef4a8;
+  box-shadow:
+    0 20px 48px #465e7b0d,
+    inset 0 1px #fff;
+  backdrop-filter: blur(24px) saturate(135%);
+  -webkit-backdrop-filter: blur(24px) saturate(135%);
+}
+
+.penpot-video-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  border: 1px solid #ffffffd6;
+  border-radius: 24px;
+  background: #ffffff61;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.penpot-play {
+  width: 146px;
+  height: 146px;
+  display: grid;
+  place-items: center;
+  padding-left: 10px;
+  border: 1px solid #ffffffea;
+  border-radius: 50%;
+  background: #ffffffa6;
+  color: #4b6787;
+  font-size: 48px;
+  box-shadow:
+    inset 0 1px #fff,
+    0 12px 34px #263d5814;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.penpot-video p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 20px;
+}
+
+.penpot-collaboration {
+  height: 750px;
+  margin-top: 108px;
+  position: relative;
+}
+
+.collaboration-copy {
+  position: absolute;
+  left: 80px;
+  top: 99px;
+  z-index: 2;
+}
+
+.collaboration-kicker {
+  margin: 0 0 135px;
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+}
+
+.collaboration-copy h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 49px;
+  font-weight: 720;
+  letter-spacing: -0.04em;
+  line-height: 1.95;
+}
+
+.collaboration-foot {
+  margin-top: 100px;
+}

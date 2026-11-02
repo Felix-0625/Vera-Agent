@@ -12,6 +12,8 @@ describe('getActivePanelInstanceKey', () => {
   });
 
   it('keeps the same tab in different conversations separate', () => {
-    expect(getActivePanelInstanceKey('conversation:a', 'files')).not.toBe(getActivePanelInstanceKey('conversation:b', 'files'));
+    expect(getActivePanelInstanceKey('conversation:a', 'files')).not.toBe(
+      getActivePanelInstanceKey('conversation:b', 'files'),
+    );
   });
 });

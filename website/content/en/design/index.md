@@ -4,7 +4,7 @@ This page describes the **current implementation** of VeraAgent: its purpose, ar
 
 ## Overview and goals
 
-VeraAgent is a local AI agent workspace for software projects with an existing code repository. It brings project binding, model conversations, a task board, organization charts, and workflow orchestration into a Windows desktop app. Project files stay in their original local directory.
+VeraAgent is a local AI agent workspace for software projects with an existing code repository. It brings project binding, model conversations, a task board, organization charts, and workflow orchestration into a Windows desktop app. Project files stay in their original directory; model requests still send prompts and selected project context to the configured provider.
 
 The intended deployment is single-user and local. A direct agent conversation and multi-role collaboration use the same conversation engine. Editable templates make reporting lines and workflow steps explicit.
 

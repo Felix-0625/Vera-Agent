@@ -4,13 +4,8 @@
  * Backend: `server/routes/settings.py` (`/api/settings/*`), `server/routes/mcp.py` (`/api/mcp/*`),
  * and `server/routes/skills.py` (`/api/skills*`).
  */
+import { McpServerConfig, ModelConfig, PermissionsConfig, SkillItem } from '../types/settings';
 import { request } from './client';
-import {
-  ModelConfig,
-  PermissionsConfig,
-  McpServerConfig,
-  SkillItem,
-} from '../types/settings';
 
 // 1. Models
 export async function fetchModels(): Promise<{ models: ModelConfig[] }> {
@@ -96,7 +91,9 @@ export async function saveRules(content: string): Promise<{ status: string; cont
   });
 }
 
-export async function saveContextSettings(settings: Partial<Pick<UserContextSettings, 'include_agents_md' | 'memory_enabled'>>): Promise<UserContextSettings> {
+export async function saveContextSettings(
+  settings: Partial<Pick<UserContextSettings, 'include_agents_md' | 'memory_enabled'>>,
+): Promise<UserContextSettings> {
   return request('/api/settings/context', { method: 'POST', body: JSON.stringify(settings) });
 }
 
@@ -104,10 +101,17 @@ export async function fetchUserMemories(): Promise<{ memories: UserMemory[] }> {
   return request('/api/settings/user-memories');
 }
 
-export async function saveUserMemory(data: Pick<UserMemory, 'category' | 'content'>, memoryId?: string): Promise<{ memory: UserMemory }> {
-  return request(memoryId ? `/api/settings/user-memories/${encodeURIComponent(memoryId)}` : '/api/settings/user-memories', {
-    method: memoryId ? 'PATCH' : 'POST', body: JSON.stringify(data),
-  });
+export async function saveUserMemory(
+  data: Pick<UserMemory, 'category' | 'content'>,
+  memoryId?: string,
+): Promise<{ memory: UserMemory }> {
+  return request(
+    memoryId ? `/api/settings/user-memories/${encodeURIComponent(memoryId)}` : '/api/settings/user-memories',
+    {
+      method: memoryId ? 'PATCH' : 'POST',
+      body: JSON.stringify(data),
+    },
+  );
 }
 
 export async function deleteUserMemory(memoryId: string): Promise<{ status: string }> {
@@ -130,7 +134,10 @@ export async function createMcpServer(data: Partial<McpServerConfig>): Promise<{
   });
 }
 
-export async function updateMcpServer(serverId: string, data: Partial<McpServerConfig>): Promise<{ server: McpServerConfig }> {
+export async function updateMcpServer(
+  serverId: string,
+  data: Partial<McpServerConfig>,
+): Promise<{ server: McpServerConfig }> {
   return request(`/api/mcp/servers/${serverId}`, {
     method: 'PUT',
     body: JSON.stringify(data),
@@ -156,13 +163,25 @@ export async function deleteMcpServer(serverId: string): Promise<{ status: strin
 }
 
 export interface McpMarketItem {
-  id: string; name: string; description: string; category: string; type: string;
-  version?: string; repository?: string;
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  type: string;
+  version?: string;
+  repository?: string;
   packages?: Array<{ registryType?: string; identifier?: string; version?: string; transport?: { type?: string } }>;
-  remotes?: Array<{ type?: string; url?: string; headers?: Array<{ name: string; description?: string; isRequired?: boolean }> }>;
+  remotes?: Array<{
+    type?: string;
+    url?: string;
+    headers?: Array<{ name: string; description?: string; isRequired?: boolean }>;
+  }>;
 }
 
-export async function fetchMcpMarket(query = '', cursor = ''): Promise<{ market: McpMarketItem[]; source?: string; next_cursor?: string | null }> {
+export async function fetchMcpMarket(
+  query = '',
+  cursor = '',
+): Promise<{ market: McpMarketItem[]; source?: string; next_cursor?: string | null }> {
   const params = new URLSearchParams();
   if (query.trim()) params.set('q', query.trim());
   if (cursor) params.set('cursor', cursor);
@@ -170,15 +189,32 @@ export async function fetchMcpMarket(query = '', cursor = ''): Promise<{ market:
   return request(`/api/mcp/market${suffix}`);
 }
 
-export async function installMcpFromMarket(item: McpMarketItem): Promise<{ status?: string; server: McpServerConfig; install_scripts?: string }> {
-  const npmPackage = item.packages?.find(pkg => pkg.registryType === 'npm' && pkg.identifier);
+export async function installMcpFromMarket(
+  item: McpMarketItem,
+): Promise<{ status?: string; server: McpServerConfig; install_scripts?: string }> {
+  const npmPackage = item.packages?.find((pkg) => pkg.registryType === 'npm' && pkg.identifier);
   if (npmPackage) {
     return request('/api/mcp/market/install', { method: 'POST', body: JSON.stringify({ registry_id: item.id }) });
   }
-  const remote = item.remotes?.find(entry => entry.url);
+  const remote = item.remotes?.find((entry) => entry.url);
   if (remote?.url) {
     if (!remote.url.startsWith('https://')) throw new Error('Registry 远程 MCP 必须使用 HTTPS。');
-    return createMcpServer({ registry_id: item.id, name: item.name, type: 'remote', status: 'stopped', enabled: false, command: '', args: [], env: {}, headers: {}, tools: [], url: remote.url, transport: remote.type, repository: item.repository, registry_version: item.version });
+    return createMcpServer({
+      registry_id: item.id,
+      name: item.name,
+      type: 'remote',
+      status: 'stopped',
+      enabled: false,
+      command: '',
+      args: [],
+      env: {},
+      headers: {},
+      tools: [],
+      url: remote.url,
+      transport: remote.type,
+      repository: item.repository,
+      registry_version: item.version,
+    });
   }
   throw new Error('该 Registry 条目没有可安装的 NPM 包或 HTTPS 远程端点。');
 }
@@ -204,14 +240,32 @@ export async function deleteSkill(name: string): Promise<{ status: string }> {
   });
 }
 
-export interface SkillMarketItem { market_id: string; name: string; description: string; category: string; source_id: string; source_path: string; source: string; commit: string }
+export interface SkillMarketItem {
+  market_id: string;
+  name: string;
+  description: string;
+  category: string;
+  source_id: string;
+  source_path: string;
+  source: string;
+  commit: string;
+}
 
-export async function fetchSkillsMarket(query = ''): Promise<{ market: SkillMarketItem[]; sources?: Array<{ id: string; label: string; url: string }> }> {
+export async function fetchSkillsMarket(
+  query = '',
+): Promise<{ market: SkillMarketItem[]; sources?: Array<{ id: string; label: string; url: string }> }> {
   const suffix = query.trim() ? `?q=${encodeURIComponent(query.trim())}` : '';
   return request(`/api/skills/market${suffix}`);
 }
 
-export async function installSkill(skill: { name: string; description?: string; instructions?: string; source_id?: string; source_path?: string; commit?: string }): Promise<{ status: string }> {
+export async function installSkill(skill: {
+  name: string;
+  description?: string;
+  instructions?: string;
+  source_id?: string;
+  source_path?: string;
+  commit?: string;
+}): Promise<{ status: string }> {
   return request('/api/skills/install', {
     method: 'POST',
     body: JSON.stringify(skill),

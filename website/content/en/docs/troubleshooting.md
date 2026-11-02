@@ -26,6 +26,6 @@
 - The local API is designed for one user and has no public-service caller authentication.
 - Path limits are application policy. Terminal commands have the current Windows user's permissions.
 - Workflows run serially and are scheduled by the UI. Editor node names do not imply executors exist.
-- Model, MCP, and Skill behavior depends on user configuration and external services. The website demo uses preset data.
+- Model, MCP, and Skill behavior depends on user configuration and external services. Interface illustrations on the introduction page are not real execution results.
 
 When reporting a problem, include reproduction steps, version, nonsensitive errors, and relevant node/API status. **Do not** attach API keys, full conversation exports, or credential files from `.agents/`. See the repository [testing guide](../../../../docs/TESTING.md).

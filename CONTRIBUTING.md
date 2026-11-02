@@ -28,12 +28,19 @@ VeraAgent is under active development. Small, reviewable changes with reproducib
 - API types in `frontend/src/types` mirror backend JSON and keep `snake_case` field names.
 - Use design tokens from `styles/tokens.css` and shared components from `components/common` instead of hard-coded styles.
 - Oxlint must pass (`npm run lint`).
+- Keep strict TypeScript enabled and run `npm run format:check` (Prettier). Do not compress
+  JSX or statements to satisfy line limits; split controller hooks and views by responsibility.
 
 ### Size limits
 
 `tests/test_code_size.py` caps files at 450 lines and Python functions at 120 lines. A few existing
 modules are listed with their current size as a ceiling; those may only shrink. Split new code by
 responsibility instead of raising a limit (see `server/chat/` for the pattern).
+
+Every self-authored code file, including tests, CSS, scripts and website code, also has a
+hard 1000-line limit. Generated dependency locks and upstream vendor assets are excluded.
+Examples must be reproducible, use synthetic fixtures, state provider costs and generated
+files, and document repeat/cleanup behavior. Keep their no-provider checks in repository CI.
 
 ### Comments and language
 

@@ -1,130 +1,434 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f7f8fb">
-  <meta name="description" content="VeraAgent 是你的个人 AI Agent 工作站，在一个地方组织 Agent、对话窗口和工具。">
-  <title>VeraAgent — 你的个人工作站</title>
-  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="./assets/site.css?v=shared-header-3">
-  <script src="./assets/site.js?v=i18n-4" defer></script>
-</head>
-<body class="landing-page penpot-landing">
-  <header class="topbar">
-    <div class="nav-shell">
-      <a class="brand" href="./" aria-label="VeraAgent 首页"><img src="./assets/vera-logo.png" alt="" width="42" height="42"><span>VeraAgent</span></a>
-      <nav class="main-nav" aria-label="主导航">
-        <a class="nav-link" href="./design/">设计</a>
-        <a class="nav-link" href="./docs/">文档</a>
-        <a class="nav-link" href="./playground/">演示</a>
-        <a class="nav-github" href="https://github.com/Felix-0625/Agents" target="_blank" rel="noreferrer"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>GitHub 仓库</a>
-      </nav>
-      <div class="header-actions">
-        <div class="language-switch" role="group" aria-label="语言"><button class="is-active" type="button" aria-pressed="true">中文</button><button type="button" aria-pressed="false">EN</button></div>
-        <button class="menu-toggle" type="button" aria-label="打开导航" aria-expanded="false"><span></span><span></span></button>
-      </div>
-    </div>
-  </header>
-  <main>
-    <section class="penpot-hero" aria-labelledby="hero-title">
-      <div class="penpot-hero-copy">
-        <h1 id="hero-title"><span>Vera Agent</span><strong>你的个人工作站</strong></h1>
-        <p>在一个工作站中组织 Agent、对话窗口和工具<br>任务分派、协作过程与结果清晰可见</p>
-        <div class="penpot-actions"><a class="penpot-button penpot-button-primary" href="https://github.com/Felix-0625/Agents" target="_blank" rel="noreferrer">查看仓库</a><a class="penpot-button penpot-button-secondary" href="./playground/">观看演示<span aria-hidden="true">→</span></a></div>
-      </div>
-      <div class="penpot-hero-art" aria-hidden="true">
-        <span class="hero-orbit orbit-one"></span><span class="hero-orbit orbit-two"></span><span class="hero-orbit orbit-three"></span>
-        <span class="satellite-track satellite-track-one"><span class="hero-satellite satellite-one"></span></span>
-        <span class="satellite-track satellite-track-two"><span class="hero-satellite satellite-two"></span></span>
-        <span class="satellite-track satellite-track-three"><span class="hero-satellite satellite-three"></span></span>
-        <span class="hero-orb"><span class="hero-orb-inner"><img src="./assets/vera-logo.png" alt=""></span></span>
-      </div>
-    </section>
-    <section class="penpot-video penpot-workspace-preview" aria-label="VeraAgent 工作站界面">
-      <figure class="penpot-workspace-figure">
-        <img src="./assets/workstation-no-right-panel.png" width="1280" height="720" alt="VeraAgent 桌面工作站：左侧为导航与项目入口，中间为对话区">
-        <figcaption>VeraAgent 桌面工作站</figcaption>
-      </figure>
-    </section>
-    <section class="penpot-collaboration" aria-labelledby="collaboration-title">
-      <div class="collaboration-copy"><p class="collaboration-kicker">SUBAGENT COLLABORATION</p><h2 id="collaboration-title">Vera Agent 统筹<br>专业角色各司其职</h2><div class="collaboration-foot"><span aria-hidden="true"></span><p>按需委派 · 独立执行 · 结果回传</p></div></div>
-      <div class="collaboration-diagram" aria-label="Vera Agent 将任务委派给调研员与审查员，并接收他们的结果">
-        <svg class="collaboration-lines" viewBox="0 0 740 680" preserveAspectRatio="none" aria-hidden="true">
-          <defs>
-            <radialGradient id="research-pulse"><stop offset="0" stop-color="#27a9c9" stop-opacity=".9"/><stop offset=".5" stop-color="#5ec8dd" stop-opacity=".45"/><stop offset="1" stop-color="#5ec8dd" stop-opacity="0"/></radialGradient>
-            <radialGradient id="review-pulse"><stop offset="0" stop-color="#8868cf" stop-opacity=".85"/><stop offset=".5" stop-color="#b39bdf" stop-opacity=".4"/><stop offset="1" stop-color="#b39bdf" stop-opacity="0"/></radialGradient>
-          </defs>
-          <path class="line-base research-line" d="M357 330 C440 310 438 140 516 140"/>
-          <path class="line-base review-line" d="M357 330 C440 350 438 540 516 540"/>
-          <g class="flow-particle research-particle">
-            <ellipse class="flow-halo" rx="28" ry="5" fill="url(#research-pulse)"/>
-            <ellipse class="flow-core" rx="16" ry="1.8" fill="url(#research-pulse)"/>
-            <animateMotion dur="4.8s" begin=".6s" repeatCount="indefinite" rotate="auto" path="M357 330 C440 310 438 140 516 140"/>
-            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.14;.85;1" dur="4.8s" begin=".6s" repeatCount="indefinite"/>
-          </g>
-          <g class="flow-particle review-particle">
-            <ellipse class="flow-halo" rx="28" ry="5" fill="url(#review-pulse)"/>
-            <ellipse class="flow-core" rx="16" ry="1.8" fill="url(#review-pulse)"/>
-            <animateMotion dur="5.2s" begin="1.5s" repeatCount="indefinite" rotate="auto" path="M357 330 C440 350 438 540 516 540"/>
-            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.14;.85;1" dur="5.2s" begin="1.5s" repeatCount="indefinite"/>
-          </g>
-        </svg>
-        <div class="collaboration-ring"><div class="collaboration-core"><img src="./assets/vera-logo.png" alt=""><strong>Vera Agent</strong><span>分派 · 汇总 · 实施</span></div></div>
-        <div class="collaboration-role research-role"><small>DEEP DIVE</small><strong>调研员</strong><p>深度探索 · 返回发现</p></div>
-        <div class="collaboration-role review-role"><small>FINAL REVIEW</small><strong>审查员</strong><p>审阅变更 · 返回意见</p></div>
-      </div>
-    </section>
-    <section class="penpot-templates" aria-label="组织架构与工作流模板预览">
-      <article class="template-card">
-        <h2>全局模板 · 组织架构</h2>
-        <div class="template-diagram-wrap">
-          <svg class="template-diagram organization-diagram" viewBox="0 0 603 350" role="img" aria-labelledby="org-title org-desc">
-            <title id="org-title">组织架构节点图</title>
-            <desc id="org-desc">CEO 向三位角色分派任务，右侧 CTO 再向 Coder 1 与 Coder 2 分派任务。没有编辑时的浮动工具栏。</desc>
-            <g class="diagram-edges">
-              <path d="M301 68 V112 M82 112 H498 M82 112 V149 M301 112 V166 M498 112 V149"/>
-              <path d="M498 207 V239 M430 239 H550 M430 239 V278 M550 239 V278"/>
-            </g>
-            <g class="diagram-labels">
-              <text x="165" y="105">直属关系</text><text x="393" y="105">直属关系</text>
-              <text x="312" y="142">直属关系</text>
-              <text x="509" y="226">下发任务</text>
-              <text x="396" y="263">直属关系</text><text x="517" y="263">直属关系</text>
-            </g>
-            <g class="diagram-node"><rect x="242" y="16" width="118" height="52" rx="10"/><circle class="diagram-port" cx="301" cy="68" r="4"/><text class="node-tag" x="257" y="34">组织角色</text><text class="node-name" x="257" y="54">CEO</text></g>
-            <g class="diagram-node"><rect x="20" y="149" width="124" height="58" rx="10"/><circle class="diagram-port" cx="82" cy="149" r="4"/><text class="node-tag" x="35" y="168">组织角色</text><text class="node-name" x="35" y="192">CTO</text></g>
-            <g class="diagram-node"><rect x="239" y="166" width="124" height="58" rx="10"/><circle class="diagram-port" cx="301" cy="166" r="4"/><text class="node-tag" x="254" y="185">组织角色</text><text class="node-name" x="254" y="209">CMO</text></g>
-            <g class="diagram-node"><rect x="433" y="149" width="130" height="58" rx="10"/><circle class="diagram-port" cx="498" cy="149" r="4"/><text class="node-tag" x="448" y="168">组织角色</text><text class="node-name" x="448" y="192">CTO</text></g>
-            <g class="diagram-node"><rect x="385" y="278" width="90" height="58" rx="10"/><circle class="diagram-port" cx="430" cy="278" r="4"/><text class="node-tag" x="397" y="297">执行角色</text><text class="node-name" x="397" y="321">Coder 1</text></g>
-            <g class="diagram-node"><rect x="505" y="278" width="90" height="58" rx="10"/><circle class="diagram-port" cx="550" cy="278" r="4"/><text class="node-tag" x="517" y="297">执行角色</text><text class="node-name" x="517" y="321">Coder 2</text></g>
-          </svg>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f8fb" />
+    <meta
+      name="description"
+      content="VeraAgent 是你的个人 AI Agent 工作站，在一个地方组织 Agent、对话窗口和工具。"
+    />
+    <title>VeraAgent — 你的个人工作站</title>
+    <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./assets/site.css?v=overview-6" />
+    <script src="./assets/site.js?v=overview-6" defer></script>
+  </head>
+  <body class="landing-page penpot-landing">
+    <header class="topbar">
+      <div class="nav-shell">
+        <a class="brand" href="./" aria-label="VeraAgent 首页"
+          ><img
+            src="./assets/vera-logo.png"
+            alt=""
+            width="42"
+            height="42"
+          /><span>VeraAgent</span></a
+        >
+        <nav class="main-nav" aria-label="主导航">
+          <a class="nav-link is-active" href="./" aria-current="page">首页</a>
+          <a class="nav-link" href="./design/">设计</a>
+          <a class="nav-link" href="./docs/">文档</a>
+          <a
+            class="nav-github"
+            href="https://github.com/Felix-0625/Vera-Agent"
+            target="_blank"
+            rel="noreferrer"
+            ><svg viewBox="0 0 16 16" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.65 7.65 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+              /></svg
+            >GitHub 仓库</a
+          >
+        </nav>
+        <div class="header-actions">
+          <div class="language-switch" role="group" aria-label="语言">
+            <button class="is-active" type="button" aria-pressed="true">
+              中文</button
+            ><button type="button" aria-pressed="false">EN</button>
+          </div>
+          <button
+            class="menu-toggle"
+            type="button"
+            aria-label="打开导航"
+            aria-expanded="false"
+          >
+            <span></span><span></span>
+          </button>
         </div>
-      </article>
-      <article class="template-card">
-        <h2>全局模板 · 工作流</h2>
-        <div class="template-diagram-wrap">
-          <svg class="template-diagram workflow-diagram" viewBox="0 0 638 278" role="img" aria-labelledby="flow-title flow-desc">
-            <title id="flow-title">工作流分支节点图</title>
-            <desc id="flow-desc">分解任务后，分别执行财务分析、行业分析和竞品分析，再汇总为综合报告。</desc>
-            <g class="diagram-edges">
-              <path d="M133 139 C184 139 183 49 247 49 M133 139 H247 M133 139 C184 139 183 229 247 229"/>
-              <path d="M379 49 C438 49 438 139 502 139 M379 139 H502 M379 229 C438 229 438 139 502 139"/>
-            </g>
-            <g class="diagram-labels">
-              <text x="166" y="92">传递上游结果</text><text x="164" y="130">传递上游结果</text><text x="166" y="200">传递上游结果</text>
-              <text x="404" y="92">传递上游结果</text><text x="405" y="130">传递上游结果</text><text x="404" y="200">传递上游结果</text>
-            </g>
-            <g class="diagram-node"><rect x="12" y="105" width="121" height="68" rx="10"/><circle class="diagram-port" cx="133" cy="139" r="4"/><text class="node-tag" x="26" y="126">业务步骤</text><text class="node-name" x="26" y="151">分解任务</text></g>
-            <g class="diagram-node"><rect x="247" y="15" width="132" height="68" rx="10"/><circle class="diagram-port" cx="247" cy="49" r="4"/><circle class="diagram-port" cx="379" cy="49" r="4"/><text class="node-tag" x="261" y="36">业务步骤</text><text class="node-name" x="261" y="61">财务分析</text></g>
-            <g class="diagram-node"><rect x="247" y="105" width="132" height="68" rx="10"/><circle class="diagram-port" cx="247" cy="139" r="4"/><circle class="diagram-port" cx="379" cy="139" r="4"/><text class="node-tag" x="261" y="126">业务步骤</text><text class="node-name" x="261" y="151">行业分析</text></g>
-            <g class="diagram-node"><rect x="247" y="195" width="132" height="68" rx="10"/><circle class="diagram-port" cx="247" cy="229" r="4"/><circle class="diagram-port" cx="379" cy="229" r="4"/><text class="node-tag" x="261" y="216">业务步骤</text><text class="node-name" x="261" y="241">竞品分析</text></g>
-            <g class="diagram-node"><rect x="502" y="105" width="124" height="68" rx="10"/><circle class="diagram-port" cx="502" cy="139" r="4"/><text class="node-tag" x="516" y="126">业务步骤</text><text class="node-name" x="516" y="151">综合报告</text></g>
-          </svg>
+      </div>
+    </header>
+    <main>
+      <section class="penpot-hero" aria-labelledby="hero-title">
+        <div class="penpot-hero-copy">
+          <h1 id="hero-title">
+            <span>Vera Agent</span><strong>你的个人工作站</strong>
+          </h1>
+          <p>
+            在一个工作站中组织 Agent、对话窗口和工具<br />任务分派、协作过程与结果清晰可见
+          </p>
+          <div class="penpot-actions penpot-actions-single">
+            <a
+              class="penpot-button penpot-button-primary"
+              href="https://github.com/Felix-0625/Vera-Agent"
+              target="_blank"
+              rel="noreferrer"
+              >在 GitHub 查看源码 <span aria-hidden="true">↗</span></a
+            >
+          </div>
         </div>
-      </article>
-    </section>
-    <section class="penpot-final" aria-labelledby="final-title"><h2 id="final-title"><span>Vera Agent</span><strong>开启你的个人工作站</strong></h2><p>在 Windows 上启动 Vera Agent，自定义你的工作站</p><div class="penpot-actions"><a class="penpot-button penpot-button-primary" href="https://github.com/Felix-0625/Agents" target="_blank" rel="noreferrer">查看仓库</a><a class="penpot-button penpot-button-secondary" href="./playground/">观看演示 <span aria-hidden="true">→</span></a></div></section>
-  </main>
-</body>
+        <div class="penpot-hero-art" aria-hidden="true">
+          <span class="hero-orbit orbit-one"></span
+          ><span class="hero-orbit orbit-two"></span
+          ><span class="hero-orbit orbit-three"></span>
+          <span class="satellite-track satellite-track-one"
+            ><span class="hero-satellite satellite-one"></span
+          ></span>
+          <span class="satellite-track satellite-track-two"
+            ><span class="hero-satellite satellite-two"></span
+          ></span>
+          <span class="satellite-track satellite-track-three"
+            ><span class="hero-satellite satellite-three"></span
+          ></span>
+          <span class="hero-orb"
+            ><span class="hero-orb-inner"
+              ><img src="./assets/vera-logo.png" alt="" /></span
+          ></span>
+        </div>
+      </section>
+      <section
+        class="penpot-video penpot-workspace-preview"
+        aria-label="VeraAgent 工作站界面"
+      >
+        <figure class="penpot-workspace-figure">
+          <img
+            src="./assets/workstation-no-right-panel.png"
+            width="1280"
+            height="720"
+            alt="VeraAgent 桌面工作站：左侧为导航与项目入口，中间为对话区"
+          />
+          <figcaption>VeraAgent 桌面工作站</figcaption>
+        </figure>
+      </section>
+      <section
+        class="penpot-collaboration"
+        aria-labelledby="collaboration-title"
+      >
+        <div class="collaboration-copy">
+          <p class="collaboration-kicker">SUBAGENT COLLABORATION</p>
+          <h2 id="collaboration-title">
+            Vera Agent 统筹<br />专业角色各司其职
+          </h2>
+          <div class="collaboration-foot">
+            <span aria-hidden="true"></span>
+            <p>按需委派 · 独立执行 · 结果回传</p>
+          </div>
+        </div>
+        <div
+          class="collaboration-diagram"
+          aria-label="Vera Agent 将任务委派给调研员与审查员，并接收他们的结果"
+        >
+          <svg
+            class="collaboration-lines"
+            viewBox="0 0 740 680"
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            <defs>
+              <radialGradient id="research-pulse">
+                <stop offset="0" stop-color="#27a9c9" stop-opacity=".9" />
+                <stop offset=".5" stop-color="#5ec8dd" stop-opacity=".45" />
+                <stop offset="1" stop-color="#5ec8dd" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="review-pulse">
+                <stop offset="0" stop-color="#8868cf" stop-opacity=".85" />
+                <stop offset=".5" stop-color="#b39bdf" stop-opacity=".4" />
+                <stop offset="1" stop-color="#b39bdf" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <path
+              class="line-base research-line"
+              d="M357 330 C440 310 438 140 516 140"
+            />
+            <path
+              class="line-base review-line"
+              d="M357 330 C440 350 438 540 516 540"
+            />
+            <g class="flow-particle research-particle">
+              <ellipse
+                class="flow-halo"
+                rx="28"
+                ry="5"
+                fill="url(#research-pulse)"
+              />
+              <ellipse
+                class="flow-core"
+                rx="16"
+                ry="1.8"
+                fill="url(#research-pulse)"
+              />
+              <animateMotion
+                dur="4.8s"
+                begin=".6s"
+                repeatCount="indefinite"
+                rotate="auto"
+                path="M357 330 C440 310 438 140 516 140"
+              />
+              <animate
+                attributeName="opacity"
+                values="0;1;1;0"
+                keyTimes="0;.14;.85;1"
+                dur="4.8s"
+                begin=".6s"
+                repeatCount="indefinite"
+              />
+            </g>
+            <g class="flow-particle review-particle">
+              <ellipse
+                class="flow-halo"
+                rx="28"
+                ry="5"
+                fill="url(#review-pulse)"
+              />
+              <ellipse
+                class="flow-core"
+                rx="16"
+                ry="1.8"
+                fill="url(#review-pulse)"
+              />
+              <animateMotion
+                dur="5.2s"
+                begin="1.5s"
+                repeatCount="indefinite"
+                rotate="auto"
+                path="M357 330 C440 350 438 540 516 540"
+              />
+              <animate
+                attributeName="opacity"
+                values="0;1;1;0"
+                keyTimes="0;.14;.85;1"
+                dur="5.2s"
+                begin="1.5s"
+                repeatCount="indefinite"
+              />
+            </g>
+          </svg>
+          <div class="collaboration-ring">
+            <div class="collaboration-core">
+              <img src="./assets/vera-logo.png" alt="" /><strong
+                >Vera Agent</strong
+              ><span>分派 · 汇总 · 实施</span>
+            </div>
+          </div>
+          <div class="collaboration-role research-role">
+            <small>DEEP DIVE</small><strong>调研员</strong>
+            <p>深度探索 · 返回发现</p>
+          </div>
+          <div class="collaboration-role review-role">
+            <small>FINAL REVIEW</small><strong>审查员</strong>
+            <p>审阅变更 · 返回意见</p>
+          </div>
+        </div>
+      </section>
+      <section class="penpot-templates" aria-label="组织架构与工作流模板预览">
+        <article class="template-card">
+          <h2>全局模板 · 组织架构</h2>
+          <div class="template-diagram-wrap">
+            <svg
+              class="template-diagram organization-diagram"
+              viewBox="0 0 603 350"
+              role="img"
+              aria-labelledby="org-title org-desc"
+            >
+              <title id="org-title">组织架构节点图</title>
+              <desc id="org-desc">
+                CEO 向三位角色分派任务，右侧 CTO 再向 Coder 1 与 Coder 2
+                分派任务。没有编辑时的浮动工具栏。
+              </desc>
+              <g class="diagram-edges">
+                <path
+                  d="M301 68 V112 M82 112 H498 M82 112 V149 M301 112 V166 M498 112 V149"
+                />
+                <path
+                  d="M498 207 V239 M430 239 H550 M430 239 V278 M550 239 V278"
+                />
+              </g>
+              <g class="diagram-labels">
+                <text x="165" y="105">直属关系</text>
+                <text x="393" y="105">直属关系</text>
+                <text x="312" y="142">直属关系</text>
+                <text x="509" y="226">下发任务</text>
+                <text x="396" y="263">直属关系</text>
+                <text x="517" y="263">直属关系</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="242" y="16" width="118" height="52" rx="10" />
+                <circle class="diagram-port" cx="301" cy="68" r="4" />
+                <text class="node-tag" x="257" y="34">组织角色</text>
+                <text class="node-name" x="257" y="54">CEO</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="20" y="149" width="124" height="58" rx="10" />
+                <circle class="diagram-port" cx="82" cy="149" r="4" />
+                <text class="node-tag" x="35" y="168">组织角色</text>
+                <text class="node-name" x="35" y="192">CTO</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="239" y="166" width="124" height="58" rx="10" />
+                <circle class="diagram-port" cx="301" cy="166" r="4" />
+                <text class="node-tag" x="254" y="185">组织角色</text>
+                <text class="node-name" x="254" y="209">CMO</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="433" y="149" width="130" height="58" rx="10" />
+                <circle class="diagram-port" cx="498" cy="149" r="4" />
+                <text class="node-tag" x="448" y="168">组织角色</text>
+                <text class="node-name" x="448" y="192">CTO</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="385" y="278" width="90" height="58" rx="10" />
+                <circle class="diagram-port" cx="430" cy="278" r="4" />
+                <text class="node-tag" x="397" y="297">执行角色</text>
+                <text class="node-name" x="397" y="321">Coder 1</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="505" y="278" width="90" height="58" rx="10" />
+                <circle class="diagram-port" cx="550" cy="278" r="4" />
+                <text class="node-tag" x="517" y="297">执行角色</text>
+                <text class="node-name" x="517" y="321">Coder 2</text>
+              </g>
+            </svg>
+          </div>
+        </article>
+        <article class="template-card">
+          <h2>全局模板 · 工作流</h2>
+          <div class="template-diagram-wrap">
+            <svg
+              class="template-diagram workflow-diagram"
+              viewBox="0 0 638 278"
+              role="img"
+              aria-labelledby="flow-title flow-desc"
+            >
+              <title id="flow-title">工作流分支节点图</title>
+              <desc id="flow-desc">
+                分解任务后，分别执行财务分析、行业分析和竞品分析，再汇总为综合报告。
+              </desc>
+              <g class="diagram-edges">
+                <path
+                  d="M133 139 C184 139 183 49 247 49 M133 139 H247 M133 139 C184 139 183 229 247 229"
+                />
+                <path
+                  d="M379 49 C438 49 438 139 502 139 M379 139 H502 M379 229 C438 229 438 139 502 139"
+                />
+              </g>
+              <g class="diagram-labels">
+                <text x="166" y="92">传递上游结果</text>
+                <text x="164" y="130">传递上游结果</text>
+                <text x="166" y="200">传递上游结果</text>
+                <text x="404" y="92">传递上游结果</text>
+                <text x="405" y="130">传递上游结果</text>
+                <text x="404" y="200">传递上游结果</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="12" y="105" width="121" height="68" rx="10" />
+                <circle class="diagram-port" cx="133" cy="139" r="4" />
+                <text class="node-tag" x="26" y="126">业务步骤</text>
+                <text class="node-name" x="26" y="151">分解任务</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="247" y="15" width="132" height="68" rx="10" />
+                <circle class="diagram-port" cx="247" cy="49" r="4" />
+                <circle class="diagram-port" cx="379" cy="49" r="4" />
+                <text class="node-tag" x="261" y="36">业务步骤</text>
+                <text class="node-name" x="261" y="61">财务分析</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="247" y="105" width="132" height="68" rx="10" />
+                <circle class="diagram-port" cx="247" cy="139" r="4" />
+                <circle class="diagram-port" cx="379" cy="139" r="4" />
+                <text class="node-tag" x="261" y="126">业务步骤</text>
+                <text class="node-name" x="261" y="151">行业分析</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="247" y="195" width="132" height="68" rx="10" />
+                <circle class="diagram-port" cx="247" cy="229" r="4" />
+                <circle class="diagram-port" cx="379" cy="229" r="4" />
+                <text class="node-tag" x="261" y="216">业务步骤</text>
+                <text class="node-name" x="261" y="241">竞品分析</text>
+              </g>
+              <g class="diagram-node">
+                <rect x="502" y="105" width="124" height="68" rx="10" />
+                <circle class="diagram-port" cx="502" cy="139" r="4" />
+                <text class="node-tag" x="516" y="126">业务步骤</text>
+                <text class="node-name" x="516" y="151">综合报告</text>
+              </g>
+            </svg>
+          </div>
+        </article>
+      </section>
+      <section
+        class="product-showcase evaluation-showcase"
+        aria-labelledby="evaluation-title"
+      >
+        <div class="product-showcase-head">
+          <h2 id="evaluation-title">评测与 RSI</h2>
+          <p>低分记录驱动改进，对照评测后人工采纳</p>
+        </div>
+        <div class="evaluation-flow" aria-label="评测与 RSI 流程">
+          <div class="evaluation-step">
+            <span class="evaluation-step-index">01</span>
+            <h3>记录执行</h3>
+            <p>轨迹 · 验证 · outcome 评分</p>
+          </div>
+          <div class="evaluation-step">
+            <span class="evaluation-step-index">02</span>
+            <h3>筛选低分</h3>
+            <p>outcome &lt; 0.5 的执行记录</p>
+          </div>
+          <div class="evaluation-step">
+            <span class="evaluation-step-index">03</span>
+            <h3>提出改进</h3>
+            <p>生成规则或 Skill 候选</p>
+          </div>
+          <div class="evaluation-step">
+            <span class="evaluation-step-index">04</span>
+            <h3>对照评测</h3>
+            <p>训练不退步 · 留出有提升 · 守护零回归</p>
+          </div>
+          <div class="evaluation-step">
+            <span class="evaluation-step-index">05</span>
+            <h3>人工采纳</h3>
+            <p>通过评测后确认生效</p>
+          </div>
+          <div class="evaluation-step">
+            <span class="evaluation-step-index">06</span>
+            <h3>监测回滚</h3>
+            <p>14 天对照 · 效果下降时回滚</p>
+          </div>
+        </div>
+        <div class="product-showcase-links">
+          <a href="./design/#data-model"
+            >了解设计 <span aria-hidden="true">↗</span></a
+          ><a href="./docs/?page=usage"
+            >查看使用文档 <span aria-hidden="true">↗</span></a
+          >
+        </div>
+      </section>
+      <section class="penpot-final" aria-labelledby="final-title">
+        <h2 id="final-title">
+          <span>Vera Agent</span><strong>开启你的个人工作站</strong>
+        </h2>
+        <p>在 Windows 上启动 Vera Agent，自定义你的工作站</p>
+        <div class="penpot-actions penpot-actions-single">
+          <a
+            class="penpot-button penpot-button-primary"
+            href="https://github.com/Felix-0625/Vera-Agent"
+            target="_blank"
+            rel="noreferrer"
+            >在 GitHub 查看源码 <span aria-hidden="true">↗</span></a
+          >
+        </div>
+      </section>
+    </main>
+  </body>
 </html>

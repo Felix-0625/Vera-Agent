@@ -44,7 +44,12 @@ def test_quickstart_dry_run_creates_instance_task_and_run(tmp_path: Path):
     project_copy = tmp_path / "demo-project"
     shutil.copytree(EXAMPLE_DIR / "demo-project", project_copy)
 
-    result = setup.setup_demo(setup.in_process_caller(tmp_path / "app-data"), project_copy, create_run=True)
+    with setup.in_process_caller(tmp_path / "app-data") as call:
+        result = setup.setup_demo(call, project_copy, create_run=True)
+        repeated = setup.setup_demo(call, project_copy)
+    assert repeated["group_id"] == result["group_id"]
+    assert repeated["task_identifier"] == result["task_identifier"]
+    assert repeated["reused_instance"] is True
 
     assert result["template_ids"] == ["example_review_pipeline", "example_small_team"]
     assert result["group_id"].startswith("flow_")
@@ -58,3 +63,12 @@ def test_quickstart_dry_run_creates_instance_task_and_run(tmp_path: Path):
 
 def test_quickstart_does_not_write_into_the_example_folder():
     assert not (EXAMPLE_DIR / "demo-project" / ".agents").exists()
+
+
+def test_learning_example_runs_without_a_paid_provider():
+    """The documented example itself verifies real tools, scoring and memory boundaries."""
+    folder = EXAMPLE_DIR.parent / "learning-loop"
+    spec = importlib.util.spec_from_file_location("learning_example", folder / "verify.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.main() == 0

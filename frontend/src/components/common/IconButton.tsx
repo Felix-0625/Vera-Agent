@@ -24,7 +24,15 @@ export const IconButton: React.FC<IconButtonProps> = ({
     aria-label={props['aria-label'] ?? label}
     title={props.title ?? label}
     aria-pressed={props['aria-pressed'] ?? (active ? true : undefined)}
-    className={['ui-icon-button', `ui-icon-button--${tone}`, `ui-icon-button--${size}`, active && 'ui-icon-button--active', className].filter(Boolean).join(' ')}
+    className={[
+      'ui-icon-button',
+      `ui-icon-button--${tone}`,
+      `ui-icon-button--${size}`,
+      active && 'ui-icon-button--active',
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ')}
   >
     {children}
   </button>

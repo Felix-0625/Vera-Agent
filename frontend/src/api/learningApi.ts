@@ -4,7 +4,6 @@
  * Backend: `server/routes/traces.py` (`/api/traces*`), `server/routes/memories.py`
  * (`/api/memories*`), and `server/routes/evolution.py` (`/api/evolution/*`).
  */
-import { request } from './client';
 import {
   EvolutionProposal,
   MemoryItem,
@@ -14,6 +13,7 @@ import {
   TraceDetail,
   TraceSummary,
 } from '../types/learning';
+import { request } from './client';
 
 const query = (params: Record<string, string | number | undefined | null>) => {
   const search = new URLSearchParams();
@@ -25,8 +25,12 @@ const query = (params: Record<string, string | number | undefined | null>) => {
 };
 
 // 1. Traces
-export async function fetchTraces(params: { projectId?: string | null; threadId?: string; days?: number; belowScore?: number } = {}): Promise<{ traces: TraceSummary[] }> {
-  return request(`/api/traces${query({ project_id: params.projectId, thread_id: params.threadId, days: params.days, below_score: params.belowScore })}`);
+export async function fetchTraces(
+  params: { projectId?: string | null; threadId?: string; days?: number; belowScore?: number } = {},
+): Promise<{ traces: TraceSummary[] }> {
+  return request(
+    `/api/traces${query({ project_id: params.projectId, thread_id: params.threadId, days: params.days, below_score: params.belowScore })}`,
+  );
 }
 
 export async function fetchTraceSummary(days = 30): Promise<{ task_types: TaskTypeSuccess[] }> {
@@ -38,16 +42,24 @@ export async function fetchTrace(traceId: string): Promise<{ trace: TraceDetail 
 }
 
 export async function sendTraceFeedback(traceId: string, value: number, comment = ''): Promise<unknown> {
-  return request(`/api/traces/${encodeURIComponent(traceId)}/feedback`, { method: 'POST', body: JSON.stringify({ value, comment }) });
+  return request(`/api/traces/${encodeURIComponent(traceId)}/feedback`, {
+    method: 'POST',
+    body: JSON.stringify({ value, comment }),
+  });
 }
 
 // 2. Memories
-export async function fetchMemories(params: { scope?: string; kind?: string; status?: string } = {}): Promise<{ memories: MemoryItem[] }> {
+export async function fetchMemories(
+  params: { scope?: string; kind?: string; status?: string } = {},
+): Promise<{ memories: MemoryItem[] }> {
   return request(`/api/memories${query(params)}`);
 }
 
 export async function updateMemory(memoryId: string, content: string): Promise<{ memory: MemoryItem }> {
-  return request(`/api/memories/${encodeURIComponent(memoryId)}`, { method: 'PATCH', body: JSON.stringify({ content }) });
+  return request(`/api/memories/${encodeURIComponent(memoryId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ content }),
+  });
 }
 
 export async function deleteMemory(memoryId: string): Promise<unknown> {
@@ -59,7 +71,10 @@ export async function fetchMemoryHistory(memoryId: string): Promise<{ history: M
 }
 
 export async function restoreMemoryVersion(memoryId: string, version: number): Promise<{ memory: MemoryItem }> {
-  return request(`/api/memories/${encodeURIComponent(memoryId)}/restore`, { method: 'POST', body: JSON.stringify({ version }) });
+  return request(`/api/memories/${encodeURIComponent(memoryId)}/restore`, {
+    method: 'POST',
+    body: JSON.stringify({ version }),
+  });
 }
 
 export async function fetchPendingChanges(): Promise<{ changes: PendingMemoryChange[] }> {
@@ -67,7 +82,10 @@ export async function fetchPendingChanges(): Promise<{ changes: PendingMemoryCha
 }
 
 export async function resolvePendingChange(changeId: string, accept: boolean): Promise<unknown> {
-  return request(`/api/memories/pending/${encodeURIComponent(changeId)}`, { method: 'POST', body: JSON.stringify({ accept }) });
+  return request(`/api/memories/pending/${encodeURIComponent(changeId)}`, {
+    method: 'POST',
+    body: JSON.stringify({ accept }),
+  });
 }
 
 // 3. Evolution
@@ -84,7 +102,10 @@ export async function startGate(proposalId: string): Promise<unknown> {
 }
 
 export async function adoptProposal(proposalId: string, override = false): Promise<{ proposal: EvolutionProposal }> {
-  return request(`/api/evolution/proposals/${encodeURIComponent(proposalId)}/adopt`, { method: 'POST', body: JSON.stringify({ confirm: true, override }) });
+  return request(`/api/evolution/proposals/${encodeURIComponent(proposalId)}/adopt`, {
+    method: 'POST',
+    body: JSON.stringify({ confirm: true, override }),
+  });
 }
 
 export async function rejectProposal(proposalId: string): Promise<{ proposal: EvolutionProposal }> {
@@ -92,5 +113,8 @@ export async function rejectProposal(proposalId: string): Promise<{ proposal: Ev
 }
 
 export async function rollbackProposal(proposalId: string, reason = ''): Promise<{ proposal: EvolutionProposal }> {
-  return request(`/api/evolution/proposals/${encodeURIComponent(proposalId)}/rollback`, { method: 'POST', body: JSON.stringify({ reason }) });
+  return request(`/api/evolution/proposals/${encodeURIComponent(proposalId)}/rollback`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  });
 }

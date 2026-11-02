@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -12,9 +13,7 @@ MAX_FUNCTION_LINES = 120
 # Existing files above the limit, with their current size as a ceiling. Lower a ceiling when a
 # file shrinks; remove the entry once the file is under MAX_FILE_LINES. Do not raise ceilings.
 FILE_CEILINGS = {
-    "vera-agent/src/vera_agent/server/routes/groups.py": 990,
     "vera-agent/src/vera_agent/server/routes/files.py": 600,
-    "frontend/src/stores/chatStore.ts": 600,
     "vera-agent/src/vera_agent/server/routes/threads.py": 525,
     "vera-agent/src/vera_agent/server/routes/mcp.py": 480,
 }
@@ -23,20 +22,36 @@ FILE_CEILINGS = {
 FUNCTION_CEILINGS = {
     "models/litellm_model.py:query_stream": 130,
     "models/utils/actions_toolcall.py:parse_toolcall_actions": 122,
-    "server/chat/prompt.py:build_system_prompt": 217,
     "server/chat/request.py:parse_chat_request": 149,
     "server/routes/analytics.py:get_analytics_dashboard": 170,
-    "server/routes/groups.py:compose_group": 186,
     "server/routes/mcp.py:install_mcp_market": 165,
     "server/routes/runs.py:update_group_run": 150,
     "server/routes/skills.py:get_skills_market": 163,
     "server/routes/skills.py:fetch_market": 137,
     "server/routes/tasks.py:_execute_task": 129,
     "session/context_management.py:compact_session": 169,
-    "tools/subagent_tools.py:execute_subagent": 301,
 }
 
 SOURCE_GLOBS = ("vera-agent/src/vera_agent/**/*.py", "frontend/src/**/*.ts", "frontend/src/**/*.tsx")
+CODE_SUFFIXES = {".py", ".ts", ".tsx", ".js", ".jsx", ".css", ".html", ".ps1", ".bat"}
+
+
+def test_all_own_code_files_have_a_hard_upper_limit():
+    """Include tests, styles, scripts and website code; exclude generated locks and upstream vendor assets."""
+    names = (
+        subprocess.check_output(["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"], cwd=REPO_ROOT)
+        .decode()
+        .split("\0")
+    )
+    problems = []
+    for name in set(names):
+        path = REPO_ROOT / name
+        if not path.is_file() or path.suffix not in CODE_SUFFIXES or "/vendor/" in name:
+            continue
+        count = len(path.read_text(encoding="utf-8").splitlines())
+        if count > 1000:
+            problems.append(f"{name}: {count} lines")
+    assert not problems, "Split self-owned files exceeding 1000 lines:\n" + "\n".join(sorted(problems))
 
 
 def _sources() -> list[Path]:

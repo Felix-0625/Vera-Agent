@@ -1,3 +1,5 @@
+> Historical recording plan. The product website no longer ships the video/playground. Paths and steps below describe the retired setup and are not current installation instructions. For runnable examples use [examples/](../../examples/README.md).
+
 # 落地页实录脚本
 
 本轮新增功能适合用一条真实任务串起来：接任务 → 审批 → 修改 → 测试 → 核对执行记录 → 保存并召回项目记忆 → 查看受控改进。建议先做一支 **90 秒产品片**，另保留 **3–5 分钟完整实录**供文档或发布说明引用。下表时间是剪辑目标，实际模型等待时间可加速，但应标明倍速或省略等待。

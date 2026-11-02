@@ -58,7 +58,11 @@ export function describeSpan(span: TraceSpan): string {
     const tokens = Number(meta.prompt_tokens || 0) + Number(meta.completion_tokens || 0);
     return `模型 · 第 ${meta.step ?? '?'} 步 · ${tokens ? `${tokens.toLocaleString()} Token · ` : ''}${duration}`;
   }
-  const approval = meta.approval ? ({ approved: '已批准', rejected: '已拒绝', corrected: '已修正' } as Record<string, string>)[String(meta.approval)] : '';
+  const approval = meta.approval
+    ? ({ approved: '已批准', rejected: '已拒绝', corrected: '已修正' } as Record<string, string>)[String(meta.approval)]
+    : '';
   const code = meta.returncode !== undefined && meta.returncode !== null ? `退出码 ${meta.returncode}` : '';
-  return [span.kind === 'subagent' ? `子智能体 ${span.name}` : span.name, approval, code, duration].filter(Boolean).join(' · ');
+  return [span.kind === 'subagent' ? `子智能体 ${span.name}` : span.name, approval, code, duration]
+    .filter(Boolean)
+    .join(' · ');
 }

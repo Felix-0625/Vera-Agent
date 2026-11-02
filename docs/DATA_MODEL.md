@@ -1,8 +1,11 @@
 # Data model and local storage
 
-VeraAgent keeps all state on the local machine as JSON files plus one SQLite
-database. Nothing is synced. This page lists what is written, where, and the
+VeraAgent keeps all state on the local machine as JSON files and SQLite
+databases (task board, memory and traces). Nothing is synced. This page lists what is written, where, and the
 shape of the core records. API contracts are in [API.md](API.md).
+
+Learning record fields and response envelopes are indexed in [LEARNING_API.md](LEARNING_API.md);
+their lifecycle and configuration are described in [LEARNING_LOOP.md](LEARNING_LOOP.md).
 
 ## Storage roots
 

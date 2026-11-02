@@ -1,3 +1,5 @@
+"""LiteLLM text-action protocol adapter."""
+
 import litellm
 
 from vera_agent.models.litellm_model import LitellmModel, LitellmModelConfig

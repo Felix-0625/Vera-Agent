@@ -4,8 +4,8 @@
  * Backend: `server/routes/threads.py` (`/api/threads*`, `/api/context-status`) and
  * `server/routes/chat.py` (`/api/chat/*`). `streamChat` parses the SSE events documented in docs/API.md.
  */
+import { ChatImageAttachment, ChatMessage, StreamFinishPayload, SubagentRun, Thread } from '../types/chat';
 import { request } from './client';
-import { Thread, ChatMessage, ChatImageAttachment, StreamFinishPayload, SubagentRun } from '../types/chat';
 
 export interface StreamChatParams {
   thread_id?: string;
@@ -23,7 +23,10 @@ export interface StreamChatParams {
   context_update?: boolean;
   workflow_input?: string;
   workflow_upstream?: string;
-  workflow_context?: { task: string; upstream: Array<{ node_id: string; title: string; relation?: string; label?: string; output: string }> };
+  workflow_context?: {
+    task: string;
+    upstream: Array<{ node_id: string; title: string; relation?: string; label?: string; output: string }>;
+  };
   workflow_control?: { type: 'condition' | 'loop'; condition: string; max_iterations?: number };
   workflow_stage?: 'supervisor_review' | 'control_decision';
   onThinking?: (step: number, content: string) => void;
@@ -32,7 +35,13 @@ export interface StreamChatParams {
   onApprovalRequired?: (actionId: string, toolName: string, message: string, args: Record<string, unknown>) => void;
   onToolResult?: (actionId: string, toolName: string, output: string, returncode: number) => void;
   onSubagent?: (run: SubagentRun) => void;
-  onContextManagement?: (event: { kind: string; timestamp: number; before_tokens: number; after_tokens: number; reason?: string }) => void;
+  onContextManagement?: (event: {
+    kind: string;
+    timestamp: number;
+    before_tokens: number;
+    after_tokens: number;
+    reason?: string;
+  }) => void;
   onFinish?: (payload: StreamFinishPayload) => void;
   onError?: (err: Error) => void;
 }
@@ -51,12 +60,20 @@ export async function createThread(title: string, group_id?: string, project_id?
   });
 }
 
-export async function fetchThreadMessages(threadId: string): Promise<{ messages: ChatMessage[]; cost: number; title: string }> {
+export async function fetchThreadMessages(
+  threadId: string,
+): Promise<{ messages: ChatMessage[]; cost: number; title: string }> {
   return request(`/api/threads/${threadId}/messages`);
 }
 
-export async function deliverOrchestrationResult(threadId: string, data: { project_id: string; group_id: string; run_id: string; input: string; content: string }): Promise<{ status: string; messages: ChatMessage[] }> {
-  return request(`/api/threads/${encodeURIComponent(threadId)}/messages/deliver`, { method: 'POST', body: JSON.stringify(data) });
+export async function deliverOrchestrationResult(
+  threadId: string,
+  data: { project_id: string; group_id: string; run_id: string; input: string; content: string },
+): Promise<{ status: string; messages: ChatMessage[] }> {
+  return request(`/api/threads/${encodeURIComponent(threadId)}/messages/deliver`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }
 
 export async function updateThread(threadId: string, updates: Partial<Thread>): Promise<Thread> {
@@ -67,7 +84,10 @@ export async function updateThread(threadId: string, updates: Partial<Thread>): 
 }
 
 export async function truncateThreadFromMessage(threadId: string, messageId: string): Promise<void> {
-  await request(`/api/threads/${threadId}/messages/truncate`, { method: 'POST', body: JSON.stringify({ message_id: messageId }) });
+  await request(`/api/threads/${threadId}/messages/truncate`, {
+    method: 'POST',
+    body: JSON.stringify({ message_id: messageId }),
+  });
 }
 
 export async function deleteThread(threadId: string): Promise<{ status: string }> {
@@ -107,21 +127,31 @@ export async function fetchDraftContextStatus(modelId?: string): Promise<ThreadC
   return request(`/api/context-status${query}`);
 }
 
-export async function rebirthGroupThreadContext(threadId: string, modelId?: string): Promise<{ status: string; event: { kind: string; timestamp: number; detail: string } }> {
+export async function rebirthGroupThreadContext(
+  threadId: string,
+  modelId?: string,
+): Promise<{ status: string; event: { kind: string; timestamp: number; detail: string } }> {
   return request(`/api/threads/${encodeURIComponent(threadId)}/context-rebirth`, {
     method: 'POST',
     body: JSON.stringify({ model_id: modelId }),
   });
 }
 
-export async function confirmApproval(thread_id: string, action_id: string, choice: string): Promise<{ status: string }> {
+export async function confirmApproval(
+  thread_id: string,
+  action_id: string,
+  choice: string,
+): Promise<{ status: string }> {
   return request('/api/chat/confirm', {
     method: 'POST',
     body: JSON.stringify({ thread_id, action_id, choice }),
   });
 }
 
-export async function interruptChat(thread_id: string, client_message_id?: string): Promise<{ status: string; interrupted: boolean }> {
+export async function interruptChat(
+  thread_id: string,
+  client_message_id?: string,
+): Promise<{ status: string; interrupted: boolean }> {
   return request('/api/chat/interrupt', {
     method: 'POST',
     body: JSON.stringify({ thread_id, client_message_id }),

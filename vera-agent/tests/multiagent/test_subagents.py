@@ -220,7 +220,7 @@ def test_default_agent_dispatches_subagent_tool():
 
 def test_interactive_agent_slash_commands():
     """Test InteractiveAgent /research and /review slash commands."""
-    from tests.agents.test_interactive import mock_prompts
+    from tests.agents.interactive.helpers import mock_prompts
     from vera_agent.agents.interactive import InteractiveAgent
 
     calls = []

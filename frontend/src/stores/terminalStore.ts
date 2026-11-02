@@ -32,12 +32,25 @@ export const useTerminalStore = create<TerminalState>((set) => ({
 
   connect: (groupId, projectId) => {
     const target = `${projectId || 'current-project'}:${groupId || 'project-root'}`;
-    if (activeTarget === target && socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
+    if (
+      activeTarget === target &&
+      socket &&
+      (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)
+    )
+      return;
 
     socket?.close();
     socket = null;
     activeTarget = target;
-    set({ output: '', cwd: '', shell: 'PowerShell', targetKey: target, connected: false, connecting: true, error: null });
+    set({
+      output: '',
+      cwd: '',
+      shell: 'PowerShell',
+      targetKey: target,
+      connected: false,
+      connecting: true,
+      error: null,
+    });
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const query = new URLSearchParams();
@@ -55,7 +68,13 @@ export const useTerminalStore = create<TerminalState>((set) => ({
         return;
       }
       if (payload.type === 'connected') {
-        set({ connected: true, connecting: false, cwd: payload.cwd || '', shell: payload.shell || 'PowerShell', error: null });
+        set({
+          connected: true,
+          connecting: false,
+          cwd: payload.cwd || '',
+          shell: payload.shell || 'PowerShell',
+          error: null,
+        });
       } else if (payload.type === 'output' && payload.data) {
         set((state) => ({ output: (state.output + payload.data).slice(-MAX_OUTPUT_CHARS) }));
       } else if (payload.type === 'error') {

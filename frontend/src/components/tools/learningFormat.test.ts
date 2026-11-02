@@ -37,11 +37,17 @@ describe('learningFormat', () => {
   });
 
   it('describes tool spans with approval, exit code, and duration', () => {
-    expect(describeSpan(span({ metadata: { approval: 'rejected', returncode: 1 } }))).toBe('bash · 已拒绝 · 退出码 1 · 250 ms');
+    expect(describeSpan(span({ metadata: { approval: 'rejected', returncode: 1 } }))).toBe(
+      'bash · 已拒绝 · 退出码 1 · 250 ms',
+    );
   });
 
   it('describes model spans with tokens', () => {
-    const model = span({ kind: 'model', name: 'deepseek', metadata: { step: 2, prompt_tokens: 1200, completion_tokens: 34 } });
+    const model = span({
+      kind: 'model',
+      name: 'deepseek',
+      metadata: { step: 2, prompt_tokens: 1200, completion_tokens: 34 },
+    });
     expect(describeSpan(model)).toBe('模型 · 第 2 步 · 1,234 Token · 250 ms');
   });
 });

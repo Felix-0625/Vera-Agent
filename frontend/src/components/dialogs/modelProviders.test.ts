@@ -5,7 +5,9 @@ import { MODEL_PROVIDERS, getProviderBaseUrl } from './modelProviders';
 
 /** Provider IDs accepted by `_validate_model` in vera-agent/src/vera_agent/server/routes/settings.py. */
 function backendProviderIds(): string[] {
-  const settingsPath = fileURLToPath(new URL('../../../../vera-agent/src/vera_agent/server/routes/settings.py', import.meta.url));
+  const settingsPath = fileURLToPath(
+    new URL('../../../../vera-agent/src/vera_agent/server/routes/settings.py', import.meta.url),
+  );
   const source = readFileSync(settingsPath, 'utf-8');
   const block = source.match(/model\.get\("provider", "deepseek"\) not in \{([^}]*)\}/);
   if (!block) throw new Error('Provider allow-list not found in settings.py');

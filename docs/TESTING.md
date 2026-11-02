@@ -33,6 +33,7 @@ cd ..
 .\vera-agent\.venv\Scripts\python.exe examples\mcp-server\test_client.py
 cd frontend
 npm run lint
+npm run format:check
 npm test
 npm run build
 ```
@@ -47,6 +48,29 @@ The top-level script stops on the first failing command. It does not call model 
 - MCP protocol smoke tests do not certify a package’s safety.
 - Passing tests do not establish performance or benchmark results. Publish only measured results with the exact dataset, command, and environment.
 - The learning-loop tests use scripted models. They prove the runner, gate and adoption logic, not that a real model improves; that needs `vera-eval run` with a configured model (it costs money and is never part of `check-all.ps1`).
+
+## Source standardization verification (2026-11-02)
+
+This pass covered source organization, documentation and reproducible examples in the local
+working tree. It did not publish a release or run paid model evaluations.
+
+- Backend regression: **788 passed, 81 skipped**, with the existing Pydantic `ReadOnly` warning.
+  The test count is preserved after splitting the large interactive-agent and frontend API suites.
+- Repository checks: **48 passed**, including repeatable workflow setup, the scripted-provider
+  learning example, independent API query assertions and the hard 1000-line own-code limit.
+- Frontend: **46 tests passed**; strict TypeScript and unused-symbol checking are enabled.
+  The added chat-store checks cover stale streaming/history responses and per-conversation queues.
+- Python Ruff, frontend Oxlint, Prettier and the browser production build passed.
+- The three documented example commands were executed: workflow dry run, memory/eval verification,
+  and MCP stdio discovery plus four read-only calls. No paid provider requests were made.
+- Isolated browser smoke operations switched workflow type, created/renamed a node, saved the
+  template and checked the persisted result. Site home/design/docs loaded without script errors,
+  broken images or horizontal overflow at the tested desktop size.
+- The split stylesheets were compared structurally with their original ordered CSS rules;
+  application design tokens and base styles were also checked in the browser.
+
+Browser smoke coverage is narrower than a full desktop/provider acceptance run. The historical
+records below describe their own dates and scopes and should not be treated as newer measurements.
 
 For a release candidate, also perform a clean Windows install, a real configured-model conversation, project binding, file operation permission checks, one tool call, one MCP call, one Skill activation, and an update/backup check. Record model/provider and whether any external service was used.
 
@@ -65,8 +89,7 @@ For a release candidate, also perform a clean Windows install, a real configured
 
 The regression suite includes the last acceptance issue: `python -m pytest -q --version`
 must not overwrite an earlier failed verification score. This pass did not call a real model,
-record a new product video, trigger hosted CI, or deploy the website. Existing demo footage
-remains labeled as a preset flow. Use [the recording script](DEMO_RECORDING.md) for the new video.
+record a new product video, trigger hosted CI, or deploy the website. The recording plan from that historical pass is [archived](archive/DEMO_RECORDING.md); the current website no longer includes the video/playground. Runnable examples are in [examples/](../examples/README.md).
 Editable diagrams and SVG exports are indexed in [the diagram library](../website/diagrams/README.md).
 
 ## Workflow and Task Board acceptance (2026-10-16)

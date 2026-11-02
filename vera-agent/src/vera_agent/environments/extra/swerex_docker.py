@@ -1,3 +1,5 @@
+"""SWE-ReX Docker environment adapter."""
+
 import asyncio
 from typing import Any
 

@@ -1,3 +1,5 @@
+"""Shared structured console logging setup."""
+
 import logging
 from pathlib import Path
 

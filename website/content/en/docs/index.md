@@ -11,6 +11,6 @@ These pages follow the practical order of using the VeraAgent Windows desktop ap
 | [API reference](api.md) | Integration and maintenance | Local API, SSE, WebSocket, key requests |
 | [Troubleshooting](troubleshooting.md) | Problem solving | Startup checks and current limitations |
 
-VeraAgent currently runs from GitHub source. There is no signed Windows installer, auto-updater, or hosted account service. The website demo is a preset recording; it does not replace a real installation or model connection.
+VeraAgent currently runs from GitHub source. There is no signed Windows installer, auto-updater, or hosted account service. Interface illustrations on the introduction page do not replace a real installation or model connection.
 
 For implementation decisions, read [System design](../design/index.md). The repository [API index](../../../../docs/API.md), [data model](../../../../docs/DATA_MODEL.md), and [testing guide](../../../../docs/TESTING.md) are the detailed technical references.

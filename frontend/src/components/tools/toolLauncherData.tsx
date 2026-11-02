@@ -1,17 +1,17 @@
-import React from 'react';
 import {
-  FileText,
-  Terminal as TerminalIcon,
-  Folder,
-  MessageSquare,
   Bot,
-  Sparkles,
-  GitBranch,
-  Users,
   Brain,
+  FileText,
   FlaskConical,
+  Folder,
+  GitBranch,
   GitCommitVertical,
+  MessageSquare,
+  Sparkles,
+  Terminal as TerminalIcon,
+  Users,
 } from 'lucide-react';
+import React from 'react';
 import { ToolTabId } from '../../types/tool';
 
 export interface ToolLauncherItem {
@@ -22,7 +22,6 @@ export interface ToolLauncherItem {
   iconBg: string;
   borderColor: string;
 }
-
 
 export const TOOL_LAUNCHER_ITEMS: ToolLauncherItem[] = [
   {

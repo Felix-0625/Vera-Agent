@@ -8,7 +8,7 @@ VeraAgent 目前在 Windows 10/11 上从 GitHub 源码启动。安装依赖需�
 | --- | --- |
 | Windows | 10 或 11 |
 | Git for Windows | 提供 Git，也为本地命令工具提供 Git Bash |
-| Node.js | 20 或更新，带 npm |
+| Node.js | 推荐 24 LTS；支持 20.19+ 或 22.12+，带 npm |
 | Python | 3.10 或更新 |
 | uv | 0.11 或更新 |
 | Microsoft Edge WebView2 Runtime | 用于桌面窗口 |
@@ -18,8 +18,8 @@ VeraAgent 目前在 Windows 10/11 上从 GitHub 源码启动。安装依赖需�
 在 PowerShell 中执行：
 
 ```powershell
-git clone https://github.com/Felix-0625/Agents.git
-cd Agents\frontend
+git clone https://github.com/Felix-0625/Vera-Agent.git
+cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent
 uv sync --locked --no-dev --extra desktop

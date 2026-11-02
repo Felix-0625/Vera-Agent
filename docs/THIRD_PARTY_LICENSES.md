@@ -15,6 +15,10 @@ separate from the generated Python/npm inventories below.
 
 ## Regenerate on Windows
 
+If only the frontend lockfile changes, run `python scripts/generate_license_inventory.py --frontend-only`.
+This refreshes npm rows and keeps the dated Python inventory unchanged. For backend changes, use
+the clean runtime environments below.
+
 Run these commands from the repository root after changing a dependency lockfile:
 
 ```powershell
@@ -28,7 +32,7 @@ Remove-Item Env:UV_PROJECT_ENVIRONMENT
 python scripts/generate_license_inventory.py --python (Join-Path $python310 'Scripts/python.exe') (Join-Path $python312 'Scripts/python.exe')
 ```
 
-Python package rows across supported runtimes: 200; frontend lockfile packages: 121.
+Python package rows across supported runtimes: 200; frontend lockfile packages: 122.
 
 ## Python 3.10 Windows desktop runtime
 
@@ -242,6 +246,8 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 
 ## Frontend npm lockfile
 
+npm metadata refreshed on 2026-11-02; Python inventory above is unchanged.
+
 | Package | Version | License metadata | Scope |
 | --- | --- | --- | --- |
 | `@jridgewell/sourcemap-codec` | `1.6.0` | MIT | development |
@@ -346,6 +352,7 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `picocolors` | `1.1.1` | ISC | development |
 | `picomatch` | `4.0.7` | MIT | development |
 | `postcss` | `8.5.29` | MIT | development |
+| `prettier` | `3.9.10` | MIT | development |
 | `react` | `19.3.0` | MIT | runtime |
 | `react-dom` | `19.3.0` | MIT | runtime |
 | `rolldown` | `1.2.13` | MIT | development |

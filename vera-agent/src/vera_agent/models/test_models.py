@@ -1,3 +1,5 @@
+"""Deterministic model fixtures for offline tests and examples."""
+
 import logging
 import time
 from typing import Any

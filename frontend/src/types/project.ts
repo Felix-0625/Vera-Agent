@@ -39,7 +39,26 @@ export interface Group {
   threads?: Thread[];
 }
 
-export type WorkflowNodeType = 'agent' | 'start' | 'input' | 'condition' | 'code' | 'tool' | 'http' | 'knowledge' | 'document' | 'variable' | 'aggregator' | 'template' | 'parallel' | 'loop' | 'iteration' | 'approval' | 'error' | 'output' | 'end';
+export type WorkflowNodeType =
+  | 'agent'
+  | 'start'
+  | 'input'
+  | 'condition'
+  | 'code'
+  | 'tool'
+  | 'http'
+  | 'knowledge'
+  | 'document'
+  | 'variable'
+  | 'aggregator'
+  | 'template'
+  | 'parallel'
+  | 'loop'
+  | 'iteration'
+  | 'approval'
+  | 'error'
+  | 'output'
+  | 'end';
 
 export interface WorkflowNodeDefinition {
   id: string;

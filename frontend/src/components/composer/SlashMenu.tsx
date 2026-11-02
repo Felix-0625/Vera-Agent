@@ -1,5 +1,5 @@
+import { BookOpen, Clock, Compass, HelpCircle, Target } from 'lucide-react';
 import React from 'react';
-import { Target, Compass, Clock, BookOpen, HelpCircle } from 'lucide-react';
 import { RuleTrigger } from '../../types/chat';
 
 interface SlashMenuProps {
@@ -7,7 +7,6 @@ interface SlashMenuProps {
   onSelect: (trigger: RuleTrigger) => void;
   onClose: () => void;
 }
-
 
 export const SlashMenu: React.FC<SlashMenuProps> = ({ isOpen, onSelect, onClose }) => {
   if (!isOpen) return null;
@@ -60,7 +59,14 @@ export const SlashMenu: React.FC<SlashMenuProps> = ({ isOpen, onSelect, onClose 
         zIndex: 50,
       }}
     >
-      <div style={{ padding: 'var(--space-1) var(--space-2) var(--space-1-5)', fontSize: 'var(--font-size-compact)', fontWeight: 600, color: 'var(--text-muted)' }}>
+      <div
+        style={{
+          padding: 'var(--space-1) var(--space-2) var(--space-1-5)',
+          fontSize: 'var(--font-size-compact)',
+          fontWeight: 600,
+          color: 'var(--text-muted)',
+        }}
+      >
         快捷指令触发器
       </div>
       {items.map((item) => (

@@ -1,8 +1,7 @@
 import React from 'react';
 import { useToolTabsStore } from '../../stores/toolTabsStore';
-import { TOOL_LAUNCHER_ITEMS } from './toolLauncherData';
 import { Button } from '../common/Button';
-
+import { TOOL_LAUNCHER_ITEMS } from './toolLauncherData';
 
 export const ToolLauncherGrid: React.FC = () => {
   const { openTab } = useToolTabsStore();

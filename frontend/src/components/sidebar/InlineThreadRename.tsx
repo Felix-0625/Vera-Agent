@@ -34,24 +34,26 @@ export const InlineThreadRename: React.FC<InlineThreadRenameProps> = ({ title, o
     }
   };
 
-  return <TextInput
-    ref={inputRef}
-    aria-label="对话名称"
-    value={value}
-    onChange={event => setValue(event.target.value)}
-    onClick={event => event.stopPropagation()}
-    onKeyDown={event => {
-      event.stopPropagation();
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        void save();
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        cancelledRef.current = true;
-        onCancel();
-      }
-    }}
-    onBlur={() => void save()}
-    className="inline-thread-rename-input"
-  />;
+  return (
+    <TextInput
+      ref={inputRef}
+      aria-label="对话名称"
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+      onClick={(event) => event.stopPropagation()}
+      onKeyDown={(event) => {
+        event.stopPropagation();
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          void save();
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          cancelledRef.current = true;
+          onCancel();
+        }
+      }}
+      onBlur={() => void save()}
+      className="inline-thread-rename-input"
+    />
+  );
 };

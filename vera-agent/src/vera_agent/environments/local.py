@@ -1,3 +1,5 @@
+"""Local command execution and file operation boundaries."""
+
 import os
 import platform
 import shutil

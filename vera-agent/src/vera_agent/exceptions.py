@@ -1,3 +1,6 @@
+"""Shared agent control-flow exceptions."""
+
+
 class InterruptAgentFlowError(Exception):
     """Raised to interrupt the agent flow and add messages."""
 

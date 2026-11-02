@@ -1,8 +1,7 @@
-import React from 'react';
 import { AlertTriangle } from 'lucide-react';
+import React from 'react';
 import { useChatStore } from '../../stores/chatStore';
 import { ApprovalActionButtons } from './ApprovalActionButtons';
-
 
 export const ApprovalBanner: React.FC = () => {
   const { approvalRequest, confirmAction } = useChatStore();
@@ -29,14 +28,36 @@ export const ApprovalBanner: React.FC = () => {
           <div style={{ fontSize: 'var(--font-size-md)', fontWeight: 600, color: 'var(--accent-amber)' }}>
             高危操作安全审批门禁
           </div>
-          <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginTop: 'var(--space-0-5)' }}>
-            工具调用: <code style={{ backgroundColor: 'var(--bg-input)', padding: 'var(--space-0-5) var(--space-1-25)', borderRadius: 'var(--radius-xs)' }}>{approvalRequest.tool_name}</code>
-            {' — '}{approvalRequest.message}
+          <div
+            style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-secondary)', marginTop: 'var(--space-0-5)' }}
+          >
+            工具调用:{' '}
+            <code
+              style={{
+                backgroundColor: 'var(--bg-input)',
+                padding: 'var(--space-0-5) var(--space-1-25)',
+                borderRadius: 'var(--radius-xs)',
+              }}
+            >
+              {approvalRequest.tool_name}
+            </code>
+            {' — '}
+            {approvalRequest.message}
           </div>
         </div>
       </div>
 
-      <div style={{ fontSize: 'var(--font-size-compact)', color: 'var(--text-muted)', fontFamily: 'monospace', backgroundColor: 'var(--bg-input)', padding: 'var(--space-1-5) var(--space-2-5)', borderRadius: 'var(--radius-xs)', overflowX: 'auto' }}>
+      <div
+        style={{
+          fontSize: 'var(--font-size-compact)',
+          color: 'var(--text-muted)',
+          fontFamily: 'monospace',
+          backgroundColor: 'var(--bg-input)',
+          padding: 'var(--space-1-5) var(--space-2-5)',
+          borderRadius: 'var(--radius-xs)',
+          overflowX: 'auto',
+        }}
+      >
         {JSON.stringify(approvalRequest.args, null, 2)}
       </div>
 

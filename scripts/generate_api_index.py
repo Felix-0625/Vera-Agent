@@ -40,15 +40,44 @@ class RouteInfo:
     statuses: tuple[int, ...]
 
 
-def _query_params(func: ast.AST) -> tuple[str, ...]:
+def _query_params(func: ast.AST, functions: dict[str, ast.AST] | None = None) -> tuple[str, ...]:
+    """Collect direct reads, simple aliases and local helper reads without importing the app."""
     keys: list[str] = []
-    for node in ast.walk(func):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "get":
-            owner = node.func.value
-            if isinstance(owner, ast.Attribute) and owner.attr == "query_params" and node.args:
-                first = node.args[0]
-                if isinstance(first, ast.Constant) and isinstance(first.value, str):
-                    keys.append(first.value)
+    visited: set[str] = set()
+
+    def visit_function(function: ast.AST) -> None:
+        name = getattr(function, "name", "")
+        if name in visited:
+            return
+        visited.add(name)
+        aliases: set[str] = set()
+
+        def is_query(node: ast.AST) -> bool:
+            return (isinstance(node, ast.Attribute) and node.attr == "query_params") or (
+                isinstance(node, ast.Name) and node.id in aliases
+            )
+
+        nodes = sorted(ast.walk(function), key=lambda node: getattr(node, "lineno", 0))
+        for node in nodes:
+            if isinstance(node, ast.Assign) and is_query(node.value):
+                aliases.update(target.id for target in node.targets if isinstance(target, ast.Name))
+            key = None
+            if isinstance(node, ast.Call):
+                if (
+                    isinstance(node.func, ast.Attribute)
+                    and node.func.attr == "get"
+                    and is_query(node.func.value)
+                    and node.args
+                ):
+                    key = node.args[0]
+                elif isinstance(node.func, ast.Name) and functions and node.func.id in functions:
+                    visit_function(functions[node.func.id])
+            elif isinstance(node, ast.Subscript) and is_query(node.value):
+                key = node.slice
+            if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                keys.append(key.value)
+
+    visit_function(func)
     return tuple(dict.fromkeys(keys))
 
 
@@ -100,6 +129,12 @@ def collect_routes() -> list[RouteInfo]:
                     methods = tuple(element.value for element in keyword.value.elts)
             # A route list may register handlers imported from sibling modules (e.g. groups.py -> runs.py).
             defining_module, func = _find_handler(module_path, functions, handler)
+            defining_tree = ast.parse((ROUTES_DIR / defining_module).read_text(encoding="utf-8"))
+            helpers = {
+                node.name: node
+                for node in defining_tree.body
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            }
             summary = (ast.get_docstring(func) or "").strip().split("\n")[0]
             routes.append(
                 RouteInfo(
@@ -109,7 +144,7 @@ def collect_routes() -> list[RouteInfo]:
                     handler=handler,
                     line=func.lineno,
                     summary=summary,
-                    query=_query_params(func),
+                    query=_query_params(func, helpers),
                     statuses=_status_codes(func),
                 )
             )

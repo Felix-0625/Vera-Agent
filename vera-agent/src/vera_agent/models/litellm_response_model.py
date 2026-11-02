@@ -1,3 +1,5 @@
+"""LiteLLM Responses API model adapter."""
+
 import logging
 import time
 from collections.abc import Callable

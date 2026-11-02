@@ -1,5 +1,5 @@
+import { MoreVertical, Pin } from 'lucide-react';
 import React from 'react';
-import { Pin, MoreVertical } from 'lucide-react';
 import { Thread } from '../../types/chat';
 import { IconButton } from '../common/IconButton';
 
@@ -29,12 +29,27 @@ export const ThreadRow: React.FC<ThreadRowProps> = ({ thread, isActive, onSelect
       position: 'relative',
     }}
   >
-    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, marginRight: 'var(--space-1-5)' }}>
+    <span
+      style={{
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        flex: 1,
+        marginRight: 'var(--space-1-5)',
+      }}
+    >
       {thread.title || '对话'}
     </span>
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1)', flexShrink: 0 }}>
       {thread.is_pinned && <Pin size={11} color="var(--accent-amber)" />}
-      <IconButton onClick={(event) => { event.stopPropagation(); onContextMenu(event); }} label={`${thread.title || '对话'} 操作菜单`} size="sm">
+      <IconButton
+        onClick={(event) => {
+          event.stopPropagation();
+          onContextMenu(event);
+        }}
+        label={`${thread.title || '对话'} 操作菜单`}
+        size="sm"
+      >
         <MoreVertical size={13} />
       </IconButton>
     </div>

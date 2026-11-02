@@ -1,11 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import type { Group, WorkflowEdgeDefinition, WorkflowNodeDefinition } from '../../types/project';
-import { executeRun, finalizeNodes, parseWorkflowControlResult, type NodeTurnRequest, type RunLogEntry, type RunNodeState } from './workflowRunner';
+import {
+  executeRun,
+  finalizeNodes,
+  parseWorkflowControlResult,
+  type NodeTurnRequest,
+  type RunLogEntry,
+  type RunNodeState,
+} from './workflowRunner';
 
 type Reply = string | ((request: NodeTurnRequest, call: number) => string);
 
 /** Build a run harness whose model replies are scripted per node thread. */
-function harness(nodes: WorkflowNodeDefinition[], edges: WorkflowEdgeDefinition[], replies: Record<string, Reply>, mode: Group['group_mode'] = 'workflow') {
+function harness(
+  nodes: WorkflowNodeDefinition[],
+  edges: WorkflowEdgeDefinition[],
+  replies: Record<string, Reply>,
+  mode: Group['group_mode'] = 'workflow',
+) {
   const group: Group = { group_id: 'flow_test', name: 'test', group_mode: mode, nodes, edges };
   const sessions = nodes.map((node) => ({ node_id: node.id, thread_id: `th_${node.id}` }));
   const requests: NodeTurnRequest[] = [];
@@ -22,11 +34,22 @@ function harness(nodes: WorkflowNodeDefinition[], edges: WorkflowEdgeDefinition[
       if (reply === undefined) throw new Error(`unexpected call for ${key}`);
       onText(typeof reply === 'function' ? reply(request, call) : reply);
     },
-    saveNodes: async (saved: RunNodeState[]) => { saves.push(saved); },
-    updateLog: (update: (entries: RunLogEntry[]) => RunLogEntry[]) => { log = update(log); },
+    saveNodes: async (saved: RunNodeState[]) => {
+      saves.push(saved);
+    },
+    updateLog: (update: (entries: RunLogEntry[]) => RunLogEntry[]) => {
+      log = update(log);
+    },
   };
   const nodesRef = { current: [] as RunNodeState[] };
-  return { run: () => executeRun(group, sessions, 'task', deps, nodesRef), requests, saves, log: () => log, nodesRef, calls };
+  return {
+    run: () => executeRun(group, sessions, 'task', deps, nodesRef),
+    requests,
+    saves,
+    log: () => log,
+    nodesRef,
+    calls,
+  };
 }
 
 const agentNode = (id: string): WorkflowNodeDefinition => ({ id, type: 'agent', title: id });
@@ -34,7 +57,12 @@ const yes = JSON.stringify({ decision: 'YES', reason: 'ok' });
 const no = JSON.stringify({ decision: 'NO', reason: 'not yet', feedback: 'try again' });
 
 describe('executeRun: condition branches', () => {
-  const nodes = [agentNode('a'), { id: 'check', type: 'condition' as const, title: 'check', config: { expression: 'passes' } }, agentNode('yes_path'), agentNode('no_path')];
+  const nodes = [
+    agentNode('a'),
+    { id: 'check', type: 'condition' as const, title: 'check', config: { expression: 'passes' } },
+    agentNode('yes_path'),
+    agentNode('no_path'),
+  ];
   const edges: WorkflowEdgeDefinition[] = [
     { source: 'a', target: 'check' },
     { source: 'check', target: 'yes_path', config: { sourceHandle: 'true' } },
@@ -53,7 +81,9 @@ describe('executeRun: condition branches', () => {
     expect(byId.check.output).toContain('判断结果：NO');
     const control = h.requests.find((request) => request.workflowStage === 'control_decision');
     expect(control?.workflowControl).toEqual({ type: 'condition', condition: 'passes' });
-    expect(control?.workflowContext.upstream).toEqual([{ node_id: 'a', title: 'a', relation: undefined, label: undefined, output: 'A-OUT' }]);
+    expect(control?.workflowContext.upstream).toEqual([
+      { node_id: 'a', title: 'a', relation: undefined, label: undefined, output: 'A-OUT' },
+    ]);
   });
 
   it('stops with a clear error when the control node returns invalid JSON', async () => {
@@ -64,7 +94,11 @@ describe('executeRun: condition branches', () => {
 });
 
 describe('executeRun: loops', () => {
-  const nodes = [agentNode('writer'), { id: 'loop', type: 'loop' as const, title: 'loop', config: { max_iterations: 2, continue_condition: 'good' } }, agentNode('end')];
+  const nodes = [
+    agentNode('writer'),
+    { id: 'loop', type: 'loop' as const, title: 'loop', config: { max_iterations: 2, continue_condition: 'good' } },
+    agentNode('end'),
+  ];
   const edges: WorkflowEdgeDefinition[] = [
     { source: 'writer', target: 'loop', config: { targetHandle: 'input' } },
     { source: 'loop', target: 'writer', config: { sourceHandle: 'repeat' } },
@@ -72,7 +106,12 @@ describe('executeRun: loops', () => {
   ];
 
   it('repeats the loop body with feedback until YES', async () => {
-    const h = harness(nodes, edges, { writer: (_r, call) => `draft ${call}`, loop: (_r, call) => (call === 1 ? no : yes), end: 'done', supervisor: 'FINAL' });
+    const h = harness(nodes, edges, {
+      writer: (_r, call) => `draft ${call}`,
+      loop: (_r, call) => (call === 1 ? no : yes),
+      end: 'done',
+      supervisor: 'FINAL',
+    });
     await h.run();
     expect(h.calls.get('writer')).toBe(2);
     const secondWriter = h.requests.filter((request) => request.threadId === 'th_writer')[1];
@@ -91,12 +130,18 @@ describe('executeRun: loops', () => {
 describe('executeRun: organizations', () => {
   it('runs roles top-down and passes the lead output to both reports', async () => {
     const nodes = [agentNode('lead'), agentNode('dev'), agentNode('qa')];
-    const edges = [{ source: 'lead', target: 'dev' }, { source: 'lead', target: 'qa' }];
+    const edges = [
+      { source: 'lead', target: 'dev' },
+      { source: 'lead', target: 'qa' },
+    ];
     const h = harness(nodes, edges, { lead: 'PLAN', dev: 'CODE', qa: 'TESTS', supervisor: 'FINAL' }, 'architecture');
     const outcome = await h.run();
     expect(h.requests.map((request) => request.threadId)).toEqual(['th_lead', 'th_dev', 'th_qa', 'th_qa']);
     for (const id of ['dev', 'qa']) {
-      expect(outcome.nodes.find((node) => node.node_id === id)?.inputs?.[0]).toMatchObject({ node_id: 'lead', output: 'PLAN' });
+      expect(outcome.nodes.find((node) => node.node_id === id)?.inputs?.[0]).toMatchObject({
+        node_id: 'lead',
+        output: 'PLAN',
+      });
     }
     const review = h.requests.at(-1)!;
     expect(review.workflowStage).toBe('supervisor_review');
@@ -104,19 +149,37 @@ describe('executeRun: organizations', () => {
   });
 
   it('rejects an instance without a root agent', async () => {
-    const h = harness([agentNode('a'), agentNode('b')], [{ source: 'a', target: 'b' }, { source: 'b', target: 'a' }], {});
+    const h = harness(
+      [agentNode('a'), agentNode('b')],
+      [
+        { source: 'a', target: 'b' },
+        { source: 'b', target: 'a' },
+      ],
+      {},
+    );
     await expect(h.run()).rejects.toThrow('起始对话窗口');
   });
 });
 
 describe('helpers', () => {
   it('requires feedback for a NO loop decision', () => {
-    expect(() => parseWorkflowControlResult(JSON.stringify({ decision: 'NO', reason: 'x' }), 'loop')).toThrow('feedback');
-    expect(parseWorkflowControlResult(JSON.stringify({ decision: 'NO', reason: ' x ' }), 'condition')).toEqual({ decision: 'NO', reason: 'x' });
+    expect(() => parseWorkflowControlResult(JSON.stringify({ decision: 'NO', reason: 'x' }), 'loop')).toThrow(
+      'feedback',
+    );
+    expect(parseWorkflowControlResult(JSON.stringify({ decision: 'NO', reason: ' x ' }), 'condition')).toEqual({
+      decision: 'NO',
+      reason: 'x',
+    });
   });
 
   it('marks never-started nodes as skipped', () => {
-    const nodes = finalizeNodes([{ node_id: 'a', thread_id: 't' }, { node_id: 'b', thread_id: 't2' }], [{ node_id: 'a', status: 'completed', output: 'x' }]);
+    const nodes = finalizeNodes(
+      [
+        { node_id: 'a', thread_id: 't' },
+        { node_id: 'b', thread_id: 't2' },
+      ],
+      [{ node_id: 'a', status: 'completed', output: 'x' }],
+    );
     expect(nodes.map((node) => node.status)).toEqual(['completed', 'skipped']);
   });
 });

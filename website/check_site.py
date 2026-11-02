@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 SITE_ROOT = Path(__file__).resolve().parent
-PAGES = (Path("index.html"), Path("design/index.html"), Path("docs/index.html"), Path("playground/index.html"))
+PAGES = (Path("index.html"), Path("design/index.html"), Path("docs/index.html"))
 DOCUMENT_SOURCES = (
     Path("content/design/index.md"),
     Path("content/docs/index.md"),

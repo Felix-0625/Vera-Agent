@@ -1,11 +1,12 @@
 # VeraAgent website
 
-The static site keeps four experiences on separate routes:
+The static site keeps three experiences on separate routes:
 
 - `index.html`: product introduction, a desktop-workspace screenshot, and a lightweight CSS animation.
 - `design/index.html`: system design documentation rendered from `content/design/index.md`.
 - `docs/index.html`: usage and maintenance documentation rendered from `content/docs/*.md`. The overview is the route index; six guides and references are selected from the left sidebar.
-- `playground/index.html`: the existing video recorded from a preset demo. It does not call the desktop app, a model provider, or the visitor's files. A new real-model recording is planned using [the recording script](../docs/DEMO_RECORDING.md).
+
+The introduction includes interface illustrations for the task board and evaluation loop. They use example labels, not live execution or measured results.
 
 All pages share `assets/site.css`, `assets/site.js`, and `assets/favicon.svg`. Documentation pages use a locally vendored MIT-licensed copy of Marked to render the checked-in Markdown; no build step or CDN is required. Open the site through a local HTTP server so the pages can fetch those Markdown files. Run `python website/check_site.py` to verify page entry points, document sources, local links, fragment anchors, scripts, styles, and images.
 

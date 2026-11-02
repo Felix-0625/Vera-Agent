@@ -1,3 +1,5 @@
+"""Portkey Responses API model adapter."""
+
 import json
 import logging
 import os

@@ -1,4 +1,3 @@
-import React from 'react';
 import { WorkspaceShell } from './components/layout/WorkspaceShell';
 
 function App() {

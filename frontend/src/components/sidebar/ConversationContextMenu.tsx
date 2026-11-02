@@ -1,6 +1,6 @@
+import { Archive, Edit3, Pin, Trash2 } from 'lucide-react';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Pin, Trash2, Edit3, Archive } from 'lucide-react';
 import { Thread } from '../../types/chat';
 
 interface ConversationContextMenuProps {
@@ -12,7 +12,6 @@ interface ConversationContextMenuProps {
   onArchive: (thread: Thread) => void;
   onDelete: (thread: Thread) => void;
 }
-
 
 export const ConversationContextMenu: React.FC<ConversationContextMenuProps> = ({
   thread,
@@ -61,7 +60,7 @@ export const ConversationContextMenu: React.FC<ConversationContextMenuProps> = (
     },
   ];
 
-  return createPortal((
+  return createPortal(
     <>
       {}
       <div
@@ -105,13 +104,12 @@ export const ConversationContextMenu: React.FC<ConversationContextMenuProps> = (
               color: item.danger ? 'var(--accent-rose)' : 'var(--text-primary)',
             }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-              {item.icon}
-            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>{item.icon}</span>
             <span style={{ flex: 1, whiteSpace: 'nowrap' }}>{item.label}</span>
           </button>
         ))}
       </div>
-    </>
-  ), document.body);
+    </>,
+    document.body,
+  );
 };

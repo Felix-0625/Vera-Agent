@@ -5,7 +5,9 @@ function mockFetch(response: { ok: boolean; status: number; body?: unknown; inva
   const fetchMock = vi.fn().mockResolvedValue({
     ok: response.ok,
     status: response.status,
-    json: response.invalidJson ? () => Promise.reject(new SyntaxError('bad json')) : () => Promise.resolve(response.body),
+    json: response.invalidJson
+      ? () => Promise.reject(new SyntaxError('bad json'))
+      : () => Promise.resolve(response.body),
   });
   vi.stubGlobal('fetch', fetchMock);
   return fetchMock;
@@ -19,7 +21,9 @@ describe('request', () => {
   it('sends JSON headers, keeps caller options, and returns the parsed body', async () => {
     const fetchMock = mockFetch({ ok: true, status: 200, body: { items: [1] } });
 
-    await expect(request('/api/taskboard/tasks', { method: 'POST', headers: { 'X-Trace': '1' } })).resolves.toEqual({ items: [1] });
+    await expect(request('/api/taskboard/tasks', { method: 'POST', headers: { 'X-Trace': '1' } })).resolves.toEqual({
+      items: [1],
+    });
 
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('/api/taskboard/tasks');
@@ -29,7 +33,9 @@ describe('request', () => {
 
   it('surfaces the backend `error` field as the thrown message', async () => {
     mockFetch({ ok: false, status: 409, body: { error: 'Work item changed; refresh and retry' } });
-    await expect(request('/api/taskboard/tasks/x', { method: 'PATCH' })).rejects.toThrow('Work item changed; refresh and retry');
+    await expect(request('/api/taskboard/tasks/x', { method: 'PATCH' })).rejects.toThrow(
+      'Work item changed; refresh and retry',
+    );
   });
 
   it('falls back to the HTTP status when the error body is not JSON', async () => {

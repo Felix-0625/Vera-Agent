@@ -1,14 +1,19 @@
+import { Folders, RefreshCw } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { RefreshCw, Folders } from 'lucide-react';
-import { fetchFilePreview, fetchWorktreeDiff, fetchWorktreeRefs, stageWorktreeFile, discardWorktreeFile } from '../../api/toolApi';
-import { WorktreeCommitRef, WorktreeDiffData } from '../../types/tool';
-import { DiffFileList } from './DiffFileList';
-import { DiffCodeView } from './DiffCodeView';
+import {
+  discardWorktreeFile,
+  fetchFilePreview,
+  fetchWorktreeDiff,
+  fetchWorktreeRefs,
+  stageWorktreeFile,
+} from '../../api/toolApi';
 import { useChatStore } from '../../stores/chatStore';
-import { ResizableTreeLayout } from './ResizableTreeLayout';
+import { WorktreeCommitRef, WorktreeDiffData } from '../../types/tool';
 import { SelectField } from '../common/Field';
 import { IconButton } from '../common/IconButton';
-
+import { DiffCodeView } from './DiffCodeView';
+import { DiffFileList } from './DiffFileList';
+import { ResizableTreeLayout } from './ResizableTreeLayout';
 
 export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ projectId: projectIdOverride }) => {
   const { activeThreadId, threads, draftProjectId } = useChatStore();
@@ -28,59 +33,93 @@ export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ project
   const refsRequestId = useRef(0);
 
   const activeThread = threads.find((thread) => thread.thread_id === activeThreadId);
-  const projectId = projectIdOverride !== undefined ? projectIdOverride || undefined : activeThreadId ? activeThread?.project_id || undefined : draftProjectId || undefined;
-  const selectedPatch = selectedFile ? [data?.diff_staged, data?.diff_text].filter(Boolean).flatMap((text) => text!.split(/(?=^diff --git )/m).filter((block) => block.includes(`b/${selectedFile}`) || block.includes(`a/${selectedFile}`))).join('\n') : '';
+  const projectId =
+    projectIdOverride !== undefined
+      ? projectIdOverride || undefined
+      : activeThreadId
+        ? activeThread?.project_id || undefined
+        : draftProjectId || undefined;
+  const selectedPatch = selectedFile
+    ? [data?.diff_staged, data?.diff_text]
+        .filter(Boolean)
+        .flatMap((text) =>
+          text!
+            .split(/(?=^diff --git )/m)
+            .filter((block) => block.includes(`b/${selectedFile}`) || block.includes(`a/${selectedFile}`)),
+        )
+        .join('\n')
+    : '';
 
-  const loadDiff = useCallback(async (baseRef = selectedCommit) => {
-    const requestId = ++diffRequestId.current;
-    if (!projectId) {
-      setData(null);
-      setSelectedFile(null);
-      setLoading(false);
+  const loadDiff = useCallback(
+    async (baseRef = selectedCommit) => {
+      const requestId = ++diffRequestId.current;
+      if (!projectId) {
+        setData(null);
+        setSelectedFile(null);
+        setLoading(false);
+        setError('');
+        return;
+      }
+      setLoading(true);
       setError('');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetchWorktreeDiff(undefined, projectId, baseRef || undefined);
-      if (requestId !== diffRequestId.current) return;
-      setData(res);
-      const files = [...new Set([...res.staged.map((item) => item.file), ...res.unstaged.map((item) => item.file), ...res.untracked])];
-      setSelectedFile((current) => current && files.includes(current) ? current : files[0] || null);
-    } catch (cause) {
-      if (requestId !== diffRequestId.current) return;
-      setData(null);
-      setSelectedFile(null);
-      setError(cause instanceof Error ? cause.message : '读取工作树差异失败');
-    } finally {
-      if (requestId === diffRequestId.current) setLoading(false);
-    }
-  }, [projectId, selectedCommit]);
+      try {
+        const res = await fetchWorktreeDiff(undefined, projectId, baseRef || undefined);
+        if (requestId !== diffRequestId.current) return;
+        setData(res);
+        const files = [
+          ...new Set([
+            ...res.staged.map((item) => item.file),
+            ...res.unstaged.map((item) => item.file),
+            ...res.untracked,
+          ]),
+        ];
+        setSelectedFile((current) => (current && files.includes(current) ? current : files[0] || null));
+      } catch (cause) {
+        if (requestId !== diffRequestId.current) return;
+        setData(null);
+        setSelectedFile(null);
+        setError(cause instanceof Error ? cause.message : '读取工作树差异失败');
+      } finally {
+        if (requestId === diffRequestId.current) setLoading(false);
+      }
+    },
+    [projectId, selectedCommit],
+  );
 
-  const loadRefs = useCallback(async (branch?: string) => {
-    const requestId = ++refsRequestId.current;
-    if (!projectId) { setBranches([]); setCommits([]); setSelectedBranch(''); setSelectedCommit(''); setRefsLoadedFor(null); setError(''); return; }
-    setRefsLoadedFor(null);
-    setError('');
-    try {
-      const refs = await fetchWorktreeRefs(projectId, branch);
-      if (requestId !== refsRequestId.current) return;
-      setBranches(refs.branches);
-      const nextBranch = branch || refs.current_branch || refs.branches[0] || '';
-      setSelectedBranch(nextBranch);
-      setCommits(refs.commits);
-      setSelectedCommit(refs.commits[0]?.hash || nextBranch);
-      setRefsLoadedFor(projectId);
-    } catch (cause) {
-      if (requestId !== refsRequestId.current) return;
-      setBranches([]);
-      setCommits([]);
-      setData(null);
-      setSelectedFile(null);
-      setError(cause instanceof Error ? cause.message : '读取分支和提交失败');
-    }
-  }, [projectId]);
+  const loadRefs = useCallback(
+    async (branch?: string) => {
+      const requestId = ++refsRequestId.current;
+      if (!projectId) {
+        setBranches([]);
+        setCommits([]);
+        setSelectedBranch('');
+        setSelectedCommit('');
+        setRefsLoadedFor(null);
+        setError('');
+        return;
+      }
+      setRefsLoadedFor(null);
+      setError('');
+      try {
+        const refs = await fetchWorktreeRefs(projectId, branch);
+        if (requestId !== refsRequestId.current) return;
+        setBranches(refs.branches);
+        const nextBranch = branch || refs.current_branch || refs.branches[0] || '';
+        setSelectedBranch(nextBranch);
+        setCommits(refs.commits);
+        setSelectedCommit(refs.commits[0]?.hash || nextBranch);
+        setRefsLoadedFor(projectId);
+      } catch (cause) {
+        if (requestId !== refsRequestId.current) return;
+        setBranches([]);
+        setCommits([]);
+        setData(null);
+        setSelectedFile(null);
+        setError(cause instanceof Error ? cause.message : '读取分支和提交失败');
+      }
+    },
+    [projectId],
+  );
 
   useEffect(() => {
     // oxlint-disable-next-line react/set-state-in-effect -- The selected project determines which branch and commit refs are displayed.
@@ -98,7 +137,10 @@ export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ project
     // oxlint-disable-next-line react/set-state-in-effect -- Clear the prior file preview immediately when its selection changes.
     setSourcePreview(null);
     setPreviewMessage(null);
-    if (!selectedFile || selectedPatch) return () => { cancelled = true; };
+    if (!selectedFile || selectedPatch)
+      return () => {
+        cancelled = true;
+      };
     fetchFilePreview(selectedFile, undefined, projectId)
       .then((result) => {
         if (cancelled) return;
@@ -109,9 +151,13 @@ export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ project
       .catch((error: unknown) => {
         if (cancelled) return;
         const message = error instanceof Error ? error.message : '';
-        setPreviewMessage(/not found|404/i.test(message) ? '此文件无变更记录，预览请在文件标签页打开' : message || '无法读取文件预览');
+        setPreviewMessage(
+          /not found|404/i.test(message) ? '此文件无变更记录，预览请在文件标签页打开' : message || '无法读取文件预览',
+        );
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [selectedFile, selectedPatch, projectId]);
 
   const handleStage = async (file: string) => {
@@ -151,23 +197,49 @@ export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ project
           <span style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>当前工作树 · 对比所选提交</span>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          {projectId && <>
-            <SelectField aria-label="选择对比分支" value={selectedBranch} onChange={(event) => { void loadRefs(event.target.value); }} className="diff-selector diff-selector--branch">
-              {branches.map((branch) => <option key={branch} value={branch}>{branch}</option>)}
-            </SelectField>
-            <SelectField aria-label="选择对比提交" value={selectedCommit} onChange={(event) => setSelectedCommit(event.target.value)} className="diff-selector diff-selector--commit">
-              {commits.map((commit) => <option key={commit.hash} value={commit.hash}>{commit.short_hash} · {commit.subject}</option>)}
-            </SelectField>
-          </>}
+          {projectId && (
+            <>
+              <SelectField
+                aria-label="选择对比分支"
+                value={selectedBranch}
+                onChange={(event) => {
+                  void loadRefs(event.target.value);
+                }}
+                className="diff-selector diff-selector--branch"
+              >
+                {branches.map((branch) => (
+                  <option key={branch} value={branch}>
+                    {branch}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField
+                aria-label="选择对比提交"
+                value={selectedCommit}
+                onChange={(event) => setSelectedCommit(event.target.value)}
+                className="diff-selector diff-selector--commit"
+              >
+                {commits.map((commit) => (
+                  <option key={commit.hash} value={commit.hash}>
+                    {commit.short_hash} · {commit.subject}
+                  </option>
+                ))}
+              </SelectField>
+            </>
+          )}
           <IconButton
             label={treeCollapsed ? '显示变更目录' : '收起变更目录'}
             onClick={() => setTreeCollapsed((value) => !value)}
             title={treeCollapsed ? '显示变更目录' : '收起变更目录'}
             size="sm"
-          ><Folders size={15} /></IconButton>
+          >
+            <Folders size={15} />
+          </IconButton>
           <IconButton
             label="刷新差异"
-            onClick={() => { void loadDiff(selectedCommit); }}
+            onClick={() => {
+              void loadDiff(selectedCommit);
+            }}
             disabled={loading}
             size="sm"
           >
@@ -176,11 +248,57 @@ export const DiffViewerTab: React.FC<{ projectId?: string | null }> = ({ project
         </div>
       </div>
 
-      {error && <div role="alert" style={{ padding: 'var(--space-1-75) var(--space-3-5)', color: 'var(--accent-rose)', background: 'color-mix(in srgb, var(--accent-rose) 8%, var(--bg-surface))', fontSize: 'var(--font-size-compact)' }}>{error}</div>}
+      {error && (
+        <div
+          role="alert"
+          style={{
+            padding: 'var(--space-1-75) var(--space-3-5)',
+            color: 'var(--accent-rose)',
+            background: 'color-mix(in srgb, var(--accent-rose) 8%, var(--bg-surface))',
+            fontSize: 'var(--font-size-compact)',
+          }}
+        >
+          {error}
+        </div>
+      )}
 
       {}
       <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-        {!projectId ? <div style={{ flex: 1, display: 'grid', placeItems: 'center', color: 'var(--text-muted)', fontSize: 'var(--font-size-md)' }}>当前对话未绑定项目，没有可显示的变更</div> : <ResizableTreeLayout collapsed={treeCollapsed} onToggle={() => setTreeCollapsed((value) => !value)} primary={<DiffCodeView fileName={selectedFile} sourceText={sourcePreview} message={previewMessage} diffText={selectedPatch} />} secondary={<DiffFileList data={data} selectedFile={selectedFile} onSelect={setSelectedFile} onStage={handleStage} onDiscard={handleDiscard} />} />}
+        {!projectId ? (
+          <div
+            style={{
+              flex: 1,
+              display: 'grid',
+              placeItems: 'center',
+              color: 'var(--text-muted)',
+              fontSize: 'var(--font-size-md)',
+            }}
+          >
+            当前对话未绑定项目，没有可显示的变更
+          </div>
+        ) : (
+          <ResizableTreeLayout
+            collapsed={treeCollapsed}
+            onToggle={() => setTreeCollapsed((value) => !value)}
+            primary={
+              <DiffCodeView
+                fileName={selectedFile}
+                sourceText={sourcePreview}
+                message={previewMessage}
+                diffText={selectedPatch}
+              />
+            }
+            secondary={
+              <DiffFileList
+                data={data}
+                selectedFile={selectedFile}
+                onSelect={setSelectedFile}
+                onStage={handleStage}
+                onDiscard={handleDiscard}
+              />
+            }
+          />
+        )}
       </div>
     </div>
   );

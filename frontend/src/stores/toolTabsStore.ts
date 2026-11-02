@@ -3,16 +3,26 @@
  */
 import { create } from 'zustand';
 import { ToolTab, ToolTabId } from '../types/tool';
-import { useSideChatStore } from './sideChatStore';
 import { useChatStore } from './chatStore';
+import { useSideChatStore } from './sideChatStore';
 import { useTerminalStore } from './terminalStore';
 
 const INITIAL_TAB: ToolTab = { id: 'tab_initial', toolType: 'launcher', title: '新标签页', closable: true };
 export const DEFAULT_TOOL_TABS: ToolTab[] = [INITIAL_TAB];
 const DEFAULT_TOOL_TITLES: Partial<Record<ToolTabId, string>> = {
-  launcher: '新标签页', diff: '变更', files: '文件', fileDocument: '文件', terminal: '终端', sidechat: '侧边聊天',
-  subagents: '子智能体', metrics: '数据看板', gitflow: 'GitFlow', workflow: '流程编排',
-  traces: '执行记录', memory: '长期记忆', evolution: '改进提案',
+  launcher: '新标签页',
+  diff: '变更',
+  files: '文件',
+  fileDocument: '文件',
+  terminal: '终端',
+  sidechat: '侧边聊天',
+  subagents: '子智能体',
+  metrics: '数据看板',
+  gitflow: 'GitFlow',
+  workflow: '流程编排',
+  traces: '执行记录',
+  memory: '长期记忆',
+  evolution: '改进提案',
 };
 export const getConversationToolScope = () => {
   const { activeThreadId, draftConversationId } = useChatStore.getState();
@@ -27,7 +37,8 @@ export const getCurrentProjectId = () => {
 };
 
 export const getProjectToolScope = (projectId = getCurrentProjectId()) => `project:${projectId || 'workspace'}`;
-export const getMountedPanelScope = (conversationKey: string, projectKey: string) => JSON.stringify([conversationKey, projectKey]);
+export const getMountedPanelScope = (conversationKey: string, projectKey: string) =>
+  JSON.stringify([conversationKey, projectKey]);
 
 interface MountedPanelGroup {
   conversationKey: string;
@@ -38,7 +49,11 @@ interface MountedPanelGroup {
 // Tabs are a view owned by a conversation. Project tools still resolve their
 // data from the active conversation's project, but opening/activating a tab in
 // one conversation must not change another conversation's tab strip.
-export const getToolScope = (_toolType: ToolTabId, _projectId = getCurrentProjectId(), conversationKey = getConversationToolScope()) => conversationKey;
+export const getToolScope = (
+  _toolType: ToolTabId,
+  _projectId = getCurrentProjectId(),
+  conversationKey = getConversationToolScope(),
+) => conversationKey;
 
 interface ToolTabsState {
   tabsByConversation: Record<string, ToolTab[]>;
@@ -60,47 +75,52 @@ export const useToolTabsStore = create<ToolTabsState>((set, get) => ({
   activeTabByConversation: {},
   activeScopeByConversation: {},
   mountedPanelsByScope: {},
-  markPanelMounted: (conversationKey, projectKey, toolType) => set((state) => {
-    const scopeKey = getMountedPanelScope(conversationKey, projectKey);
-    const current = state.mountedPanelsByScope[scopeKey];
-    if (current?.toolTypes.includes(toolType)) return state;
-    return {
-      mountedPanelsByScope: {
-        ...state.mountedPanelsByScope,
-        [scopeKey]: {
-          conversationKey,
-          projectKey,
-          toolTypes: [...(current?.toolTypes || []), toolType],
+  markPanelMounted: (conversationKey, projectKey, toolType) =>
+    set((state) => {
+      const scopeKey = getMountedPanelScope(conversationKey, projectKey);
+      const current = state.mountedPanelsByScope[scopeKey];
+      if (current?.toolTypes.includes(toolType)) return state;
+      return {
+        mountedPanelsByScope: {
+          ...state.mountedPanelsByScope,
+          [scopeKey]: {
+            conversationKey,
+            projectKey,
+            toolTypes: [...(current?.toolTypes || []), toolType],
+          },
         },
-      },
-    };
-  }),
-  adoptConversationTabs: (fromKey, toKey) => set((state) => {
-    const from = fromKey.startsWith('conversation:') ? fromKey : `conversation:${fromKey}`;
-    const to = toKey.startsWith('conversation:') ? toKey : `conversation:${toKey}`;
-    if (!state.tabsByConversation[from] || state.tabsByConversation[to]) return state;
-    const { [from]: tabs, ...remainingTabs } = state.tabsByConversation;
-    const { [from]: activeTabId, ...remainingActive } = state.activeTabByConversation;
-    const { [from]: activeScope, ...remainingScopes } = state.activeScopeByConversation;
-    const mountedPanelsByScope = { ...state.mountedPanelsByScope };
-    for (const [scopeKey, panelGroup] of Object.entries(state.mountedPanelsByScope)) {
-      if (panelGroup.conversationKey !== from) continue;
-      delete mountedPanelsByScope[scopeKey];
-      const nextScopeKey = getMountedPanelScope(to, panelGroup.projectKey);
-      const nextGroup = mountedPanelsByScope[nextScopeKey];
-      mountedPanelsByScope[nextScopeKey] = {
-        conversationKey: to,
-        projectKey: panelGroup.projectKey,
-        toolTypes: [...new Set([...(nextGroup?.toolTypes || []), ...panelGroup.toolTypes])],
       };
-    }
-    return {
-      tabsByConversation: { ...remainingTabs, [to]: tabs },
-      activeTabByConversation: { ...remainingActive, [to]: activeTabId ?? null },
-      activeScopeByConversation: { ...remainingScopes, [to]: activeScope === from ? to : activeScope || getProjectToolScope() },
-      mountedPanelsByScope,
-    };
-  }),
+    }),
+  adoptConversationTabs: (fromKey, toKey) =>
+    set((state) => {
+      const from = fromKey.startsWith('conversation:') ? fromKey : `conversation:${fromKey}`;
+      const to = toKey.startsWith('conversation:') ? toKey : `conversation:${toKey}`;
+      if (!state.tabsByConversation[from] || state.tabsByConversation[to]) return state;
+      const { [from]: tabs, ...remainingTabs } = state.tabsByConversation;
+      const { [from]: activeTabId, ...remainingActive } = state.activeTabByConversation;
+      const { [from]: activeScope, ...remainingScopes } = state.activeScopeByConversation;
+      const mountedPanelsByScope = { ...state.mountedPanelsByScope };
+      for (const [scopeKey, panelGroup] of Object.entries(state.mountedPanelsByScope)) {
+        if (panelGroup.conversationKey !== from) continue;
+        delete mountedPanelsByScope[scopeKey];
+        const nextScopeKey = getMountedPanelScope(to, panelGroup.projectKey);
+        const nextGroup = mountedPanelsByScope[nextScopeKey];
+        mountedPanelsByScope[nextScopeKey] = {
+          conversationKey: to,
+          projectKey: panelGroup.projectKey,
+          toolTypes: [...new Set([...(nextGroup?.toolTypes || []), ...panelGroup.toolTypes])],
+        };
+      }
+      return {
+        tabsByConversation: { ...remainingTabs, [to]: tabs },
+        activeTabByConversation: { ...remainingActive, [to]: activeTabId ?? null },
+        activeScopeByConversation: {
+          ...remainingScopes,
+          [to]: activeScope === from ? to : activeScope || getProjectToolScope(),
+        },
+        mountedPanelsByScope,
+      };
+    }),
 
   openTab: (toolType, customTitle, requestedConversationKey, requestedProjectId) => {
     const conversationKey = requestedConversationKey || getConversationToolScope();
@@ -115,14 +135,25 @@ export const useToolTabsStore = create<ToolTabsState>((set, get) => ({
     const existing = tabs.find((tab) => tab.toolType === toolType);
     if (existing) {
       set((state) => ({
-        tabsByConversation: { ...state.tabsByConversation, [scopeKey]: tabs.map((tab) => tab.id === existing.id ? { ...tab, projectId: requestedProjectId ?? tab.projectId } : tab) },
+        tabsByConversation: {
+          ...state.tabsByConversation,
+          [scopeKey]: tabs.map((tab) =>
+            tab.id === existing.id ? { ...tab, projectId: requestedProjectId ?? tab.projectId } : tab,
+          ),
+        },
         activeTabByConversation: { ...state.activeTabByConversation, [scopeKey]: existing.id },
         activeScopeByConversation: { ...state.activeScopeByConversation, [conversationKey]: scopeKey },
       }));
       return;
     }
     const id = `tab_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    const tab: ToolTab = { id, toolType, title: customTitle || DEFAULT_TOOL_TITLES[toolType] || '工具', closable: true, projectId: requestedProjectId ?? undefined };
+    const tab: ToolTab = {
+      id,
+      toolType,
+      title: customTitle || DEFAULT_TOOL_TITLES[toolType] || '工具',
+      closable: true,
+      projectId: requestedProjectId ?? undefined,
+    };
     set((state) => ({
       tabsByConversation: { ...state.tabsByConversation, [scopeKey]: [...tabs, tab] },
       activeTabByConversation: { ...state.activeTabByConversation, [scopeKey]: id },
@@ -153,7 +184,7 @@ export const useToolTabsStore = create<ToolTabsState>((set, get) => ({
       useTerminalStore.getState().disconnect(`${projectId || 'current-project'}:project-root`);
     }
     const nextTabs = tabs.filter((tab) => tab.id !== id);
-    const nextId = activeId === id ? nextTabs.at(-1)?.id ?? null : activeId;
+    const nextId = activeId === id ? (nextTabs.at(-1)?.id ?? null) : activeId;
     const nextScope = conversationKey;
     set((state) => ({
       tabsByConversation: { ...state.tabsByConversation, [scopeKey]: nextTabs },
@@ -162,12 +193,13 @@ export const useToolTabsStore = create<ToolTabsState>((set, get) => ({
     }));
   },
 
-  activateTab: (id, scopeKey, conversationKey) => set((state) => ({
-    activeTabByConversation: { ...state.activeTabByConversation, [scopeKey]: id },
-    activeScopeByConversation: { ...state.activeScopeByConversation, [conversationKey]: scopeKey },
-  })),
+  activateTab: (id, scopeKey, conversationKey) =>
+    set((state) => ({
+      activeTabByConversation: { ...state.activeTabByConversation, [scopeKey]: id },
+      activeScopeByConversation: { ...state.activeScopeByConversation, [conversationKey]: scopeKey },
+    })),
 
-  addNewLauncherTab: (requestedProjectId, requestedConversationKey) => {
+  addNewLauncherTab: (_requestedProjectId, requestedConversationKey) => {
     const conversationKey = requestedConversationKey || getConversationToolScope();
     const scopeKey = conversationKey;
     const tabs = get().tabsByConversation[scopeKey] || DEFAULT_TOOL_TABS;
@@ -185,16 +217,14 @@ export const useToolTabsStore = create<ToolTabsState>((set, get) => ({
     const scopeKey = conversationKey;
     const tabs = get().tabsByConversation[scopeKey] || DEFAULT_TOOL_TABS;
     const projectId = requestedProjectId ?? getCurrentProjectId() ?? undefined;
-    const existing = tabs.find((tab) =>
-      tab.toolType === 'fileDocument'
-      && tab.filePath === path
-      && (tab.projectId ?? projectId) === projectId,
+    const existing = tabs.find(
+      (tab) => tab.toolType === 'fileDocument' && tab.filePath === path && (tab.projectId ?? projectId) === projectId,
     );
     if (existing) {
       set((state) => ({
         tabsByConversation: {
           ...state.tabsByConversation,
-          [scopeKey]: tabs.map((tab) => tab.id === existing.id ? { ...tab, title, projectId } : tab),
+          [scopeKey]: tabs.map((tab) => (tab.id === existing.id ? { ...tab, title, projectId } : tab)),
         },
         activeTabByConversation: { ...state.activeTabByConversation, [scopeKey]: existing.id },
         activeScopeByConversation: { ...state.activeScopeByConversation, [conversationKey]: scopeKey },

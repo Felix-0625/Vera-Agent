@@ -1,10 +1,9 @@
+import { CheckSquare, Clock, History, Plus, Workflow } from 'lucide-react';
 import React from 'react';
-import { Plus, History, Clock, Workflow, CheckSquare } from 'lucide-react';
 import { useChatStore } from '../../stores/chatStore';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useProjectStore } from '../../stores/projectStore';
 import { Button } from '../common/Button';
-
 
 export const NavLinks: React.FC = () => {
   const { openDraftConversation } = useChatStore();
@@ -21,7 +20,14 @@ export const NavLinks: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 'var(--space-2-5) var(--space-3) var(--space-1-5)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+    <div
+      style={{
+        padding: 'var(--space-2-5) var(--space-3) var(--space-1-5)',
+        display: 'flex',
+        flexDirection: 'column',
+        flexShrink: 0,
+      }}
+    >
       {}
       <Button variant="outline" size="md" className="sidebar-new-conversation" onClick={handleNewConversation}>
         <Plus size={16} color="var(--accent-primary)" />
@@ -44,7 +50,6 @@ export const NavLinks: React.FC = () => {
           <CheckSquare size={15} color={taskboardOpen ? 'var(--accent-primary)' : 'var(--text-muted)'} />
           <span>任务面板</span>
         </Button>
-
       </div>
     </div>
   );
@@ -52,10 +57,34 @@ export const NavLinks: React.FC = () => {
 
 export const ScheduledTasksLink: React.FC = () => {
   const { setScheduledTasksOpen } = useLayoutStore();
-  return <div style={{ padding: '0 var(--space-3)' }}><Button variant="ghost" size="sm" className="sidebar-navigation-button" onClick={() => setScheduledTasksOpen(true)}><Clock size={15} color="var(--text-muted)"/><span>计划任务</span></Button></div>;
+  return (
+    <div style={{ padding: '0 var(--space-3)' }}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="sidebar-navigation-button"
+        onClick={() => setScheduledTasksOpen(true)}
+      >
+        <Clock size={15} color="var(--text-muted)" />
+        <span>计划任务</span>
+      </Button>
+    </div>
+  );
 };
 
 export const WorkflowTemplatesLink: React.FC = () => {
   const { setWorkflowTemplatesOpen } = useLayoutStore();
-  return <div style={{ padding: '0 var(--space-3)' }}><Button variant="ghost" size="sm" className="sidebar-navigation-button" onClick={() => setWorkflowTemplatesOpen(true)}><Workflow size={15} color="var(--accent-primary)"/><span>流程架构模板</span></Button></div>;
+  return (
+    <div style={{ padding: '0 var(--space-3)' }}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="sidebar-navigation-button"
+        onClick={() => setWorkflowTemplatesOpen(true)}
+      >
+        <Workflow size={15} color="var(--accent-primary)" />
+        <span>流程架构模板</span>
+      </Button>
+    </div>
+  );
 };

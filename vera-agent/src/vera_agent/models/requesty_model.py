@@ -1,3 +1,5 @@
+"""Requesty model gateway adapter."""
+
 import json
 import logging
 import os

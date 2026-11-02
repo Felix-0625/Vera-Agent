@@ -69,6 +69,13 @@ The task board tracks durable project work items; it is intentionally separate f
 
 ## Workflow and architecture instances
 
+Code ownership: `server/routes/groups.py` registers the group routes; `group_instances.py`,
+`group_threads.py`, `group_registry.py`, `group_composition.py` and `group_materialization.py`
+own their respective operations. Frontend `WorkflowTab.tsx` is a small entry point using
+controller hooks, separate views, canvas/node components and the tested `workflowRunner.ts`.
+Conversation state is split between `chatStore.ts`, stream/queue state in `chatState.ts`
+and the send lifecycle in `chatSendMessage.ts`. These splits preserve the public API shapes.
+
 The UI exposes global templates and project-owned instances (lifecycle and record shapes: [DATA_MODEL.md](DATA_MODEL.md#template--instance--run-lifecycle); runnable example: [examples/workflow-quickstart](../examples/workflow-quickstart/README.md)). A template defines agent roles, responsibilities, prompt templates, model choices, and graph edges; the project instance is the copied, editable definition used for a real run. It does not capture a model credential. Each run creates isolated conversation sessions for its nodes and stores task input, node outputs, status snapshots, and bounded status events under the project `.agents/runs` directory.
 
 The current runner is deliberately dependency-light: the UI schedules one node at a time and calls the existing chat SSE endpoint for model work; the backend owns isolated sessions, validates chat handoff data, validates legal run/node state transitions, and atomically persists each run update. Agent outputs are passed as structured records (`node_id`, title, edge relation/label, output). The runner waits for active branch inputs before a merge node, sends only outputs on active edges, routes condition and loop decisions through a strict `YES`/`NO` response, and caps loop iterations. One node's output is the handoff payload; there is no additional manager model call to rewrite every handoff. A final Supervisor turn reviews the collected results and returns the answer to the originating conversation.

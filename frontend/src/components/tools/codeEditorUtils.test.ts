@@ -30,8 +30,12 @@ describe('highlightCodeLine', () => {
   });
 
   it('uses # comments for Python and key coloring for YAML', () => {
-    expect(highlightCodeLine('x = 1  # note', 'tool.py')).toContain('<span style="color:var(--text-muted)">  # note</span>');
-    expect(highlightCodeLine('name: vera', 'agent.yaml')).toContain('<span style="color:var(--accent-cyan)">name</span>');
+    expect(highlightCodeLine('x = 1  # note', 'tool.py')).toContain(
+      '<span style="color:var(--text-muted)">  # note</span>',
+    );
+    expect(highlightCodeLine('name: vera', 'agent.yaml')).toContain(
+      '<span style="color:var(--accent-cyan)">name</span>',
+    );
   });
 });
 

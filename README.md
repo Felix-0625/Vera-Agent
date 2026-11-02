@@ -12,10 +12,8 @@ The agent core is derived from [mini-swe-agent](https://github.com/SWE-agent/min
 and follows the minimal-tool philosophy of Pi Agent (four primitives: read, write, edit,
 bash). This describes lineage; it does not imply endorsement by either project.
 
-[![VeraAgent interactive demo preview](website/assets/video/demo-poster.png)](website/assets/video/veraagent-task-collaboration-demo.webm)
-
-The recording and the [website playground](website/playground/index.html) replay scripted
-data; they do not connect to a model, the backend, or your files.
+The [project website](website/README.md) introduces the desktop interface, system design,
+and practical documentation. Its interface illustrations are static examples.
 
 ## Features
 
@@ -41,11 +39,11 @@ Bind only trusted projects and review MCP servers and Skills before enabling the
 
 ## Quick start (Windows)
 
-Requirements: Windows 10/11, Git, Node.js 20+, Python 3.10+, [uv](https://docs.astral.sh/uv/) 0.11+, and the Microsoft Edge WebView2 Runtime.
+Requirements: Windows 10/11, Git, Node.js 24 LTS (or 20.19+ / 22.12+), Python 3.10+, [uv](https://docs.astral.sh/uv/) 0.11+, and the Microsoft Edge WebView2 Runtime.
 
 ```powershell
-git clone https://github.com/Felix-0625/Agents.git
-cd Agents\frontend
+git clone https://github.com/Felix-0625/Vera-Agent.git
+cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent
 uv sync --locked --no-dev --extra desktop
@@ -57,9 +55,29 @@ Then add a model under **设置 → 模型** (the UI is in Chinese). VeraAgent i
 as source on GitHub only; there is no npm package, PyPI package, or signed installer.
 Details: [Windows installation](docs/INSTALL_WINDOWS.md).
 
-**Try the example:** [`examples/workflow-quickstart`](examples/workflow-quickstart/README.md)
-loads a demo project, two templates, and a task board item, then walks you through
-invoking a workflow from chat.
+## Runnable examples
+
+Start with the [example index](examples/README.md). Each example includes prerequisites,
+commands, expected observations, generated files and cleanup instructions.
+
+| Goal | Example | Provider calls |
+| --- | --- | --- |
+| Follow template → project instance → confirmed workflow → returned answer | [Workflow quickstart](examples/workflow-quickstart/README.md) | None for setup/dry run; paid model for the desktop run |
+| Verify scoped memory, version restore and a real eval acceptance command | [Learning loop](examples/learning-loop/README.md) | None for the scripted check; optional paid single-case CLI run |
+| Connect two inspectable read-only tools over real MCP stdio | [MCP server](examples/mcp-server/README.md) | None |
+
+For the offline examples, first install the [development dependencies](docs/DEVELOPMENT.md),
+then run from the repository root:
+
+```powershell
+.\vera-agent\.venv\Scripts\python.exe examples\workflow-quickstart\setup_demo.py --dry-run
+.\vera-agent\.venv\Scripts\python.exe examples\learning-loop\verify.py
+.\vera-agent\.venv\Scripts\python.exe examples\mcp-server\test_client.py
+```
+
+These exercise real local APIs, tools/storage or MCP transport with synthetic inputs.
+The eval example labels its model as scripted; passing it does not measure provider quality
+or prove that an improvement proposal helps. Live model steps are explicit and excluded from CI.
 
 ## How it works
 
@@ -85,7 +103,7 @@ examples/       Runnable examples (start with workflow-quickstart/)
 tests/          Repository-level tests and check-all.ps1 (backend/frontend tests live next to their code)
 docs/           Maintainer and user documentation
 scripts/        Maintenance scripts (API index, license inventory)
-website/        Static project website (landing page, docs, playground)
+website/        Static project website (introduction, design, documentation)
 ```
 
 ## Documentation
@@ -96,12 +114,12 @@ website/        Static project website (landing page, docs, playground)
 | Development setup and conventions | [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md), [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Architecture and module map | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | HTTP API reference | [docs/API.md](docs/API.md) |
+| Memory, traces and improvement request/response contracts | [docs/LEARNING_API.md](docs/LEARNING_API.md) |
 | Data model and local storage | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) |
 | Configuration and environment variables | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
 | Tools, permissions, MCP, Skills | [docs/TOOLS_AND_MCP.md](docs/TOOLS_AND_MCP.md) |
 | Traces, memory, evals, self-improvement | [docs/LEARNING_LOOP.md](docs/LEARNING_LOOP.md) |
 | System diagrams and editable source | [website/diagrams/README.md](website/diagrams/README.md) |
-| Product video recording script | [docs/DEMO_RECORDING.md](docs/DEMO_RECORDING.md) |
 | Testing and verification records | [docs/TESTING.md](docs/TESTING.md), [tests/README.md](tests/README.md) |
 | Website and deployment | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md), [website/README.md](website/README.md) |
 | Licenses | [docs/LICENSES.md](docs/LICENSES.md) |
@@ -115,6 +133,11 @@ website/        Static project website (landing page, docs, playground)
 Runs lint, backend tests, repository tests (examples, docs, hygiene), the MCP example,
 the website checker, frontend lint, unit tests, and the production build. It does not
 install dependencies or call model APIs.
+
+Python uses Ruff; the frontend uses strict TypeScript, Oxlint and Prettier. CI checks
+formatting and source size. Self-authored code (including tests, CSS and website scripts)
+has a hard 1000-line file limit; runtime modules target 450 lines, with documented existing
+exceptions that may only shrink. Dependency locks and upstream vendor assets are exempt.
 
 ## Status
 

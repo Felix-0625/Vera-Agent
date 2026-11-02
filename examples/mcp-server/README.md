@@ -15,7 +15,7 @@ It uses the [official MCP Python SDK](https://github.com/modelcontextprotocol/py
 From this directory:
 
 ```powershell
-uv run --with "mcp>=1.12,<2" mcp dev server.py
+uv run --with "mcp[cli]>=1.30,<2" mcp dev server.py
 ```
 
 The Inspector launches the server as a local stdio subprocess. Try `list_tasks` with no arguments, filter by `status`, then call `get_task` with `VA-102`.
@@ -23,10 +23,28 @@ The Inspector launches the server as a local stdio subprocess. Try `list_tasks` 
 ## Run the smoke check
 
 ```powershell
-uv run --with "mcp>=1.12,<2" python test_client.py
+uv run --with "mcp>=1.30,<2" python test_client.py
 ```
 
 The client performs a real local MCP handshake, lists the advertised tools, and makes four read-only calls, including a missing-task case. It verifies this example server only; it is not an integration test of VeraAgent's settings UI or a security certification.
+
+Expected output: `MCP stdio smoke check passed: tools/list and 4 read-only calls.` A failed
+assertion exits nonzero. The Inspector requires the SDK's `cli` extra; the smoke client does not.
+The `<2` bound deliberately keeps this example on the same SDK major as VeraAgent.
+
+## Connect to VeraAgent
+
+In **设置 → MCP**, add a stdio server using the absolute path to
+`<checkout>/vera-agent/.venv/Scripts/python.exe` as the command, and the absolute path to
+`<checkout>/examples/mcp-server/server.py` as its single argument. Do not enter literal
+`<checkout>` placeholders. The server needs no environment variables, headers or API key.
+
+After connecting, require tool discovery to show `list_tasks` and `get_task`. Calling
+`list_tasks` returns three fixture tasks; `get_task` with `VA-102` returns one, and an unknown
+id returns null. These are embedded fixtures, not your app's current task board.
+
+The sample server writes no files. Stop the Inspector/client to end its subprocess; remove
+the MCP entry from settings to disconnect it. Running it again starts with the same fixture.
 
 ## Review boundary
 

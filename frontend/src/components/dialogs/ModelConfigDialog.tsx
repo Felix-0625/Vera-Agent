@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
 import { Activity, Save } from 'lucide-react';
-import { useLayoutStore } from '../../stores/layoutStore';
-import { Modal } from '../common/Modal';
-import { Button } from '../common/Button';
+import React, { useEffect, useState } from 'react';
 import { createModel, patchModel, testModelConnection } from '../../api/settingsApi';
+import { useLayoutStore } from '../../stores/layoutStore';
 import { ModelConfig, ModelProvider } from '../../types/settings';
+import { Button } from '../common/Button';
+import { Modal } from '../common/Modal';
+import { ModelAdvancedParams } from './ModelAdvancedParams';
 import { ModelBasicFields } from './ModelBasicFields';
 import { getProviderBaseUrl } from './modelProviders';
-import { ModelAdvancedParams } from './ModelAdvancedParams';
-
 
 export const ModelConfigDialog: React.FC = () => {
   const { modelConfigOpen, closeModelConfig, editingModel, notifyModelCatalogChanged } = useLayoutStore();
@@ -58,8 +57,13 @@ export const ModelConfigDialog: React.FC = () => {
       setApiKey('');
       setMaxTokens(8192);
       setTemperature(0.2);
-      setContextWindow(''); setOutputTokens(''); setMaxToolCalls(500);
-      setSupportsImages(true); setThinkingMode('auto'); setTopP(''); setTopK('');
+      setContextWindow('');
+      setOutputTokens('');
+      setMaxToolCalls(500);
+      setSupportsImages(true);
+      setThinkingMode('auto');
+      setTopP('');
+      setTopK('');
     }
     setAdvancedOpen(false);
     setTestResult(null);
@@ -87,14 +91,17 @@ export const ModelConfigDialog: React.FC = () => {
       });
       setTestResult({
         success: res.success,
-        msg: res.success ? (res.message || '连通性验证成功！') : (res.error || '连通失败'),
+        msg: res.success ? res.message || '连通性验证成功！' : res.error || '连通失败',
       });
     } catch (error) {
       setTestResult({
         success: false,
-        msg: error instanceof DOMException && error.name === 'AbortError'
-          ? '连接测试超时（12 秒），请检查请求地址、网络和密钥。'
-          : error instanceof Error ? `连接测试失败：${error.message}` : '连接测试失败，请检查请求地址和模型配置。',
+        msg:
+          error instanceof DOMException && error.name === 'AbortError'
+            ? '连接测试超时（12 秒），请检查请求地址、网络和密钥。'
+            : error instanceof Error
+              ? `连接测试失败：${error.message}`
+              : '连接测试失败，请检查请求地址和模型配置。',
       });
     } finally {
       setTesting(false);
@@ -132,7 +139,14 @@ export const ModelConfigDialog: React.FC = () => {
 
     try {
       if (editingModel) await patchModel(modelId, payload);
-      else await createModel({ ...payload, id: modelId, name: name.trim(), provider, display_name: displayName.trim() || name.trim() } as ModelConfig);
+      else
+        await createModel({
+          ...payload,
+          id: modelId,
+          name: name.trim(),
+          provider,
+          display_name: displayName.trim() || name.trim(),
+        } as ModelConfig);
       notifyModelCatalogChanged();
       closeModelConfig();
     } catch (error) {
@@ -168,12 +182,20 @@ export const ModelConfigDialog: React.FC = () => {
           onToggle={() => setAdvancedOpen(!advancedOpen)}
           temperature={temperature}
           setTemperature={setTemperature}
-          contextWindow={contextWindow} setContextWindow={setContextWindow}
-          outputTokens={outputTokens} setOutputTokens={setOutputTokens}
-          maxToolCalls={maxToolCalls} setMaxToolCalls={setMaxToolCalls}
-          supportsImages={supportsImages} setSupportsImages={setSupportsImages}
-          thinkingMode={thinkingMode} setThinkingMode={setThinkingMode}
-          topP={topP} setTopP={setTopP} topK={topK} setTopK={setTopK}
+          contextWindow={contextWindow}
+          setContextWindow={setContextWindow}
+          outputTokens={outputTokens}
+          setOutputTokens={setOutputTokens}
+          maxToolCalls={maxToolCalls}
+          setMaxToolCalls={setMaxToolCalls}
+          supportsImages={supportsImages}
+          setSupportsImages={setSupportsImages}
+          thinkingMode={thinkingMode}
+          setThinkingMode={setThinkingMode}
+          topP={topP}
+          setTopP={setTopP}
+          topK={topK}
+          setTopK={setTopK}
         />
 
         {testResult && (
@@ -190,38 +212,38 @@ export const ModelConfigDialog: React.FC = () => {
           </div>
         )}
         {formError && (
-          <div role="alert" style={{ padding: 'var(--space-2) var(--space-3)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--font-size-sm)', backgroundColor: 'var(--bg-danger-soft)', color: 'var(--accent-rose)' }}>
+          <div
+            role="alert"
+            style={{
+              padding: 'var(--space-2) var(--space-3)',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: 'var(--font-size-sm)',
+              backgroundColor: 'var(--bg-danger-soft)',
+              color: 'var(--accent-rose)',
+            }}
+          >
             {formError}
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'var(--space-2-5)' }}>
-          <Button
-            type="button"
-            onClick={handleTest}
-            disabled={testing}
-            variant="secondary"
-            size="sm"
-          >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginTop: 'var(--space-2-5)',
+          }}
+        >
+          <Button type="button" onClick={handleTest} disabled={testing} variant="secondary" size="sm">
             <Activity size={13} />
             <span>{testing ? '测试中...' : '测试连通性'}</span>
           </Button>
 
           <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-            <Button
-              type="button"
-              onClick={closeModelConfig}
-              variant="ghost"
-              size="sm"
-            >
+            <Button type="button" onClick={closeModelConfig} variant="ghost" size="sm">
               取消
             </Button>
-            <Button
-              type="button"
-              onClick={handleSave}
-              variant="primary"
-              size="sm"
-            >
+            <Button type="button" onClick={handleSave} variant="primary" size="sm">
               <Save size={13} />
               <span>保存配置</span>
             </Button>

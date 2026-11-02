@@ -6,7 +6,7 @@ VeraAgent is distributed as source on GitHub and run from a local checkout. Ther
 
 - Windows 10 or 11.
 - Git for Windows.
-- Node.js 20 or newer with npm.
+- Node.js 24 LTS with npm (also supported: 20.19+ or 22.12+).
 - Python 3.10 or newer.
 - [uv](https://docs.astral.sh/uv/) 0.11 or newer (CI uses 0.11.15).
 - Microsoft Edge WebView2 Runtime.
@@ -17,8 +17,8 @@ VeraAgent is distributed as source on GitHub and run from a local checkout. Ther
 In PowerShell, run:
 
 ```powershell
-git clone https://github.com/Felix-0625/Agents.git
-cd Agents\frontend
+git clone https://github.com/Felix-0625/Vera-Agent.git
+cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent
 uv sync --locked --no-dev --extra desktop

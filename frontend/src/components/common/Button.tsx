@@ -24,9 +24,7 @@ export const Button: React.FC<ButtonProps> = ({
     {...props}
     type={type}
     disabled={disabled}
-    className={['ui-button', `ui-button--${variant}`, `ui-button--${size}`, className]
-      .filter(Boolean)
-      .join(' ')}
+    className={['ui-button', `ui-button--${variant}`, `ui-button--${size}`, className].filter(Boolean).join(' ')}
     style={{ opacity: disabled ? 0.55 : undefined, ...style }}
   >
     {icon}

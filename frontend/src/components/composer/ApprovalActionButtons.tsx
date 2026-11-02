@@ -1,12 +1,11 @@
+import { Check, Edit2, X } from 'lucide-react';
 import React, { useState } from 'react';
-import { Check, X, Edit2 } from 'lucide-react';
-import { TextInput } from '../common/Field';
 import { Button } from '../common/Button';
+import { TextInput } from '../common/Field';
 
 interface ApprovalActionButtonsProps {
   onConfirm: (action: string) => void;
 }
-
 
 export const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({ onConfirm }) => {
   const [overrideText, setOverrideText] = useState('');
@@ -30,38 +29,27 @@ export const ApprovalActionButtons: React.FC<ApprovalActionButtonsProps> = ({ on
           placeholder="输入修正指令或执行反馈 (Override)..."
           className="approval-override-input"
         />
-        <Button onClick={handleOverrideSubmit} variant="primary" size="sm">提交修正</Button>
-        <Button onClick={() => setShowOverrideInput(false)} variant="ghost" size="sm">取消</Button>
+        <Button onClick={handleOverrideSubmit} variant="primary" size="sm">
+          提交修正
+        </Button>
+        <Button onClick={() => setShowOverrideInput(false)} variant="ghost" size="sm">
+          取消
+        </Button>
       </div>
     );
   }
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', justifyContent: 'flex-end' }}>
-      <Button
-        onClick={() => onConfirm('Y')}
-        variant="success"
-        size="sm"
-        icon={<Check size={14} />}
-      >
+      <Button onClick={() => onConfirm('Y')} variant="success" size="sm" icon={<Check size={14} />}>
         批准执行 (Y)
       </Button>
 
-      <Button
-        onClick={() => onConfirm('N')}
-        variant="danger"
-        size="sm"
-        icon={<X size={14} />}
-      >
+      <Button onClick={() => onConfirm('N')} variant="danger" size="sm" icon={<X size={14} />}>
         驳回操作 (N)
       </Button>
 
-      <Button
-        onClick={() => setShowOverrideInput(true)}
-        variant="secondary"
-        size="sm"
-        icon={<Edit2 size={13} />}
-      >
+      <Button onClick={() => setShowOverrideInput(true)} variant="secondary" size="sm" icon={<Edit2 size={13} />}>
         修改执行 (O)
       </Button>
     </div>

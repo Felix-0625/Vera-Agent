@@ -1,16 +1,17 @@
 import React, { Suspense, useRef, useState } from 'react';
 import { useChatStore } from '../../stores/chatStore';
-import { WorkspaceHeader } from './WorkspaceHeader';
-import { WelcomeBanner } from './WelcomeBanner';
-import { MessageStream } from './MessageStream';
+import { useLayoutStore } from '../../stores/layoutStore';
 import { ApprovalBanner } from './ApprovalBanner';
+import { MessageStream } from './MessageStream';
 import { ProjectCapsule } from './ProjectCapsule';
 import { SignatureInputCard } from './SignatureInputCard';
+import { WelcomeBanner } from './WelcomeBanner';
+import { WorkspaceHeader } from './WorkspaceHeader';
 import { readImageFiles } from './imageAttachments';
-import { useLayoutStore } from '../../stores/layoutStore';
 
-const TerminalTab = React.lazy(() => import('../tools/TerminalTab').then((module) => ({ default: module.TerminalTab })));
-
+const TerminalTab = React.lazy(() =>
+  import('../tools/TerminalTab').then((module) => ({ default: module.TerminalTab })),
+);
 
 export const CenterWorkspace: React.FC = () => {
   const messages = useChatStore((state) => state.messages);
@@ -27,7 +28,10 @@ export const CenterWorkspace: React.FC = () => {
     const move = (moveEvent: PointerEvent) => {
       if (!resizeStart.current || !mainRef.current) return;
       const max = Math.floor(mainRef.current.clientHeight * 0.4);
-      const height = Math.max(130, Math.min(max, resizeStart.current.height + resizeStart.current.y - moveEvent.clientY));
+      const height = Math.max(
+        130,
+        Math.min(max, resizeStart.current.height + resizeStart.current.y - moveEvent.clientY),
+      );
       setBottomDrawerHeight(height);
     };
     const end = () => {
@@ -40,10 +44,28 @@ export const CenterWorkspace: React.FC = () => {
   };
 
   const terminalDrawer = (
-    <div className="center-terminal-drawer" style={{ height: bottomDrawerHeight, flexBasis: bottomDrawerHeight, maxHeight: '40%' }}>
-      <div className="center-terminal-resize" onPointerDown={startResize} title="拖动调整终端高度" aria-label="调整终端高度" />
+    <div
+      className="center-terminal-drawer"
+      style={{ height: bottomDrawerHeight, flexBasis: bottomDrawerHeight, maxHeight: '40%' }}
+    >
+      <div
+        className="center-terminal-resize"
+        onPointerDown={startResize}
+        title="拖动调整终端高度"
+        aria-label="调整终端高度"
+      />
       <div style={{ height: 'calc(100% - 6px)', minHeight: 0 }}>
-        <Suspense fallback={<div role="status" aria-live="polite" style={{ padding: 'var(--space-3)', color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}>正在加载终端…</div>}>
+        <Suspense
+          fallback={
+            <div
+              role="status"
+              aria-live="polite"
+              style={{ padding: 'var(--space-3)', color: 'var(--text-muted)', fontSize: 'var(--font-size-sm)' }}
+            >
+              正在加载终端…
+            </div>
+          }
+        >
           <TerminalTab onClose={toggleBottomDrawer} />
         </Suspense>
       </div>
@@ -78,15 +100,34 @@ export const CenterWorkspace: React.FC = () => {
       }}
       onDragEnter={handleDragOver}
       onDragOver={handleDragOver}
-      onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingImage(false); }}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingImage(false);
+      }}
       onDrop={handleDrop}
     >
-      {isDraggingImage && <div style={{ position: 'absolute', inset: 10, zIndex: 80, borderRadius: 'var(--radius-xl)', border: '1px dashed var(--accent-cyan)', background: 'var(--bg-info-soft)', display: 'grid', placeItems: 'center', color: 'var(--text-primary)', fontSize: 'var(--font-size-md)', pointerEvents: 'none' }}>松开鼠标添加图片</div>}
+      {isDraggingImage && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 10,
+            zIndex: 80,
+            borderRadius: 'var(--radius-xl)',
+            border: '1px dashed var(--accent-cyan)',
+            background: 'var(--bg-info-soft)',
+            display: 'grid',
+            placeItems: 'center',
+            color: 'var(--text-primary)',
+            fontSize: 'var(--font-size-md)',
+            pointerEvents: 'none',
+          }}
+        >
+          松开鼠标添加图片
+        </div>
+      )}
       {}
       <WorkspaceHeader />
 
       {messages.length === 0 ? (
-
         <div
           style={{
             flex: 1,
@@ -106,7 +147,6 @@ export const CenterWorkspace: React.FC = () => {
           <ApprovalBanner />
         </div>
       ) : (
-
         <>
           <div
             style={{
@@ -151,9 +191,7 @@ export const CenterWorkspace: React.FC = () => {
         </>
       )}
 
-      {messages.length === 0 && bottomDrawerOpen && (
-        terminalDrawer
-      )}
+      {messages.length === 0 && bottomDrawerOpen && terminalDrawer}
     </main>
   );
 };

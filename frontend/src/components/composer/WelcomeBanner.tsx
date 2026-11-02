@@ -27,7 +27,7 @@ export const WelcomeBanner: React.FC = () => {
           margin: 0,
         }}
       >
-        开  始  创  造  吧  ！
+        开 始 创 造 吧 ！
       </h1>
     </div>
   );

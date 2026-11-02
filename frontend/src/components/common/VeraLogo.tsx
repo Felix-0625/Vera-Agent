@@ -6,7 +6,6 @@ interface VeraLogoProps {
   className?: string;
 }
 
-
 export const VeraLogo: React.FC<VeraLogoProps> = ({ size = 24, className = '' }) => {
   return (
     <img

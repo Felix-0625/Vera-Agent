@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import React, { useEffect } from 'react';
 import { IconButton } from './IconButton';
 
 interface ModalProps {
@@ -70,29 +70,41 @@ export const Modal: React.FC<ModalProps> = ({
           overflow: 'hidden',
         }}
       >
-        {!hideHeader && <div
-          style={{
-            padding: 'var(--space-4) var(--space-5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid var(--border-subtle)',
-            ...headerStyle,
-          }}
-        >
-          <h3 id={titleId} style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, color: 'var(--text-primary)', ...titleStyle }}>
-            {title}
-          </h3>
-          <IconButton label="关闭" onClick={onClose} size="sm">
+        {!hideHeader && (
+          <div
+            style={{
+              padding: 'var(--space-4) var(--space-5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              borderBottom: '1px solid var(--border-subtle)',
+              ...headerStyle,
+            }}
+          >
+            <h3
+              id={titleId}
+              style={{ fontSize: 'var(--font-size-lg)', fontWeight: 600, color: 'var(--text-primary)', ...titleStyle }}
+            >
+              {title}
+            </h3>
+            <IconButton label="关闭" onClick={onClose} size="sm">
+              <X size={18} />
+            </IconButton>
+          </div>
+        )}
+        {hideHeader && (
+          <IconButton
+            label="关闭"
+            onClick={onClose}
+            size="sm"
+            style={{ position: 'absolute', top: 12, right: 14, zIndex: 2, background: 'var(--bg-card-hover)' }}
+          >
             <X size={18} />
           </IconButton>
-        </div>}
-        {hideHeader && <IconButton label="关闭" onClick={onClose} size="sm" style={{ position: 'absolute', top: 12, right: 14, zIndex: 2, background: 'var(--bg-card-hover)' }}><X size={18} /></IconButton>}
+        )}
 
         {/* Content */}
-        <div style={{ padding: 'var(--space-5)', overflowY: 'auto', flex: 1, ...contentStyle }}>
-          {children}
-        </div>
+        <div style={{ padding: 'var(--space-5)', overflowY: 'auto', flex: 1, ...contentStyle }}>{children}</div>
 
         {/* Footer */}
         {footer && (

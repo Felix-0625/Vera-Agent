@@ -29,7 +29,8 @@ import sys
 import tempfile
 import urllib.error
 import urllib.request
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -61,18 +62,19 @@ def http_caller(base_url: str) -> Caller:
     return call
 
 
-def in_process_caller(data_root: Path) -> Caller:
+@contextmanager
+def in_process_caller(data_root: Path) -> Iterator[Caller]:
     """Call an in-process app whose application data lives in ``data_root``."""
     from starlette.testclient import TestClient
     from vera_agent.server.app import create_app
 
-    client = TestClient(create_app(repo_root=data_root))
+    with TestClient(create_app(repo_root=data_root)) as client:
 
-    def call(method: str, path: str, body: dict[str, Any] | None) -> tuple[int, dict[str, Any]]:
-        response = client.request(method, path, json=body)
-        return response.status_code, response.json()
+        def call(method: str, path: str, body: dict[str, Any] | None) -> tuple[int, dict[str, Any]]:
+            response = client.request(method, path, json=body)
+            return response.status_code, response.json()
 
-    return call
+        yield call
 
 
 def load_templates() -> list[dict[str, Any]]:
@@ -101,7 +103,53 @@ def setup_demo(call: Caller, project_path: Path = DEMO_PROJECT, create_run: bool
         saved[template["template_id"]] = response["template"]
 
     workflow = json.loads((TEMPLATES_DIR / WORKFLOW_TEMPLATE).read_text(encoding="utf-8"))
-    instance = _expect(
+    groups = _expect(*call("GET", f"/api/groups?project_id={project_id}", None), 200, "Find example instance")["groups"]
+    instance = next(
+        (
+            group
+            for group in groups
+            if group.get("template_id") == workflow["template_id"] and group.get("name") == workflow["name"]
+        ),
+        None,
+    )
+    reused = instance is not None
+    if instance is None:
+        instance = _create_instance(call, project_id, project_path, workflow)
+
+    tasks = _expect(*call("GET", f"/api/taskboard/tasks?project_id={project_id}", None), 200, "Find example task")[
+        "items"
+    ]
+    task = next((item for item in tasks if "example:workflow-quickstart" in item.get("labels", [])), None)
+    if task is None:
+        task = _create_task(call, project_id, workflow)
+
+    result: dict[str, Any] = {
+        "project_id": project_id,
+        "template_ids": sorted(saved),
+        "group_id": instance["group_id"],
+        "task_identifier": task["identifier"],
+        "suggested_input": f"调用工作流 {workflow['name']}，{DEMO_INPUT}",
+        "reused_instance": reused,
+        "executed": False,
+        "model_calls": 0,
+    }
+    if create_run:
+        run = _expect(
+            *call(
+                "POST",
+                f"/api/groups/{instance['group_id']}/runs",
+                {"project_id": project_id, "confirmation": "Y", "input": DEMO_INPUT},
+            ),
+            201,
+            "Create run",
+        )["run"]
+        result["run_id"] = run["run_id"]
+        result["run_nodes"] = [node["node_id"] for node in run["nodes"]]
+    return result
+
+
+def _create_instance(call: Caller, project_id: str, project_path: Path, workflow: dict) -> dict:
+    return _expect(
         *call(
             "POST",
             "/api/groups/instances",
@@ -121,7 +169,9 @@ def setup_demo(call: Caller, project_path: Path = DEMO_PROJECT, create_run: bool
         "Create workflow instance",
     )["group"]
 
-    task = _expect(
+
+def _create_task(call: Caller, project_id: str, workflow: dict) -> dict:
+    return _expect(
         *call(
             "POST",
             "/api/taskboard/tasks",
@@ -131,33 +181,12 @@ def setup_demo(call: Caller, project_path: Path = DEMO_PROJECT, create_run: bool
                 "description": f"运行工作流「{workflow['name']}」，输入：{DEMO_INPUT}",
                 "status": "todo",
                 "priority": "medium",
-                "labels": ["demo", "workflow"],
+                "labels": ["demo", "workflow", "example:workflow-quickstart"],
             },
         ),
         201,
         "Create task board item",
     )["item"]
-
-    result: dict[str, Any] = {
-        "project_id": project_id,
-        "template_ids": sorted(saved),
-        "group_id": instance["group_id"],
-        "task_identifier": task["identifier"],
-        "suggested_input": DEMO_INPUT,
-    }
-    if create_run:
-        run = _expect(
-            *call(
-                "POST",
-                f"/api/groups/{instance['group_id']}/runs",
-                {"project_id": project_id, "confirmation": "Y", "input": DEMO_INPUT},
-            ),
-            201,
-            "Create run",
-        )["run"]
-        result["run_id"] = run["run_id"]
-        result["run_nodes"] = [node["node_id"] for node in run["nodes"]]
-    return result
 
 
 def main() -> int:
@@ -165,16 +194,31 @@ def main() -> int:
     parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="VeraAgent API URL")
     parser.add_argument("--dry-run", action="store_true", help="use an in-process app with a temporary data root")
     parser.add_argument("--create-run", action="store_true", help="also create (not execute) a run record")
+    parser.add_argument(
+        "--workspace",
+        type=Path,
+        default=EXAMPLE_DIR.parents[1] / "scratch" / "examples" / "workflow-quickstart",
+        help="Writable live demo copy (the committed fixture is never bound)",
+    )
     args = parser.parse_args()
 
     if args.dry_run:
         with tempfile.TemporaryDirectory(prefix="vera-quickstart-") as temporary:
             # Binding writes `<project>/.agents/`, so dry runs work on a copy of the demo project.
             project_copy = Path(temporary) / "demo-project"
-            shutil.copytree(DEMO_PROJECT, project_copy)
-            result = setup_demo(in_process_caller(Path(temporary) / "app-data"), project_copy, create_run=True)
+            shutil.copytree(DEMO_PROJECT, project_copy, ignore=shutil.ignore_patterns(".agents"))
+            with in_process_caller(Path(temporary) / "app-data") as call:
+                result = setup_demo(call, project_copy, create_run=True)
     else:
-        result = setup_demo(http_caller(args.base_url), create_run=args.create_run)
+        workspace = args.workspace.resolve()
+        if workspace == DEMO_PROJECT.resolve():
+            parser.error("--workspace must not be the committed demo-project fixture")
+        if not workspace.exists():
+            shutil.copytree(DEMO_PROJECT, workspace, ignore=shutil.ignore_patterns(".agents"))
+        elif not (workspace / "requirements.md").is_file() or not (workspace / "AGENTS.md").is_file():
+            parser.error("--workspace already exists and is not a prepared example project")
+        result = setup_demo(http_caller(args.base_url), workspace, create_run=args.create_run)
+        result["workspace"] = str(workspace)
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0
 

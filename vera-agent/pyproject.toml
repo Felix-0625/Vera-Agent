@@ -78,9 +78,9 @@ desktop = [
 ]
 
 [project.urls]
-Documentation = "https://github.com/Felix-0625/Agents/tree/main/docs"
-Repository = "https://github.com/Felix-0625/Agents"
-"Bug Tracker" = "https://github.com/Felix-0625/Agents/issues"
+Documentation = "https://github.com/Felix-0625/Vera-Agent/tree/main/docs"
+Repository = "https://github.com/Felix-0625/Vera-Agent"
+"Bug Tracker" = "https://github.com/Felix-0625/Vera-Agent/issues"
 
 [project.scripts]
 # `vera`/`vera-agent` run the inherited single-agent CLI. The `mini*` aliases are kept

@@ -18,6 +18,8 @@ interface FilePreviewState {
 
 export const useFilePreviewStore = create<FilePreviewState>((set) => ({
   previewsByProject: {},
-  showPreview: (projectKey, preview) => set((state) => ({ previewsByProject: { ...state.previewsByProject, [projectKey]: preview } })),
-  closePreview: (projectKey) => set((state) => ({ previewsByProject: { ...state.previewsByProject, [projectKey]: null } })),
+  showPreview: (projectKey, preview) =>
+    set((state) => ({ previewsByProject: { ...state.previewsByProject, [projectKey]: preview } })),
+  closePreview: (projectKey) =>
+    set((state) => ({ previewsByProject: { ...state.previewsByProject, [projectKey]: null } })),
 }));

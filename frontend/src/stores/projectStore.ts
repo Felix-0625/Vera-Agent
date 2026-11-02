@@ -4,15 +4,15 @@
  * Backend: `/api/projects*` and `/api/groups` through api/projectApi.ts.
  */
 import { create } from 'zustand';
-import { Project, Group } from '../types/project';
 import {
-  fetchProjects,
-  fetchCurrentProject,
   bindProjectFolder,
   deleteProjectHistory,
+  fetchCurrentProject,
   fetchGroups,
+  fetchProjects,
   updateProject,
 } from '../api/projectApi';
+import { Group, Project } from '../types/project';
 
 interface ProjectState {
   currentProject: Project | null;
@@ -68,7 +68,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   deleteProject: async (id: string) => {
-    const removed = get().projectsHistory.find(project => project.id === id);
+    const removed = get().projectsHistory.find((project) => project.id === id);
     const current = get().currentProject;
     await deleteProjectHistory(id);
     if (current?.id === id || (removed && current?.repo_root === removed.path)) set({ currentProject: null });

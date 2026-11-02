@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { provisionGroup } from '../../api/projectApi';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useProjectStore } from '../../stores/projectStore';
-import { Modal } from '../common/Modal';
-import { SelectField, TextArea, TextInput } from '../common/Field';
 import { Button } from '../common/Button';
-import { provisionGroup } from '../../api/projectApi';
+import { SelectField, TextArea, TextInput } from '../common/Field';
+import { Modal } from '../common/Modal';
 
 export const ProvisionGroupDialog: React.FC = () => {
   const { provisionGroupOpen, setProvisionGroupOpen } = useLayoutStore();
@@ -44,19 +44,30 @@ export const ProvisionGroupDialog: React.FC = () => {
     >
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3-5)' }}>
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 'var(--space-1-5)' }}>
+          <label
+            style={{
+              display: 'block',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 600,
+              color: 'var(--text-muted)',
+              marginBottom: 'var(--space-1-5)',
+            }}
+          >
             分组名称 (Group Name)
           </label>
-          <TextInput
-            type="text"
-            required
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-          />
+          <TextInput type="text" required value={groupName} onChange={(e) => setGroupName(e.target.value)} />
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 'var(--space-1-5)' }}>
+          <label
+            style={{
+              display: 'block',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 600,
+              color: 'var(--text-muted)',
+              marginBottom: 'var(--space-1-5)',
+            }}
+          >
             Git 隔离工作树分支 (Branch Name)
           </label>
           <TextInput
@@ -69,39 +80,45 @@ export const ProvisionGroupDialog: React.FC = () => {
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 'var(--space-1-5)' }}>
+          <label
+            style={{
+              display: 'block',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 600,
+              color: 'var(--text-muted)',
+              marginBottom: 'var(--space-1-5)',
+            }}
+          >
             协作拓扑模板 (Multi-Agent Topology)
           </label>
-          <SelectField
-            value={templateId}
-            onChange={(e) => setTemplateId(e.target.value)}
-          >
+          <SelectField value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
             <option value="supervisor_dev">架构主管-双开发者 (Supervisor-Devs)</option>
             <option value="parallel_peers">并行同级对等组 (Parallel Peers)</option>
           </SelectField>
         </div>
 
         <div>
-          <label style={{ display: 'block', fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 'var(--space-1-5)' }}>
+          <label
+            style={{
+              display: 'block',
+              fontSize: 'var(--font-size-sm)',
+              fontWeight: 600,
+              color: 'var(--text-muted)',
+              marginBottom: 'var(--space-1-5)',
+            }}
+          >
             业务总目标 (Goal & Acceptance Criteria)
           </label>
-          <TextArea
-            rows={3}
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-          />
+          <TextArea rows={3} value={goal} onChange={(e) => setGoal(e.target.value)} />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2-5)', marginTop: 'var(--space-2)' }}>
+        <div
+          style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2-5)', marginTop: 'var(--space-2)' }}
+        >
           <Button type="button" onClick={() => setProvisionGroupOpen(false)} variant="ghost" size="sm">
             取消
           </Button>
-          <Button
-            type="submit"
-            disabled={loading}
-            variant="primary"
-            size="sm"
-          >
+          <Button type="submit" disabled={loading} variant="primary" size="sm">
             {loading ? '正在编排分支...' : '立即编排并创建'}
           </Button>
         </div>

@@ -1,0 +1,572 @@
+@media (max-width: 1050px) {
+  :is(.content-page, .playground-shell) .topbar {
+    height: 190px;
+  }
+  :is(.content-page, .playground-shell) .nav-shell {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  :is(.content-page, .playground-shell) .header-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  :is(.content-page, .playground-shell) .nav-shell > .main-nav {
+    grid-column: 1/-1;
+    grid-row: 2;
+    justify-self: center;
+    margin-top: 18px;
+  }
+  :is(.content-page, .playground-shell) .topbar.is-docked .nav-shell {
+    grid-template-columns: 150px minmax(0, 1fr);
+  }
+  :is(.content-page, .playground-shell)
+    .topbar.is-docked
+    .nav-shell
+    > .main-nav {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: stretch;
+    margin-top: 0;
+  }
+  .content-page .docs-layout {
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 30px;
+    padding-inline: 24px;
+  }
+  .penpot-landing .topbar:not(.is-docked) .header-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  :is(.content-page, .playground-shell) .topbar {
+    height: 75px;
+  }
+  :is(.content-page, .playground-shell) .nav-shell {
+    width: calc(100% - 24px);
+    height: 44px;
+    margin-top: 15px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  :is(.content-page, .playground-shell) .brand {
+    font-size: 17px;
+  }
+  :is(.content-page, .playground-shell) .brand img {
+    width: 38px;
+    height: 38px;
+  }
+  :is(.content-page, .playground-shell) .language-switch {
+    width: 105px;
+    height: 36px;
+  }
+  :is(.content-page, .playground-shell) .language-switch button {
+    width: 47px;
+    height: 28px;
+    font-size: 12px;
+  }
+  :is(.content-page, .playground-shell) .menu-toggle {
+    display: flex;
+  }
+  :is(.content-page, .playground-shell) .main-nav {
+    display: none;
+    width: auto;
+    height: auto;
+    position: absolute;
+    z-index: 10;
+    left: 0;
+    right: 0;
+    top: 59px;
+    margin: 0;
+    padding: 12px 18px;
+    border-radius: 0 0 16px 16px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  :is(.content-page, .playground-shell) .main-nav.is-open {
+    display: flex;
+  }
+  :is(.content-page, .playground-shell) .main-nav a,
+  :is(.content-page, .playground-shell) .main-nav .nav-link,
+  :is(.content-page, .playground-shell) .main-nav .nav-link:nth-child(3),
+  :is(.content-page, .playground-shell) .main-nav .nav-github {
+    width: 100%;
+    justify-content: flex-start;
+    margin: 0;
+    padding-inline: 16px;
+  }
+  :is(.content-page, .playground-shell) .topbar.is-docked .nav-shell {
+    width: calc(100% - 24px);
+    height: 58px;
+    margin-top: 8px;
+    padding: 0 10px;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  :is(.content-page, .playground-shell) .topbar.is-docked .header-actions {
+    display: flex;
+  }
+  :is(.content-page, .playground-shell) .topbar.is-docked .language-switch {
+    display: none;
+  }
+  :is(.content-page, .playground-shell) .topbar.is-docked .main-nav {
+    display: none;
+    width: calc(100% - 24px);
+    height: auto;
+    left: 12px;
+    right: 12px;
+    top: 64px;
+    padding: 12px;
+    border: 1px solid #ffffffed;
+    border-radius: 18px;
+    background: #f6f8fbf8;
+    box-shadow: 0 18px 42px #405d7b26;
+    backdrop-filter: blur(26px);
+    -webkit-backdrop-filter: blur(26px);
+  }
+  :is(.content-page, .playground-shell) .topbar.is-docked .main-nav.is-open {
+    display: flex;
+  }
+  .content-page .docs-layout {
+    display: block;
+    padding: 25px 16px 80px;
+  }
+  .penpot-landing .topbar.is-docked .header-actions {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .content-page .topbar.is-docked .nav-shell {
+    width: min(700px, calc(100% - 304px));
+    margin-left: 280px;
+    margin-right: 24px;
+    grid-template-columns: 124px minmax(0, 1fr);
+    padding-inline: 10px;
+    gap: 4px;
+  }
+  .content-page .topbar.is-docked .brand {
+    font-size: 15px;
+    gap: 7px;
+  }
+  .content-page .topbar.is-docked .brand img {
+    width: 30px;
+    height: 30px;
+  }
+  .content-page .topbar.is-docked .main-nav {
+    gap: 2px;
+    padding-inline: 2px;
+  }
+  .content-page .topbar.is-docked .main-nav a {
+    font-size: 12px;
+  }
+  .content-page .topbar.is-docked .main-nav .nav-link,
+  .content-page .topbar.is-docked .main-nav .nav-link:nth-child(3) {
+    width: 52px;
+  }
+  .content-page .topbar.is-docked .main-nav .nav-github {
+    width: 138px;
+    gap: 5px;
+  }
+  .content-page .topbar.is-docked .nav-github svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.markdown-document img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+/* The introduction shows the real desktop workspace; the demo page hosts the recording. */
+
+.penpot-workspace-preview {
+  height: auto;
+  padding: 16px;
+}
+
+.penpot-workspace-figure {
+  margin: 0;
+}
+
+.penpot-workspace-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 19px;
+  background: #f7f7f8;
+}
+
+.penpot-workspace-figure figcaption {
+  padding: 14px 8px 2px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.playground-video-heading {
+  margin-bottom: 22px;
+}
+
+.playground-video-card {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--panel);
+  box-shadow: 0 20px 50px #465e7b12;
+}
+
+.playground-video-card video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: 12px;
+  background: #10141d;
+  object-fit: contain;
+}
+
+.playground-video-note {
+  max-width: 900px;
+  margin: 16px auto 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.playground-video-note a {
+  color: var(--accent);
+}
+
+@media (max-width: 700px) {
+  .penpot-workspace-preview {
+    padding: 9px;
+  }
+  .penpot-workspace-figure img {
+    border-radius: 12px;
+  }
+  .penpot-workspace-figure figcaption {
+    font-size: 11px;
+  }
+  .playground-video-card {
+    padding: 6px;
+    border-radius: 13px;
+  }
+  .playground-video-card video {
+    border-radius: 8px;
+  }
+  .playground-video-note {
+    font-size: 11px;
+    text-align: left;
+  }
+}
+
+/* The introduction and reading pages share a compact three-route capsule. */
+
+.penpot-landing .nav-shell {
+  grid-template-columns: 350px 650px minmax(0, 1fr);
+}
+
+.penpot-landing .main-nav,
+:is(.content-page) .main-nav {
+  width: 650px;
+  padding-inline: 18px;
+  gap: 8px;
+}
+
+.penpot-landing .main-nav .nav-link,
+.penpot-landing .main-nav .nav-link:nth-child(3),
+:is(.content-page) .main-nav .nav-link,
+:is(.content-page) .main-nav .nav-link:nth-child(3) {
+  width: 88px;
+}
+
+.penpot-landing .main-nav .nav-github,
+:is(.content-page) .main-nav .nav-github {
+  margin-left: auto;
+}
+
+.satellite-one {
+  left: 50px;
+  top: 276px;
+}
+
+.satellite-two {
+  left: 485px;
+  top: 91px;
+}
+
+.satellite-three {
+  left: 548px;
+  top: 472px;
+}
+
+:is(.content-page) .nav-shell {
+  grid-template-columns: minmax(250px, 1.2fr) minmax(0, 650px) minmax(
+      140px,
+      0.8fr
+    );
+}
+
+.penpot-landing .topbar.is-docked .nav-shell,
+:is(.content-page) .topbar.is-docked .nav-shell {
+  width: min(800px, calc(100% - 48px));
+  grid-template-columns: 175px minmax(0, 1fr);
+}
+
+.penpot-landing .topbar.is-docked .main-nav,
+:is(.content-page) .topbar.is-docked .main-nav {
+  width: 100%;
+  padding-inline: 8px;
+}
+
+.penpot-landing .topbar.is-docked .main-nav .nav-link,
+.penpot-landing .topbar.is-docked .main-nav .nav-link:nth-child(3),
+:is(.content-page) .topbar.is-docked .main-nav .nav-link,
+:is(.content-page) .topbar.is-docked .main-nav .nav-link:nth-child(3) {
+  width: 80px;
+}
+
+.penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell {
+  width: min(1000px, calc(100% - 48px));
+  grid-template-columns: 175px minmax(0, 1fr) 128px;
+}
+
+.penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell:before {
+  right: 157px;
+}
+
+/* Evaluation process on the introduction page. */
+
+.penpot-actions-single .penpot-button {
+  min-width: 250px;
+}
+
+.product-showcase {
+  width: min(1280px, calc(100% - 64px));
+  margin: 100px auto 0;
+  padding: 54px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.product-showcase-head {
+  margin-bottom: 34px;
+}
+
+.product-showcase-head h2 {
+  margin: 0;
+  font-size: clamp(32px, 3.7vw, 52px);
+  font-weight: 720;
+  letter-spacing: -0.055em;
+  line-height: 1.16;
+}
+
+.product-showcase-head > p {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.55;
+  white-space: nowrap;
+}
+
+.evaluation-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.evaluation-step {
+  min-width: 0;
+  min-height: 150px;
+  padding: 20px 22px;
+  border: 1px solid #dce4ed;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 12px 28px #536a8309;
+}
+
+.evaluation-step-index {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.evaluation-step h3 {
+  margin: 15px 0 8px;
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.evaluation-step p {
+  margin: 0;
+  color: #465165;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.product-showcase-links {
+  display: flex;
+  gap: 24px;
+  margin-top: 20px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.product-showcase-links a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.content-page .docs-layout {
+  padding-bottom: 48px;
+}
+
+.content-page .footer-shell {
+  min-height: 0;
+  padding-block: 17px;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  align-content: stretch;
+  gap: 18px;
+}
+
+.content-page .footer-shell .brand {
+  grid-column: 1;
+  grid-row: 1;
+  font-size: 14px;
+}
+
+.content-page .footer-shell .brand img {
+  width: 26px;
+  height: 26px;
+}
+
+.content-page .footer-shell small {
+  grid-column: 2;
+  grid-row: 1;
+  padding: 0;
+  border: 0;
+  font-size: 11px;
+}
+
+.content-page .footer-shell nav {
+  grid-column: 3;
+  grid-row: 1;
+  gap: 20px;
+  font-size: 12px;
+}
+
+@media (max-width: 680px) {
+  .content-page .docs-layout {
+    padding-bottom: 40px;
+  }
+  .content-page .footer-shell {
+    grid-template-columns: 1fr auto;
+    gap: 7px 14px;
+  }
+  .content-page .footer-shell small {
+    grid-column: 1/-1;
+    grid-row: 2;
+  }
+  .content-page .footer-shell nav {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 1050px) {
+  .penpot-landing .nav-shell,
+  :is(.content-page) .nav-shell {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .penpot-landing .main-nav,
+  :is(.content-page) .main-nav {
+    width: min(650px, 100%);
+  }
+  .product-showcase {
+    width: calc(100% - 48px);
+  }
+  .product-showcase-head > p {
+    font-size: 15px;
+    white-space: normal;
+  }
+  .evaluation-flow {
+    gap: 12px;
+  }
+  .evaluation-step {
+    min-height: 150px;
+  }
+}
+
+@media (max-width: 700px) {
+  .penpot-landing .nav-shell,
+  :is(.content-page) .nav-shell {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .penpot-landing .main-nav,
+  :is(.content-page) .main-nav {
+    display: none;
+    width: auto;
+    padding: 12px 18px;
+  }
+  .penpot-landing .main-nav.is-open,
+  :is(.content-page) .main-nav.is-open {
+    display: flex;
+  }
+  .penpot-landing .topbar.is-docked .nav-shell,
+  :is(.content-page) .topbar.is-docked .nav-shell,
+  .penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell {
+    width: calc(100% - 24px);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .penpot-landing .topbar.is-docked:not(.is-language-hidden) .nav-shell:before {
+    right: 0;
+  }
+  .penpot-landing .topbar.is-docked .main-nav,
+  :is(.content-page) .topbar.is-docked .main-nav {
+    width: calc(100% - 24px);
+    padding: 12px;
+  }
+  .product-showcase {
+    width: calc(100% - 32px);
+    margin-top: 65px;
+    padding: 38px 0 0;
+  }
+  .product-showcase-head {
+    margin-bottom: 25px;
+  }
+  .product-showcase-head h2 {
+    font-size: 36px;
+  }
+  .product-showcase-head > p {
+    margin-top: 16px;
+    font-size: 14px;
+  }
+  .evaluation-flow {
+    grid-template-columns: 1fr;
+    gap: 9px;
+  }
+  .evaluation-step {
+    min-height: 0;
+    padding: 17px 18px;
+  }
+  .evaluation-step h3 {
+    margin-top: 12px;
+    font-size: 17px;
+  }
+  .evaluation-step p {
+    font-size: 14px;
+  }
+  .product-showcase-links {
+    font-size: 13px;
+  }
+}

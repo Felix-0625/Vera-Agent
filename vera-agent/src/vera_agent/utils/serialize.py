@@ -1,3 +1,5 @@
+"""JSON serialization of agent and model records."""
+
 from typing import Any
 
 UNSET = object()

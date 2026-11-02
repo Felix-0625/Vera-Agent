@@ -17,7 +17,9 @@ describe('extractWorkflowTaskInput', () => {
   });
 
   it('removes a trailing invocation clause and joins both sides of the name', () => {
-    expect(extractWorkflowTaskInput(`整理发布清单，调用工作流 ${name} 并给出风险`, name)).toBe('整理发布清单\n并给出风险');
+    expect(extractWorkflowTaskInput(`整理发布清单，调用工作流 ${name} 并给出风险`, name)).toBe(
+      '整理发布清单\n并给出风险',
+    );
   });
 
   it('falls back to the whole message when only the name and invocation remain', () => {

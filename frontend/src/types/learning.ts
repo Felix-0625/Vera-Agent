@@ -97,13 +97,7 @@ export interface PendingMemoryChange {
 }
 
 export type ProposalStatus =
-  | 'draft'
-  | 'gated'
-  | 'recommended'
-  | 'not_recommended'
-  | 'adopted'
-  | 'rejected'
-  | 'rolled_back';
+  'draft' | 'gated' | 'recommended' | 'not_recommended' | 'adopted' | 'rejected' | 'rolled_back';
 
 export interface GateStage {
   split: 'train' | 'holdout' | 'guard';

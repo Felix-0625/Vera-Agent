@@ -1,0 +1,1 @@
+"""Frontend contract regression tests."""

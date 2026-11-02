@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
 import { Folder } from 'lucide-react';
-import { useLayoutStore } from '../../stores/layoutStore';
-import { useChatStore } from '../../stores/chatStore';
-import { useProjectStore } from '../../stores/projectStore';
+import React, { useState } from 'react';
 import { updateThread } from '../../api/chatApi';
-import { Modal } from '../common/Modal';
+import { useChatStore } from '../../stores/chatStore';
+import { useLayoutStore } from '../../stores/layoutStore';
+import { useProjectStore } from '../../stores/projectStore';
 import { SearchField } from '../common/Field';
-
+import { Modal } from '../common/Modal';
 
 export const HistoryModal: React.FC = () => {
   const { historyOpen, setHistoryOpen } = useLayoutStore();
@@ -38,29 +37,48 @@ export const HistoryModal: React.FC = () => {
   };
 
   return (
-    <Modal
-      isOpen={historyOpen}
-      onClose={() => setHistoryOpen(false)}
-      title=""
-      width={680}
-    >
+    <Modal isOpen={historyOpen} onClose={() => setHistoryOpen(false)} title="" width={680}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3-5)' }}>
-        {actionError && <div role="alert" style={{ color: 'var(--accent-rose)', fontSize: 'var(--font-size-sm)' }}>{actionError}</div>}
+        {actionError && (
+          <div role="alert" style={{ color: 'var(--accent-rose)', fontSize: 'var(--font-size-sm)' }}>
+            {actionError}
+          </div>
+        )}
         {}
         <div>
           <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
             对话历史
           </h2>
-          <p style={{ fontSize: 'var(--font-size-control)', color: 'var(--text-muted)', marginTop: 'var(--space-1)', marginBottom: 0 }}>
+          <p
+            style={{
+              fontSize: 'var(--font-size-control)',
+              color: 'var(--text-muted)',
+              marginTop: 'var(--space-1)',
+              marginBottom: 0,
+            }}
+          >
             按最近活动查看并继续之前的工作
           </p>
         </div>
 
         {}
-        <SearchField aria-label="搜索对话" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索对话…" />
+        <SearchField
+          aria-label="搜索对话"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="搜索对话…"
+        />
 
         {}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1-5)', maxHeight: 420, overflowY: 'auto' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-1-5)',
+            maxHeight: 420,
+            overflowY: 'auto',
+          }}
+        >
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '48px var(--space-5)' }}>
               <div style={{ fontSize: 'var(--font-size-body)', fontWeight: 600, color: 'var(--text-primary)' }}>
@@ -86,16 +104,35 @@ export const HistoryModal: React.FC = () => {
                 }}
               >
                 <div>
-                  <div style={{ fontSize: 'var(--font-size-subheading)', fontWeight: 600, color: 'var(--text-primary)' }}>
+                  <div
+                    style={{ fontSize: 'var(--font-size-subheading)', fontWeight: 600, color: 'var(--text-primary)' }}
+                  >
                     {t.title || '对话'}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-1-5)', fontSize: 'var(--font-size-label)', color: 'var(--text-muted)', marginTop: 'var(--space-0-75)' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--space-1-5)',
+                      fontSize: 'var(--font-size-label)',
+                      color: 'var(--text-muted)',
+                      marginTop: 'var(--space-0-75)',
+                    }}
+                  >
                     <Folder size={12} color="var(--accent-cyan)" />
                     <span>{projectsHistory.find((project) => project.id === t.project_id)?.name || 'VeraAgent'}</span>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-3)',
+                    fontSize: 'var(--font-size-sm)',
+                    color: 'var(--text-muted)',
+                  }}
+                >
                   {t.is_archived && (
                     <button
                       onClick={(event) => void handleUnarchive(event, t.thread_id)}

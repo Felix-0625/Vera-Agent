@@ -1,3 +1,5 @@
+"""Execute agent commands inside Docker containers."""
+
 import base64
 import json
 import logging

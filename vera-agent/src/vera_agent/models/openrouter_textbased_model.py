@@ -1,3 +1,5 @@
+"""OpenRouter text-action protocol adapter."""
+
 import json
 import logging
 

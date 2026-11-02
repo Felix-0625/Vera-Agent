@@ -1,3 +1,5 @@
+"""Contree execution environment adapter."""
+
 import logging
 import os
 import platform

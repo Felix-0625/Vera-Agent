@@ -1,3 +1,5 @@
+"""OpenRouter model adapter and cost tracking."""
+
 import json
 import logging
 import os

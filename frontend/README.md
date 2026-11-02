@@ -14,6 +14,7 @@ Run from `frontend/` after `npm ci`:
 | `npm run build` | Type-check (`tsc -b`, including tests) and build `dist/` for the browser |
 | `npm run build:desktop` | Same, with `--mode desktop`: relative asset paths and an absolute API URL |
 | `npm run lint` | Oxlint (`.oxlintrc.json`) |
+| `npm run format` / `npm run format:check` | Apply/check Prettier formatting; CI runs the check |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
 | `npm run test:watch` | Vitest in watch mode |
 
@@ -48,7 +49,7 @@ src/
 │   └── tools/    Right-side tool panels: files, diff, terminal, Git, workflow, task board, MCP, Skills
 │                 (workflowRunner.ts holds the workflow/organization run scheduler, tested in Node)
 ├── stores/       zustand stores (state shapes are documented at the top of each file)
-├── styles/       tokens.css (design tokens, light/dark) and globals.css
+├── styles/       tokens.css and ordered global/ stylesheet modules imported by globals.css
 ├── types/        TypeScript mirrors of backend JSON (snake_case field names kept as-is)
 ├── App.tsx       Root layout
 └── main.tsx      Entry point
@@ -74,6 +75,9 @@ src/
   `main.tsx` (Vite convention) and `toolLauncherData.tsx` (a data table with JSX icons) are intentional exceptions.
 - Use design tokens from `styles/tokens.css` (`var(--text-primary)`, `var(--space-2)`, ...) instead of hard-coded colors.
 - UI copy is Chinese by design; code comments are English.
+- TypeScript `strict` is enabled. Keep JSX readable with Prettier; split responsibilities
+  instead of compressing code to satisfy size checks. Workflow controllers, views, canvas
+  and node components are separate modules; `WorkflowTab.tsx` remains the public entry.
 - Keep request/response types in `src/types/` aligned with the backend route and update
   [docs/API.md](../docs/API.md) when a contract changes.
 

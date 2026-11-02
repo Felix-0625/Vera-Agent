@@ -1,12 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { useChatStore } from '../../stores/chatStore';
-import { useToolTabsStore } from '../../stores/toolTabsStore';
-import { useSideChatStore } from '../../stores/sideChatStore';
 import { ensureRightSidebarOpen, getActiveConversationKey } from '../../stores/rightSidebarLayout';
+import { useSideChatStore } from '../../stores/sideChatStore';
+import { useToolTabsStore } from '../../stores/toolTabsStore';
 import { MessageItem } from './MessageItem';
 
 export const MessageStream: React.FC = () => {
-  const { messages, isStreaming, queuePaused, currentThinking, activeThreadId, threads, editAndResendMessage } = useChatStore();
+  const { messages, isStreaming, queuePaused, currentThinking, activeThreadId, threads, editAndResendMessage } =
+    useChatStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,7 +25,10 @@ export const MessageStream: React.FC = () => {
   };
 
   const streamingAssistantIndex = isStreaming ? messages.findLastIndex((message) => message.role === 'assistant') : -1;
-  const pendingUserIndex = streamingAssistantIndex >= 0 ? messages.findLastIndex((message, index) => index < streamingAssistantIndex && message.role === 'user') : -1;
+  const pendingUserIndex =
+    streamingAssistantIndex >= 0
+      ? messages.findLastIndex((message, index) => index < streamingAssistantIndex && message.role === 'user')
+      : -1;
   const thinkingText = currentThinking?.text || '';
   const streamLabel = thinkingText.startsWith('Working')
     ? '正在执行工具…'
@@ -34,9 +38,9 @@ export const MessageStream: React.FC = () => {
         ? '思考中…'
         : thinkingText.includes('启动子智能体')
           ? '正在启动子智能体…'
-      : thinkingText.includes('生成回答')
-        ? '生成中…'
-        : '准备中…';
+          : thinkingText.includes('生成回答')
+            ? '生成中…'
+            : '准备中…';
 
   return (
     <div
@@ -49,7 +53,18 @@ export const MessageStream: React.FC = () => {
       }}
     >
       {messages.map((message, index) => (
-        <MessageItem key={message.id || index} message={message} isStreaming={index === streamingAssistantIndex} streamLabel={streamLabel} onAskDetails={message.role === 'assistant' && Boolean(message.content) ? askForDetails : undefined} onEditMessage={queuePaused && index === pendingUserIndex && message.id && activeThreadId ? (_message, content) => editAndResendMessage(message.id!, content, message.extra?.images) : undefined} />
+        <MessageItem
+          key={message.id || index}
+          message={message}
+          isStreaming={index === streamingAssistantIndex}
+          streamLabel={streamLabel}
+          onAskDetails={message.role === 'assistant' && Boolean(message.content) ? askForDetails : undefined}
+          onEditMessage={
+            queuePaused && index === pendingUserIndex && message.id && activeThreadId
+              ? (_message, content) => editAndResendMessage(message.id!, content, message.extra?.images)
+              : undefined
+          }
+        />
       ))}
 
       <div ref={bottomRef} />

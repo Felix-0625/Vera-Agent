@@ -7,7 +7,7 @@ repository-level checks and the single entry point that runs everything.
 | --- | --- | --- | --- |
 | Backend unit/API | `vera-agent/tests/` | pytest | Agents, models, tools, sessions, every API route group (server/), workflow runs, task board |
 | Frontend unit | `frontend/src/**/*.test.ts` | Vitest | Pure logic and frontend/backend contracts (e.g. model provider allow-list) |
-| Repository | `tests/` (this folder) | pytest | Examples run end to end without a model, docs links resolve, API index is current, env vars documented, no secrets/residue, lockfiles tracked, comments in English |
+| Repository | `tests/` (this folder) | pytest | Examples run without paid providers, docs links resolve, API parameters are independently checked, env vars documented, no secrets/residue, lockfiles tracked, comments in English; all own-code files ≤1000 lines |
 | MCP example | `examples/mcp-server/test_client.py` | Python | Real MCP stdio handshake with the sample server |
 | Website | `website/check_site.py` | Python | Pages, local links, anchors, assets |
 
@@ -20,6 +20,10 @@ From the repository root on Windows (after the setup in [docs/DEVELOPMENT.md](..
 ```
 
 It stops at the first failure, does not install dependencies, and never calls a model API.
+
+The frontend step checks Prettier formatting, strict TypeScript, unused symbols, Oxlint,
+Vitest and the production build. The workflow example checks repeat setup and isolated state;
+the learning example uses a scripted provider with real tools, acceptance commands and memory storage.
 
 ## Run one layer
 

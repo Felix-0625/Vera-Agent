@@ -1,33 +1,26 @@
 import React, { useEffect } from 'react';
+import { useChatStore } from '../../stores/chatStore';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useProjectStore } from '../../stores/projectStore';
-import { useChatStore } from '../../stores/chatStore';
-import { LeftSidebar } from '../sidebar/LeftSidebar';
-import { CenterWorkspace } from '../composer/CenterWorkspace';
-import { RightToolsContainer } from '../tools/RightToolsContainer';
 import { useRightSidebarLayout } from '../../stores/rightSidebarLayout';
-import { ResizeHandle } from './ResizeHandle';
+import { CenterWorkspace } from '../composer/CenterWorkspace';
+import { LeftSidebar } from '../sidebar/LeftSidebar';
+import { RightToolsContainer } from '../tools/RightToolsContainer';
 import { TaskboardWorkspace } from '../tools/TaskboardWorkspace';
+import { ResizeHandle } from './ResizeHandle';
 
 // Modals
-import { ProjectSelectorModal } from '../dialogs/ProjectSelectorModal';
 import { HistoryModal } from '../dialogs/HistoryModal';
-import { ScheduledTasksModal } from '../dialogs/ScheduledTasksModal';
-import { NewTaskDialog } from '../dialogs/NewTaskDialog';
-import { SettingsModal } from '../dialogs/SettingsModal';
-import { ModelConfigDialog } from '../dialogs/ModelConfigDialog';
 import { McpManualConfigDialog } from '../dialogs/McpManualConfigDialog';
+import { ModelConfigDialog } from '../dialogs/ModelConfigDialog';
+import { NewTaskDialog } from '../dialogs/NewTaskDialog';
+import { ProjectSelectorModal } from '../dialogs/ProjectSelectorModal';
+import { ScheduledTasksModal } from '../dialogs/ScheduledTasksModal';
+import { SettingsModal } from '../dialogs/SettingsModal';
 import { WorkflowTemplatesModal } from '../dialogs/WorkflowTemplatesModal';
 
 export const WorkspaceShell: React.FC = () => {
-  const {
-    leftCollapsed,
-    leftWidth,
-    setLeftWidth,
-    toggleLeft,
-    taskboardOpen,
-    setTaskboardOpen,
-  } = useLayoutStore();
+  const { leftCollapsed, leftWidth, setLeftWidth, toggleLeft, taskboardOpen, setTaskboardOpen } = useLayoutStore();
   const { rightCollapsed, rightWidth, setRightWidth, toggleRight, rightMaximized } = useRightSidebarLayout();
 
   const { loadCurrentProject, loadProjectsHistory, loadGroups } = useProjectStore();
@@ -54,7 +47,7 @@ export const WorkspaceShell: React.FC = () => {
 
     if (ratio < 0.15) {
       if (!leftCollapsed) toggleLeft();
-    } else if (ratio <= 0.40) {
+    } else if (ratio <= 0.4) {
       if (leftCollapsed) toggleLeft();
       setLeftWidth(newWidth);
     }
@@ -67,7 +60,7 @@ export const WorkspaceShell: React.FC = () => {
 
     if (ratio < 0.15) {
       if (!rightCollapsed) toggleRight();
-    } else if (ratio <= 0.60) {
+    } else if (ratio <= 0.6) {
       if (rightCollapsed) toggleRight();
       setRightWidth(newWidth);
     }
@@ -75,15 +68,17 @@ export const WorkspaceShell: React.FC = () => {
 
   return (
     <div
-      style={{
-        width: '100vw',
-        height: '100vh',
-        display: 'flex',
-        overflow: 'hidden',
-        position: 'relative',
-        backgroundColor: 'var(--bg-workspace)',
-        '--left-panel-width': `${leftCollapsed ? 0 : leftWidth}px`,
-      } as React.CSSProperties}
+      style={
+        {
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          overflow: 'hidden',
+          position: 'relative',
+          backgroundColor: 'var(--bg-workspace)',
+          '--left-panel-width': `${leftCollapsed ? 0 : leftWidth}px`,
+        } as React.CSSProperties
+      }
     >
       {/* 1. Left Sidebar */}
       <LeftSidebar />
@@ -93,17 +88,13 @@ export const WorkspaceShell: React.FC = () => {
       ) : (
         <>
           {/* Resize Handle 1 */}
-          {!leftCollapsed && !rightMaximized && (
-            <ResizeHandle onResize={handleResizeLeft} direction="left" />
-          )}
+          {!leftCollapsed && !rightMaximized && <ResizeHandle onResize={handleResizeLeft} direction="left" />}
 
           {/* 2. Middle Workspace */}
           {!rightMaximized && <CenterWorkspace />}
 
           {/* Resize Handle 2 */}
-          {!rightCollapsed && !rightMaximized && (
-            <ResizeHandle onResize={handleResizeRight} direction="right" />
-          )}
+          {!rightCollapsed && !rightMaximized && <ResizeHandle onResize={handleResizeRight} direction="right" />}
 
           {/* 3. Right Tools Panel */}
           <RightToolsContainer />

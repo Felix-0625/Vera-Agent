@@ -1,3 +1,5 @@
+"""LiteLLM chat-completion adapter and streaming tools."""
+
 import json
 import logging
 import os

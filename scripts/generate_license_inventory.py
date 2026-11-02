@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 from datetime import date
 from pathlib import Path
@@ -96,16 +97,52 @@ def markdown_cell(value: str) -> str:
     return value.replace("|", "&#124;")
 
 
+def update_frontend_only() -> None:
+    """Refresh npm metadata without claiming to re-audit unchanged Python environments."""
+    rows = frontend_inventory()
+    current = REPORT_PATH.read_text(encoding="utf-8")
+    marker = "## Frontend npm lockfile"
+    if marker not in current:
+        raise SystemExit("Existing Python inventory missing; run the full generator first.")
+    head = current.split(marker, 1)[0]
+    head = re.sub(r"frontend lockfile packages: \d+", f"frontend lockfile packages: {len(rows)}", head)
+    lines = [
+        marker,
+        "",
+        f"npm metadata refreshed on {date.today().isoformat()}; Python inventory above is unchanged.",
+        "",
+        "| Package | Version | License metadata | Scope |",
+        "| --- | --- | --- | --- |",
+    ]
+    lines.extend(
+        f"| `{name}` | `{version}` | {markdown_cell(license_name)} | {scope} |"
+        for name, version, license_name, scope in rows
+    )
+    REPORT_PATH.write_text(head + "\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    print(f"Refreshed {len(rows)} npm rows; retained the dated Python inventory.")
+    if any("UNKNOWN" in row[2] for row in rows):
+        raise SystemExit("Unknown npm license metadata requires review.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--python",
-        required=True,
         nargs="+",
         type=Path,
         help="Python executables for clean installs of the locked Windows desktop runtime dependencies",
     )
+    parser.add_argument(
+        "--frontend-only", action="store_true", help="Refresh npm rows and retain the existing Python inventory."
+    )
     args = parser.parse_args()
+    if args.frontend_only:
+        if args.python:
+            parser.error("Use either --frontend-only or --python, not both.")
+        update_frontend_only()
+        return
+    if not args.python:
+        parser.error("--python is required unless --frontend-only is selected.")
 
     python_inventories = [python_inventory(interpreter.resolve()) for interpreter in args.python]
     npm_rows = frontend_inventory()

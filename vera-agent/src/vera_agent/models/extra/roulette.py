@@ -1,3 +1,5 @@
+"""Weighted model selection adapter."""
+
 import random
 
 from pydantic import BaseModel

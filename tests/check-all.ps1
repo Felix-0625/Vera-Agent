@@ -8,7 +8,7 @@ $npm = Get-Command npm.cmd -ErrorAction SilentlyContinue
 
 if (-not (Test-Path $python)) { throw "Python environment missing: $python. See docs/DEVELOPMENT.md." }
 if (-not (Test-Path $ruff)) { throw "ruff missing. Install dev dependencies: uv sync --locked --extra desktop --extra dev" }
-if (-not $npm) { throw 'npm was not found. Install Node.js 20+ before running frontend checks.' }
+if (-not $npm) { throw 'npm was not found. Install Node.js 24 (or 20.19+ / 22.12+) before running frontend checks.' }
 $env:PATH = "$scripts;$env:PATH"
 
 function Invoke-Step([string]$Title, [string]$Directory, [scriptblock]$Command) {
@@ -27,6 +27,7 @@ Invoke-Step 'Repository tests (examples, docs, hygiene)' '.' { & $python -m pyte
 Invoke-Step 'MCP example stdio smoke check' '.' { & $python examples\mcp-server\test_client.py }
 Invoke-Step 'Static website links and assets' '.' { & $python website\check_site.py }
 Invoke-Step 'Frontend lint' 'frontend' { & $npm.Source run lint }
+Invoke-Step 'Frontend formatting' 'frontend' { & $npm.Source run format:check }
 Invoke-Step 'Frontend unit tests' 'frontend' { & $npm.Source test }
 Invoke-Step 'Frontend production build' 'frontend' { & $npm.Source run build }
 

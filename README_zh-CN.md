@@ -6,9 +6,7 @@ VeraAgent 是面向软件项目的本地单用户 AI Agent 工作站：把项目
 
 Agent 内核基于 [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent)，工具设计沿用 Pi Agent 的极简思路（read、write、edit、bash 四个原语）。这里说明的是技术渊源，不代表上游项目为 VeraAgent 背书。
 
-[![VeraAgent 交互演示预览](website/assets/video/demo-poster.png)](website/assets/video/veraagent-task-collaboration-demo.webm)
-
-演示录像和[网站交互演示](website/playground/index.html)使用脚本数据，不连接模型、后端或访客的本地文件。
+[项目网站](website/README.md)展示桌面界面、系统设计和使用文档。首页的界面示意是静态样例。
 
 ## 功能
 
@@ -24,11 +22,11 @@ VeraAgent **不是**操作系统级沙箱：终端命令以当前 Windows 用户
 
 ## 快速开始（Windows）
 
-需要 Windows 10/11、Git、Node.js 20+、Python 3.10+、[uv](https://docs.astral.sh/uv/) 0.11+ 和 Microsoft Edge WebView2 Runtime。
+需要 Windows 10/11、Git、Python 3.10+、[uv](https://docs.astral.sh/uv/) 0.11+ 和 Microsoft Edge WebView2 Runtime。Node.js 推荐使用 24 LTS，也支持 20.19+ 或 22.12+。
 
 ```powershell
-git clone https://github.com/Felix-0625/Agents.git
-cd Agents\frontend
+git clone https://github.com/Felix-0625/Vera-Agent.git
+cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent
 uv sync --locked --no-dev --extra desktop
@@ -38,13 +36,33 @@ cd ..
 
 启动后在 **设置 → 模型** 中添加模型。VeraAgent 只在 GitHub 以源码形式发布，不提供 npm 包、PyPI 包或签名安装程序。详见 [Windows 安装说明](docs/INSTALL_WINDOWS.md)（英文）。
 
-**体验示例**：[`examples/workflow-quickstart`](examples/workflow-quickstart/README.md) 会载入演示项目、两个模板和一个看板任务，并带你从对话中调用工作流。
+## 可运行示例
+
+从[示例目录](examples/README.md)选择入口。每个示例都说明准备条件、执行命令、预期结果、生成文件、重复运行方式和清理步骤。
+
+| 体验目标 | 示例 | 是否调用模型 |
+| --- | --- | --- |
+| 模板 → 项目实例 → 确认运行 → 结果回到原对话 | [工作流快速开始](examples/workflow-quickstart/README.md) | 准备和 dry run 不调用；桌面端运行会产生模型费用 |
+| 中文记忆召回、项目隔离、变更确认、版本恢复，以及真实评测验收命令 | [记忆与评测](examples/learning-loop/README.md) | 自动检查使用脚本化模型；可选运行单条真实模型评测 |
+| 使用真实 MCP stdio 连接两个可检查的只读工具 | [MCP 示例服务](examples/mcp-server/README.md) | 不调用 |
+
+先安装[开发依赖](docs/DEVELOPMENT.md)，再从仓库根目录执行：
+
+```powershell
+.\vera-agent\.venv\Scripts\python.exe examples\workflow-quickstart\setup_demo.py --dry-run
+.\vera-agent\.venv\Scripts\python.exe examples\learning-loop\verify.py
+.\vera-agent\.venv\Scripts\python.exe examples\mcp-server\test_client.py
+```
+
+这些命令使用合成输入，验证真实本地接口、工具、存储或 MCP 通信，不产生付费模型请求。评测示例会明确标注脚本化模型；通过示例不代表真实模型能力或 RSI 改进效果已验证。真实模型步骤单独列出，不进入 CI。
 
 ## 文档
 
 维护文档以英文为准，入口见 [README.md](README.md#documentation)：架构与模块地图、HTTP API、数据模型、配置与环境变量、工具与权限、测试与验收记录、贡献指南。
 
-更新后的[双语设计图与可编辑源文件](website/diagrams/README.md)覆盖运行架构、对话时序、编排生命周期、本地数据和学习闭环；[视频录制脚本](docs/DEMO_RECORDING.md)提供 90 秒分镜与实际操作顺序。
+更新后的[双语设计图与可编辑源文件](website/diagrams/README.md)覆盖运行架构、对话时序、编排生命周期、本地数据和学习闭环。
+
+[学习接口契约](docs/LEARNING_API.md)列明记忆、执行记录反馈、提案门禁与采纳/回滚的请求字段、响应、错误和默认行为。
 
 ## 验证
 
@@ -53,6 +71,12 @@ cd ..
 ```
 
 依次运行代码规范检查、后端测试、仓库级测试（示例、文档、仓库卫生）、MCP 示例、网站检查，以及前端 lint、单元测试和生产构建。脚本不安装依赖，也不调用模型 API。
+
+Python 使用 Ruff，前端使用严格 TypeScript、Oxlint 和 Prettier，CI 检查格式与代码体积。自有代码文件（含测试、CSS 和网站脚本）不得超过 1000 行；运行时模块目标为 450 行，已有例外只允许收缩。依赖锁文件和第三方 vendor 文件单独管理。
+
+## 当前状态
+
+项目处于 Alpha 阶段，主要面向 Windows 本地单用户使用。回归测试和示例验证用于检查行为一致性，不等同于长期压力测试或真实模型效果评测。当前行为、限制和历史验证范围见 [docs/TESTING.md](docs/TESTING.md)。
 
 ## 许可证
 

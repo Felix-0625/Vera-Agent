@@ -7,18 +7,20 @@ interface AttachedBadgesProps {
   attachedMcps: string[];
 }
 
-
-export const AttachedBadges: React.FC<AttachedBadgesProps> = ({
-  ruleTrigger,
-  attachedSkills,
-  attachedMcps,
-}) => {
+export const AttachedBadges: React.FC<AttachedBadgesProps> = ({ ruleTrigger, attachedSkills, attachedMcps }) => {
   if (!ruleTrigger && attachedSkills.length === 0 && attachedMcps.length === 0) {
     return null;
   }
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--space-1-5)', flexWrap: 'wrap', padding: 'var(--space-2-5) var(--space-3-5) 0' }}>
+    <div
+      style={{
+        display: 'flex',
+        gap: 'var(--space-1-5)',
+        flexWrap: 'wrap',
+        padding: 'var(--space-2-5) var(--space-3-5) 0',
+      }}
+    >
       {ruleTrigger && (
         <span
           style={{

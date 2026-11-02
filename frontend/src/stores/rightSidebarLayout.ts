@@ -20,8 +20,11 @@ export function ensureRightSidebarOpen(conversationKey: string): void {
 export function useRightSidebarLayout(explicitConversationKey?: string) {
   const activeThreadId = useChatStore((state) => state.activeThreadId);
   const draftConversationId = useChatStore((state) => state.draftConversationId);
-  const conversationKey = explicitConversationKey || `conversation:${activeThreadId || draftConversationId || 'draft:initial'}`;
-  const layout = useLayoutStore((state) => state.rightSidebarByConversation[conversationKey] || DEFAULT_RIGHT_SIDEBAR_LAYOUT);
+  const conversationKey =
+    explicitConversationKey || `conversation:${activeThreadId || draftConversationId || 'draft:initial'}`;
+  const layout = useLayoutStore(
+    (state) => state.rightSidebarByConversation[conversationKey] || DEFAULT_RIGHT_SIDEBAR_LAYOUT,
+  );
   const toggle = useLayoutStore((state) => state.toggleRight);
   const resize = useLayoutStore((state) => state.setRightWidth);
   const maximize = useLayoutStore((state) => state.toggleRightMaximize);

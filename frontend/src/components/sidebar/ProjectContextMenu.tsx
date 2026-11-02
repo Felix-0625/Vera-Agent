@@ -1,6 +1,6 @@
+import { Edit3, Pin, Trash2 } from 'lucide-react';
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Edit3, Pin, Trash2 } from 'lucide-react';
 import { Project } from '../../types/project';
 
 interface ProjectContextMenuProps {
@@ -12,7 +12,14 @@ interface ProjectContextMenuProps {
   onDelete: (project: Project) => void;
 }
 
-export const ProjectContextMenu: React.FC<ProjectContextMenuProps> = ({ project, position, onClose, onPin, onEdit, onDelete }) => {
+export const ProjectContextMenu: React.FC<ProjectContextMenuProps> = ({
+  project,
+  position,
+  onClose,
+  onPin,
+  onEdit,
+  onDelete,
+}) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [safePosition, setSafePosition] = useState(position);
 
@@ -31,12 +38,46 @@ export const ProjectContextMenu: React.FC<ProjectContextMenuProps> = ({ project,
     { label: '移除项目', icon: <Trash2 size={13} />, run: onDelete, danger: true },
   ];
 
-  return createPortal(<>
-    <div aria-hidden="true" onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-    <div ref={menuRef} role="menu" onPointerDown={event => event.stopPropagation()} style={{ position: 'fixed', left: safePosition.left, top: safePosition.top, width: 174, padding: 'var(--space-1-25)', borderRadius: 'var(--radius-md-plus)', background: 'var(--bg-surface-elevated)', border: '1px solid var(--border-default)', boxShadow: 'var(--shadow-lg)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: 'var(--space-0-5)' }}>
-      {items.map(item => <button key={item.label} role="menuitem" className="composer-menu-row" style={item.danger ? { color: 'var(--accent-rose)' } : undefined} onClick={() => { item.run(project); onClose(); }}>
-        {item.icon}<span>{item.label}</span>
-      </button>)}
-    </div>
-  </>, document.body);
+  return createPortal(
+    <>
+      <div aria-hidden="true" onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
+      <div
+        ref={menuRef}
+        role="menu"
+        onPointerDown={(event) => event.stopPropagation()}
+        style={{
+          position: 'fixed',
+          left: safePosition.left,
+          top: safePosition.top,
+          width: 174,
+          padding: 'var(--space-1-25)',
+          borderRadius: 'var(--radius-md-plus)',
+          background: 'var(--bg-surface-elevated)',
+          border: '1px solid var(--border-default)',
+          boxShadow: 'var(--shadow-lg)',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 'var(--space-0-5)',
+        }}
+      >
+        {items.map((item) => (
+          <button
+            key={item.label}
+            role="menuitem"
+            className="composer-menu-row"
+            style={item.danger ? { color: 'var(--accent-rose)' } : undefined}
+            onClick={() => {
+              item.run(project);
+              onClose();
+            }}
+          >
+            {item.icon}
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </div>
+    </>,
+    document.body,
+  );
 };

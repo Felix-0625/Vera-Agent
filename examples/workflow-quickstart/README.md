@@ -29,7 +29,8 @@ Template files use the same JSON shape as `POST /api/templates/topology`; see
 
 ## 1. Check it without a model (30 seconds)
 
-From the repository root, after installing the backend (`docs/INSTALL_WINDOWS.md`):
+From the repository root, after the [development setup](../../docs/DEVELOPMENT.md)
+(the in-process check needs the test client):
 
 ```powershell
 .\vera-agent\.venv\Scripts\python.exe examples\workflow-quickstart\setup_demo.py --dry-run
@@ -51,9 +52,11 @@ in CI (`tests/test_examples.py`).
    ```
 
    Use `--base-url http://127.0.0.1:<port>` if the launcher chose a port other than 8000.
-   This binds `examples/workflow-quickstart/demo-project` (VeraAgent writes its
-   `.agents/` folder there; it is Git-ignored), saves both templates, creates the
-   workflow instance, and adds a task board item.
+   This copies the synthetic project to `scratch/examples/workflow-quickstart`, binds that
+   copy, saves the two `example_` templates, creates the workflow instance and adds a task
+   board item. The committed fixture is never bound or modified. Set `--workspace <path>`
+   to choose another demo copy. Repeat setup reuses the same instance and labeled task,
+   and preserves their edits; it refreshes the two example templates.
 
    Prefer clicking? Do the same in the UI: bind the folder from the project selector,
    open **工作流模板**, recreate a template from the JSON, and create an instance in the project.
@@ -66,11 +69,27 @@ in CI (`tests/test_examples.py`).
    answers YES/NO and only that branch runs. A final Supervisor review returns the
    answer to the conversation.
 5. Link the conversation to the task board item and move it to *Done* when you accept the result.
-6. Inspect the evidence: `demo-project/.agents/runs/<group_id>/<run_id>.json` holds every
+6. Inspect the evidence: `<workspace>/.agents/runs/<group_id>/<run_id>.json` holds every
    node's status, inputs (with provenance), and output.
 
 To try the organization template, create an *architecture* instance from
 **示例：小型研发组织** in the same project and invoke it the same way.
+
+## Expected result and cleanup
+
+The dry run exits 0 and prints `project_id`, the two `template_ids`, a `group_id`,
+`task_identifier`, `run_id` and all five `run_nodes`. IDs vary. `executed` is `false` and
+`model_calls` is `0`: creating a run is not executing it. `--create-run` against a live API
+also only creates a new ready record, and intentionally creates one each time.
+
+In a live run, require completed nodes on one selected branch, a skipped unused branch and
+a final result in the originating conversation. Model text and the branch choice vary.
+Do not mark the task done merely because setup succeeded.
+
+The live workspace is an ignored copy and can be reused. To retire it, remove its task and
+project binding in the app first, close related conversations, then remove only that workspace
+folder. The two global templates named **示例：…** remain until you remove them in the template
+library. The script never deletes app configuration or user work as a reset operation.
 
 ## Limits
 

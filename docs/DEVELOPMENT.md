@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Windows 10/11 for the native desktop shell, Git, Python 3.10+, and Node.js 20+.
+- Windows 10/11 for the native desktop shell, Git, Python 3.10+, and Node.js 24 LTS (or 20.19+ / 22.12+).
 - Microsoft Edge WebView2 Runtime for pywebview's Edge Chromium backend.
 - uv 0.11+ (CI pins 0.11.15) for installing the locked Python dependencies.
 
@@ -47,6 +47,7 @@ Application data is written to `.agents/` in the API's working directory (here
 | Change | Files | Also update |
 | --- | --- | --- |
 | New or changed API route | `vera-agent/src/vera_agent/server/routes/<domain>.py` (+ module docstring) | `frontend/src/api`, `frontend/src/types`, test in `vera-agent/tests/server/`, then `python scripts/generate_api_index.py` |
+| Learning API contract | `server/routes/traces.py`, `memories.py`, `evolution.py` | [LEARNING_API.md](LEARNING_API.md), [LEARNING_LOOP.md](LEARNING_LOOP.md) and `frontend/src/types/learning.ts` |
 | Persisted record shape | the owning route/session module | [DATA_MODEL.md](DATA_MODEL.md) |
 | New agent tool | `vera-agent/src/vera_agent/tools/` and role tool sets in `tools/primitives.py` | permission category in `server/permissions.py` |
 | Built-in topology template | `vera-agent/src/vera_agent/session/templates.py` | |
@@ -61,3 +62,9 @@ Application data is written to `.agents/` in the API's working directory (here
 - Line endings are normalized to LF by `.gitattributes` (PowerShell/batch files use CRLF in the working tree).
 - Run [`tests/check-all.ps1`](../tests/check-all.ps1) before submitting; see [TESTING.md](TESTING.md).
 - Code style and naming rules are in [CONTRIBUTING.md](../CONTRIBUTING.md).
+- Frontend formatting is checked with `npm run format:check` (including website HTML/CSS/JS).
+  Run `npm run format` to apply it. Strict TypeScript and unused-symbol checks are enabled.
+- The group API registers routes in `groups.py`; lifecycle, member sessions, instances,
+  composition validation/materialization and registry operations live in separate modules.
+- The runnable [examples](../examples/README.md) state prerequisites, expected results,
+  generated state, cleanup and any provider costs. Their offline checks run in repository CI.

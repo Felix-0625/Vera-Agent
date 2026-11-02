@@ -1,0 +1,120 @@
+/* Project selection dialog */
+
+.project-name-input {
+  height: 50px;
+  padding: 0 14px 0 46px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--accent-primary) 8%, var(--bg-surface));
+  font-size: var(--font-size-body);
+}
+
+.project-name-input--create {
+  padding-left: 61px;
+}
+
+.project-history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1-5) var(--space-2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.project-history-row:hover {
+  border-color: var(--border-default);
+}
+
+.project-history-row--selected {
+  border-color: var(--accent-primary);
+  background: var(--bg-accent-soft);
+}
+
+.project-history-select.ui-button {
+  flex: 1;
+  min-width: 0;
+  justify-content: flex-start;
+  gap: var(--space-2-5);
+  padding: 0;
+  text-align: left;
+}
+
+.project-history-icon {
+  width: var(--control-hit-target-md);
+  height: var(--control-hit-target-md);
+  flex: 0 0 var(--control-hit-target-md);
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 22%, var(--border-subtle));
+  border-radius: var(--radius-md-wide);
+  background: var(--bg-accent-soft);
+}
+
+.project-history-copy {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.project-history-name {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: var(--font-size-control);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-history-path {
+  overflow: hidden;
+  margin-top: var(--space-0-75);
+  color: var(--text-muted);
+  font-size: var(--font-size-subtle);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-history-empty {
+  min-height: 84px;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.project-folder-add-row.ui-button {
+  width: 100%;
+  min-height: 54px;
+  justify-content: flex-start;
+  padding: 0 var(--space-4);
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: left;
+}
+
+.project-folder-empty-prompt.ui-button {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.project-folder-empty-action.ui-button {
+  min-width: 82px;
+  min-height: var(--control-height-compact);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.project-history-create.ui-button {
+  min-height: 52px;
+  justify-content: flex-start;
+  margin-top: var(--space-1);
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--accent-primary) 42%, var(--border-default));
+  background: var(--bg-accent-soft);
+  color: var(--accent-primary);
+}

@@ -8,7 +8,7 @@ VeraAgent currently starts from GitHub source on Windows 10/11. Installing depen
 | --- | --- |
 | Windows | 10 or 11 |
 | Git for Windows | Git and Git Bash for local command tools |
-| Node.js | 20 or later, with npm |
+| Node.js | 24 LTS recommended; 20.19+ or 22.12+ supported, with npm |
 | Python | 3.10 or later |
 | uv | 0.11 or later |
 | Microsoft Edge WebView2 Runtime | Desktop window |
@@ -18,8 +18,8 @@ VeraAgent currently starts from GitHub source on Windows 10/11. Installing depen
 Run in PowerShell:
 
 ```powershell
-git clone https://github.com/Felix-0625/Agents.git
-cd Agents\frontend
+git clone https://github.com/Felix-0625/Vera-Agent.git
+cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent
 uv sync --locked --no-dev --extra desktop

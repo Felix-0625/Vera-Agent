@@ -1,13 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { deleteScheduledTask, fetchScheduledTasks, runScheduledTask, toggleScheduledTask } from '../../api/toolApi';
 import { useLayoutStore } from '../../stores/layoutStore';
-import { Modal } from '../common/Modal';
-import { fetchScheduledTasks, toggleScheduledTask, runScheduledTask, deleteScheduledTask } from '../../api/toolApi';
 import { ScheduledTask } from '../../types/tool';
-import { ScheduledTaskItem } from './ScheduledTaskItem';
 import { Button } from '../common/Button';
 import { TextInput } from '../common/Field';
-
+import { Modal } from '../common/Modal';
+import { ScheduledTaskItem } from './ScheduledTaskItem';
 
 export const ScheduledTasksModal: React.FC = () => {
   const { scheduledTasksOpen, scheduledTasksVersion, setScheduledTasksOpen, setNewTaskDialogOpen } = useLayoutStore();
@@ -32,38 +31,45 @@ export const ScheduledTasksModal: React.FC = () => {
 
   useEffect(() => {
     if (!scheduledTasksOpen || !tasks.some((task) => task.last_status === 'running')) return;
-    const timer = window.setInterval(() => { void loadTasks(); }, 2000);
+    const timer = window.setInterval(() => {
+      void loadTasks();
+    }, 2000);
     return () => window.clearInterval(timer);
   }, [scheduledTasksOpen, tasks, loadTasks]);
 
   const handleToggle = async (t: ScheduledTask) => {
-    try { await toggleScheduledTask(t.id); await loadTasks(); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : '更新任务状态失败。'); }
+    try {
+      await toggleScheduledTask(t.id);
+      await loadTasks();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '更新任务状态失败。');
+    }
   };
 
   const handleRun = async (t: ScheduledTask) => {
     try {
       await runScheduledTask(t.id);
       await loadTasks();
-    } catch (cause) { setError(cause instanceof Error ? cause.message : '启动任务失败。'); }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '启动任务失败。');
+    }
   };
 
   const handleDelete = async (t: ScheduledTask) => {
     if (window.confirm(`确定删除任务 "${t.name}" 吗？`)) {
-      try { await deleteScheduledTask(t.id); await loadTasks(); }
-      catch (cause) { setError(cause instanceof Error ? cause.message : '删除任务失败。'); }
+      try {
+        await deleteScheduledTask(t.id);
+        await loadTasks();
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : '删除任务失败。');
+      }
     }
   };
 
   const filtered = tasks.filter((t) => t.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <Modal
-      isOpen={scheduledTasksOpen}
-      onClose={() => setScheduledTasksOpen(false)}
-      title=""
-      width={720}
-    >
+    <Modal isOpen={scheduledTasksOpen} onClose={() => setScheduledTasksOpen(false)} title="" width={720}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
         {}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -71,16 +77,19 @@ export const ScheduledTasksModal: React.FC = () => {
             <h2 style={{ fontSize: 'var(--font-size-xl)', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
               定时任务
             </h2>
-            <p style={{ fontSize: 'var(--font-size-control)', color: 'var(--text-muted)', marginTop: 'var(--space-1)', marginBottom: 0 }}>
+            <p
+              style={{
+                fontSize: 'var(--font-size-control)',
+                color: 'var(--text-muted)',
+                marginTop: 'var(--space-1)',
+                marginBottom: 0,
+              }}
+            >
               任务会在指定的日期和时间自动运行一次
             </p>
           </div>
 
-          <Button
-            onClick={() => setNewTaskDialogOpen(true)}
-            variant="primary"
-            size="sm"
-          >
+          <Button onClick={() => setNewTaskDialogOpen(true)} variant="primary" size="sm">
             <Plus size={14} />
             <span>新建任务</span>
           </Button>
@@ -98,22 +107,47 @@ export const ScheduledTasksModal: React.FC = () => {
           />
         </div>
 
-        {error && <div role="alert" style={{ color: 'var(--accent-rose)', fontSize: 'var(--font-size-sm)' }}>{error}</div>}
+        {error && (
+          <div role="alert" style={{ color: 'var(--accent-rose)', fontSize: 'var(--font-size-sm)' }}>
+            {error}
+          </div>
+        )}
         {}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', maxHeight: 420, overflowY: 'auto' }}>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', maxHeight: 420, overflowY: 'auto' }}
+        >
           {error && tasks.length === 0 ? null : filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px var(--space-5)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '48px var(--space-5)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}
+            >
               <div style={{ fontSize: 'var(--font-size-body)', fontWeight: 600, color: 'var(--text-primary)' }}>
                 还没有定时任务
               </div>
-              <div style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)', marginTop: 'var(--space-1)', maxWidth: 320 }}>
+              <div
+                style={{
+                  fontSize: 'var(--font-size-sm)',
+                  color: 'var(--text-muted)',
+                  marginTop: 'var(--space-1)',
+                  maxWidth: 320,
+                }}
+              >
                 创建一个任务，让 VeraAgent 在指定时间执行一次。
               </div>
               <Button
                 onClick={() => setNewTaskDialogOpen(true)}
                 variant="outline"
                 size="sm"
-                style={{ marginTop: 'var(--space-4)', color: 'var(--accent-primary)', borderColor: 'var(--accent-primary)' }}
+                style={{
+                  marginTop: 'var(--space-4)',
+                  color: 'var(--accent-primary)',
+                  borderColor: 'var(--accent-primary)',
+                }}
               >
                 <Plus size={13} />
                 <span>新建任务</span>

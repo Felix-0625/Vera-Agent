@@ -1,0 +1,346 @@
+.side-chat-composer-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  min-height: 58px;
+  max-height: 200px;
+  padding: var(--space-2-25) var(--space-2-75);
+  border: 0;
+  border-radius: 0;
+  color: var(--text-primary);
+  background: transparent;
+  font-size: var(--font-size-control);
+  line-height: 1.55;
+  user-select: text;
+  resize: none;
+}
+
+.side-chat-composer-input:focus-visible {
+  border-color: transparent;
+  outline: none;
+  box-shadow: none;
+}
+
+.side-chat-composer:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+.side-chat-composer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1-75);
+  padding: var(--space-0-5) var(--space-0-5) 0;
+  min-width: 0;
+}
+
+.side-chat-composer-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.side-chat-composer-actions > div {
+  min-width: 0;
+  max-width: 190px;
+  flex: 0 1 190px;
+}
+
+.side-chat-composer-actions > div > button {
+  width: 100%;
+  min-width: 0;
+}
+
+.side-chat-composer-actions > button:not(.ui-icon-button) {
+  width: var(--control-hit-target-sm);
+  height: var(--control-hit-target-sm);
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm-plus);
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+
+.side-chat-composer-actions > button:not(.ui-icon-button):hover {
+  color: var(--text-primary);
+  background: var(--bg-interactive-hover);
+}
+
+.side-chat-header {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-25);
+  padding: var(--space-1-75) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.side-chat-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1;
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+}
+
+.side-chat-heading-icon {
+  width: 27px;
+  height: 27px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-md);
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 9%, var(--bg-surface));
+}
+
+.side-chat-context-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-25);
+  min-height: 28px;
+  padding: 0 var(--space-1-75);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  background: var(--bg-surface);
+}
+
+.side-chat-context-control .side-chat-context-select {
+  width: auto;
+  max-width: 94px;
+  min-height: 0;
+  padding: var(--space-1) 1px;
+  border: 0;
+  border-radius: 0;
+  color: var(--text-primary);
+  background: transparent;
+  font-size: var(--font-size-subtle);
+  cursor: pointer;
+}
+
+.side-chat-context-control .side-chat-context-select:focus-visible {
+  border-color: transparent;
+  outline: none;
+  box-shadow: none;
+}
+
+.side-chat-context-control:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: var(--focus-ring);
+}
+
+.side-chat-context-control select option {
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+}
+
+.side-chat-context-control select option:checked {
+  color: var(--text-primary);
+  background-color: color-mix(in srgb, var(--accent-primary) 12%, var(--bg-surface));
+}
+
+.side-chat-context-control select:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.side-chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-0-5);
+}
+
+.side-chat-header-actions button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm-plus);
+  color: var(--text-muted);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color 0.14s,
+    background 0.14s;
+}
+
+.side-chat-header-actions button:hover {
+  color: var(--text-primary);
+  background: var(--bg-interactive-hover);
+}
+
+.metrics-page {
+  height: 100%;
+  overflow: auto;
+  padding: var(--space-3-75);
+  color: var(--text-primary);
+  background: var(--bg-workspace);
+}
+
+.metrics-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3-25);
+}
+
+.metrics-heading,
+.metrics-heading > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.metrics-heading {
+  font-size: var(--font-size-md);
+}
+
+.metrics-heading > span {
+  color: var(--accent-primary);
+}
+
+.metrics-refresh {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  background: var(--bg-surface-elevated);
+  cursor: pointer;
+}
+
+.metrics-refresh:hover {
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
+.metrics-refresh:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.metrics-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-2-5);
+}
+
+.metrics-summary-card,
+.metrics-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg-minus);
+  background: var(--bg-surface);
+}
+
+.metrics-summary-card {
+  min-width: 0;
+  padding: var(--space-2-5) var(--space-2-75) var(--space-2-25);
+}
+
+.metrics-summary-card > span,
+.metrics-summary-card > small {
+  display: block;
+  color: var(--text-muted);
+  font-size: var(--font-size-subtle);
+}
+
+.metrics-summary-card > strong {
+  display: block;
+  overflow: hidden;
+  margin: var(--space-1-25) 0 var(--space-0-5);
+  color: var(--text-primary);
+  font-size: 17px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metrics-summary-card:nth-child(2) > strong {
+  color: var(--accent-emerald);
+}
+
+.metrics-summary-card:nth-child(3) > strong {
+  color: var(--accent-primary);
+}
+
+.metrics-summary-card > small {
+  font-size: var(--font-size-tiny);
+}
+
+.metrics-card {
+  padding: var(--space-2-75);
+}
+
+.metrics-chart-card {
+  margin-bottom: var(--space-2-25);
+}
+
+.metrics-card-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.metrics-card-title h3 {
+  margin: 0;
+  font-size: var(--font-size-label);
+  font-weight: 650;
+}
+
+.metrics-title-icon {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-md);
+}
+
+.metrics-title-icon.chart {
+  color: var(--accent-primary);
+  background: var(--bg-accent-soft);
+}
+
+.metrics-title-icon.mcp {
+  color: var(--accent-cyan);
+  background: var(--bg-info-soft);
+}
+
+.metrics-title-icon.skill {
+  color: var(--accent-skill);
+  background: var(--bg-skill-soft);
+}
+
+.metrics-chart-title {
+  justify-content: space-between;
+}
+
+.metrics-chart-title > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.metrics-periods {
+  display: flex;
+  gap: var(--space-0-5);
+  padding: var(--space-0-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}

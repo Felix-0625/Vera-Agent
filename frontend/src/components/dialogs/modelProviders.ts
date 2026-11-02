@@ -17,4 +17,5 @@ export const MODEL_PROVIDERS = [
   { id: 'custom', label: '自定义兼容服务', baseUrl: '' },
 ] as const;
 
-export const getProviderBaseUrl = (provider: ModelProvider): string => MODEL_PROVIDERS.find((item) => item.id === provider)?.baseUrl ?? '';
+export const getProviderBaseUrl = (provider: ModelProvider): string =>
+  MODEL_PROVIDERS.find((item) => item.id === provider)?.baseUrl ?? '';

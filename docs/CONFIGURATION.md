@@ -38,6 +38,7 @@ where a `VERA_*` alias exists it takes precedence.
 | `MSWEA_GLOBAL_COST_LIMIT` | `models/__init__.py` | Process-wide cost limit in USD; `0` disables | `0` |
 | `MSWEA_GLOBAL_CALL_LIMIT` | `models/__init__.py` | Process-wide model call limit; `0` disables | `0` |
 | `MSWEA_MODEL_RETRY_STOP_AFTER_ATTEMPT` | `models/utils/retry.py` | Maximum attempts per model request | `10` |
+| `MSWEA_INSPECTOR_STYLE_PATH` | `run/utilities/inspector.py` | Optional stylesheet for the inherited trajectory inspector CLI | built-in `inspector.tcss` |
 | `VITE_API_BASE_URL` | `frontend/vite.config.ts` | API origin compiled into the UI; set by `start-desktop.ps1` | dev: same origin; desktop: `http://127.0.0.1:8000` |
 | `VITE_API_PROXY_TARGET` | `frontend/vite.config.ts` | Backend address for the `npm run dev` proxy | `http://127.0.0.1:8000` |
 
@@ -47,6 +48,9 @@ passes the key from its model settings instead. Benchmark-only variables of the
 inherited mini-swe-agent environments (`MSWEA_DOCKER_EXECUTABLE`,
 `MSWEA_SINGULARITY_EXECUTABLE`, `MSWEA_BUBBLEWRAP_EXECUTABLE`, `MSWEA_CONFIG_DIR`)
 are documented in the upstream mini-swe-agent docs and are not used by the desktop app.
+
+`MSWEA_CONFIGURED` is an internal first-run marker written by the inherited configuration
+wizard, not a desktop setting or a supported way to configure providers.
 
 ## Credentials
 

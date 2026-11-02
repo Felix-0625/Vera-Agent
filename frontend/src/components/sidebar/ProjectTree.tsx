@@ -1,23 +1,16 @@
-import React, { useState } from 'react';
 import { FolderPlus } from 'lucide-react';
-import { useProjectStore } from '../../stores/projectStore';
+import React, { useState } from 'react';
+import { deleteThread, updateThread } from '../../api/chatApi';
 import { useChatStore } from '../../stores/chatStore';
 import { useLayoutStore } from '../../stores/layoutStore';
+import { useProjectStore } from '../../stores/projectStore';
 import { Thread } from '../../types/chat';
-import { ProjectRow } from './ProjectRow';
 import { ConversationContextMenu } from './ConversationContextMenu';
-import { updateThread, deleteThread } from '../../api/chatApi';
-
+import { ProjectRow } from './ProjectRow';
 
 export const ProjectTree: React.FC = () => {
   const { currentProject, projectsHistory, updateProject, deleteProject } = useProjectStore();
-  const {
-    threads,
-    activeThreadId,
-    selectThread,
-    openDraftConversation,
-    loadThreads,
-  } = useChatStore();
+  const { threads, activeThreadId, selectThread, openDraftConversation, loadThreads } = useChatStore();
   const { openProjectCreate, openProjectEdit } = useLayoutStore();
 
   const [menuTarget, setMenuTarget] = useState<{ thread: Thread; pos: { x: number; y: number } } | null>(null);
@@ -44,12 +37,12 @@ export const ProjectTree: React.FC = () => {
   const handlePinProject = async (project: (typeof allProjects)[number]) => {
     await updateProject(project.id, { is_pinned: !project.is_pinned });
   };
-    const handleDeleteProject = async (project: (typeof allProjects)[number]) => {
-      await deleteProject(project.id);
-      if (useChatStore.getState().draftProjectId === project.id) {
-        useChatStore.getState().setDraftProjectId(null);
-      }
-    };
+  const handleDeleteProject = async (project: (typeof allProjects)[number]) => {
+    await deleteProject(project.id);
+    if (useChatStore.getState().draftProjectId === project.id) {
+      useChatStore.getState().setDraftProjectId(null);
+    }
+  };
 
   const handleRename = async (t: Thread) => {
     setEditingThreadId(t.thread_id);
@@ -76,7 +69,14 @@ export const ProjectTree: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: 'var(--space-0-5) var(--space-3)', display: 'flex', flexDirection: 'column', gap: 'var(--space-3-5)' }}>
+    <div
+      style={{
+        padding: 'var(--space-0-5) var(--space-3)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--space-3-5)',
+      }}
+    >
       {}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1-5)' }}>
         <div
@@ -94,37 +94,40 @@ export const ProjectTree: React.FC = () => {
           <button
             onClick={openProjectCreate}
             title="选择或绑定本地目录"
-            style={{ color: 'var(--accent-primary)', padding: 'var(--space-0-5)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+            style={{
+              color: 'var(--accent-primary)',
+              padding: 'var(--space-0-5)',
+              display: 'flex',
+              alignItems: 'center',
+              cursor: 'pointer',
+            }}
           >
             <FolderPlus size={14} />
           </button>
         </div>
 
-        {allProjects.filter(project => !project.is_pinned).map((project) => {
-          const projectThreads = threads.filter(
-            (t) =>
-              !t.is_archived &&
-              !t.is_pinned &&
-              t.project_id === project.id
-          );
+        {allProjects
+          .filter((project) => !project.is_pinned)
+          .map((project) => {
+            const projectThreads = threads.filter((t) => !t.is_archived && !t.is_pinned && t.project_id === project.id);
 
-          return (
-            <ProjectRow
-              key={project.id}
-              project={project}
-              threads={projectThreads}
-              activeThreadId={activeThreadId}
-              onSelectThread={selectThread}
-              onNewDraftInProject={(pId) => openDraftConversation(pId)}
-              onContextMenu={handleContextMenu}
-              onPinProject={(p) => void handlePinProject(p)}
-              onEditProject={openProjectEdit}
-              onDeleteProject={(p) => void handleDeleteProject(p)}
-              editingThreadId={editingThreadId}
-              onRenameThread={saveThreadName}
-            />
-          );
-        })}
+            return (
+              <ProjectRow
+                key={project.id}
+                project={project}
+                threads={projectThreads}
+                activeThreadId={activeThreadId}
+                onSelectThread={selectThread}
+                onNewDraftInProject={(pId) => openDraftConversation(pId)}
+                onContextMenu={handleContextMenu}
+                onPinProject={(p) => void handlePinProject(p)}
+                onEditProject={openProjectEdit}
+                onDeleteProject={(p) => void handleDeleteProject(p)}
+                editingThreadId={editingThreadId}
+                onRenameThread={saveThreadName}
+              />
+            );
+          })}
       </div>
 
       {menuTarget && (

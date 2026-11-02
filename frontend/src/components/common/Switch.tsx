@@ -13,9 +13,7 @@ export const Switch: React.FC<SwitchProps> = ({ label, checked, onChange, classN
     role="switch"
     aria-checked={checked}
     aria-label={label}
-    className={['ui-switch', checked && 'ui-switch--checked', className]
-      .filter(Boolean)
-      .join(' ')}
+    className={['ui-switch', checked && 'ui-switch--checked', className].filter(Boolean).join(' ')}
     onClick={(event) => {
       props.onClick?.(event);
       if (!event.defaultPrevented && !props.disabled) onChange(!checked);
