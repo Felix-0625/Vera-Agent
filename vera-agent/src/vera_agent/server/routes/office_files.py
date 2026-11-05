@@ -156,7 +156,8 @@ def write_xlsx(target: Path, sheets: list[dict]) -> None:
         with zipfile.ZipFile(target) as source, zipfile.ZipFile(temp_path, "w", zipfile.ZIP_DEFLATED) as output:
             sheet_defs, shared = xlsx_layout(source)
             replacements: dict[str, bytes] = {}
-            for sheet_def, edited in zip(sheet_defs, sheets):
+            # The UI may send fewer sheets than the workbook has; extra workbook sheets stay untouched.
+            for sheet_def, edited in zip(sheet_defs, sheets):  # noqa: B905
                 root = SafeET.fromstring(source.read(sheet_def["path"]))
                 sheet_data = next((node for node in root.iter() if node.tag.endswith("}sheetData")), None)
                 if sheet_data is None:

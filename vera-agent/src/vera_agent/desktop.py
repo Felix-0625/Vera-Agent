@@ -43,6 +43,7 @@ def start_server(frontend_dist: Path, port: int) -> tuple[uvicorn.Server, thread
 
 
 def main() -> None:
+    """Build-check the UI bundle, start the local API, and show the window until it is closed."""
     project_root = Path(__file__).resolve().parents[3]
     frontend_dist = project_root / "frontend" / "dist"
     icon = project_root / "frontend" / "public" / "logo.ico"

@@ -32,6 +32,7 @@ class LoopbackOriginMiddleware:
         self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """Answer 403 (HTTP) or close with 1008 (WebSocket) for a foreign Origin; pass everything else on."""
         if scope["type"] in ("http", "websocket"):
             origin = dict(scope["headers"]).get(b"origin")
             if origin is not None and not LOOPBACK_ORIGIN.match(origin.decode("latin-1")):
