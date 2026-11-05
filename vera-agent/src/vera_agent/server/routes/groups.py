@@ -17,7 +17,6 @@ from starlette.routing import Route
 
 from vera_agent.server.routes.group_instances import compose_group, create_group_instance, provision_group
 from vera_agent.server.routes.group_materialization import _materialize_group_sessions
-from vera_agent.server.routes.group_registry import add_group_edge, get_group_registry, remove_group_edge
 from vera_agent.server.routes.group_store import (
     _get_state,
     _groups_dir,
@@ -305,7 +304,4 @@ group_routes = [
     Route("/api/groups/{group_id}/runs/{run_id}", update_group_run, methods=["PATCH"]),
     Route("/api/groups/provision", provision_group, methods=["POST"]),
     Route("/api/groups/compose", compose_group, methods=["POST"]),
-    Route("/api/groups/{group_id}/registry", get_group_registry, methods=["GET"]),
-    Route("/api/groups/{group_id}/edges", add_group_edge, methods=["POST"]),
-    Route("/api/groups/{group_id}/edges", remove_group_edge, methods=["DELETE"]),
 ]

@@ -28,8 +28,6 @@ interface LayoutState {
   taskboardOpen: boolean;
   newTaskDialogOpen: boolean;
   newTaskPrompt: string;
-  provisionGroupOpen: boolean;
-  provisionGroupProjectId: string | null;
   modelConfigOpen: boolean;
   editingModel: ModelConfig | null;
   modelCatalogVersion: number;
@@ -60,7 +58,6 @@ interface LayoutState {
   setTaskboardOpen: (open: boolean) => void;
   setNewTaskDialogOpen: (open: boolean, prompt?: string) => void;
   setNewTaskPrompt: (prompt: string) => void;
-  setProvisionGroupOpen: (open: boolean, projectId?: string | null) => void;
   openModelConfig: (model?: ModelConfig | null) => void;
   notifyModelCatalogChanged: () => void;
   notifyMcpCatalogChanged: () => void;
@@ -112,8 +109,6 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   taskboardOpen: false,
   newTaskDialogOpen: false,
   newTaskPrompt: '',
-  provisionGroupOpen: false,
-  provisionGroupProjectId: null,
   modelConfigOpen: false,
   editingModel: null,
   modelCatalogVersion: 0,
@@ -179,8 +174,6 @@ export const useLayoutStore = create<LayoutState>((set) => ({
   setTaskboardOpen: (open) => set({ taskboardOpen: open }),
   setNewTaskDialogOpen: (open, prompt = '') => set({ newTaskDialogOpen: open, newTaskPrompt: open ? prompt : '' }),
   setNewTaskPrompt: (newTaskPrompt) => set({ newTaskPrompt }),
-  setProvisionGroupOpen: (open, projectId = null) =>
-    set({ provisionGroupOpen: open, provisionGroupProjectId: open ? projectId : null }),
   openModelConfig: (model = null) => set({ modelConfigOpen: true, editingModel: model }),
   notifyModelCatalogChanged: () => set((state) => ({ modelCatalogVersion: state.modelCatalogVersion + 1 })),
   notifyMcpCatalogChanged: () => set((state) => ({ mcpCatalogVersion: state.mcpCatalogVersion + 1 })),

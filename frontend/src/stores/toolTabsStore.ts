@@ -24,19 +24,19 @@ const DEFAULT_TOOL_TITLES: Partial<Record<ToolTabId, string>> = {
   memory: '长期记忆',
   evolution: '改进提案',
 };
-export const getConversationToolScope = () => {
+const getConversationToolScope = () => {
   const { activeThreadId, draftConversationId } = useChatStore.getState();
   return `conversation:${activeThreadId || draftConversationId || 'draft:initial'}`;
 };
 
-export const getCurrentProjectId = () => {
+const getCurrentProjectId = () => {
   const state = useChatStore.getState();
   return state.activeThreadId
     ? state.threads.find((thread) => thread.thread_id === state.activeThreadId)?.project_id || null
     : state.draftProjectId;
 };
 
-export const getProjectToolScope = (projectId = getCurrentProjectId()) => `project:${projectId || 'workspace'}`;
+const getProjectToolScope = (projectId = getCurrentProjectId()) => `project:${projectId || 'workspace'}`;
 export const getMountedPanelScope = (conversationKey: string, projectKey: string) =>
   JSON.stringify([conversationKey, projectKey]);
 
@@ -49,7 +49,7 @@ interface MountedPanelGroup {
 // Tabs are a view owned by a conversation. Project tools still resolve their
 // data from the active conversation's project, but opening/activating a tab in
 // one conversation must not change another conversation's tab strip.
-export const getToolScope = (
+const getToolScope = (
   _toolType: ToolTabId,
   _projectId = getCurrentProjectId(),
   conversationKey = getConversationToolScope(),

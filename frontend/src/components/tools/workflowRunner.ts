@@ -34,7 +34,7 @@ import type { Group, WorkflowEdgeDefinition, WorkflowNodeDefinition } from '../.
 
 const SKIPPED_OUTPUT = '未进入本次选中的执行路径，因此未运行。';
 
-export const edgeKey = (edge: WorkflowEdgeDefinition) =>
+const edgeKey = (edge: WorkflowEdgeDefinition) =>
   edge.id ||
   [
     edge.source,
@@ -72,7 +72,7 @@ export function parseWorkflowControlResult(raw: string, type: 'condition' | 'loo
   };
 }
 
-export function formatWorkflowControlResult(type: 'condition' | 'loop', result: WorkflowControlResult): string {
+function formatWorkflowControlResult(type: 'condition' | 'loop', result: WorkflowControlResult): string {
   const route =
     type === 'loop' ? (result.decision === 'YES' ? '退出循环' : '继续循环') : result.decision === 'YES' ? '是' : '否';
   return [

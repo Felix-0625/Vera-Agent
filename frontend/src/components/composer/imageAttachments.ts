@@ -1,6 +1,6 @@
 import { ChatImageAttachment } from '../../types/chat';
 
-export const MAX_CHAT_IMAGE_BYTES = 8 * 1024 * 1024;
+const MAX_CHAT_IMAGE_BYTES = 8 * 1024 * 1024;
 
 export async function readImageFiles(files: FileList | File[]): Promise<ChatImageAttachment[]> {
   const images = Array.from(files).filter(

@@ -96,16 +96,6 @@ export async function deleteThread(threadId: string): Promise<{ status: string }
   });
 }
 
-export async function probeThreadContext(threadId: string): Promise<{
-  thread_id: string;
-  title: string;
-  last_user_message: string;
-  last_assistant_message: string;
-  summary: string;
-}> {
-  return request(`/api/threads/${threadId}/context-probe`);
-}
-
 export interface ThreadContextStatus {
   thread_id: string;
   model: string;

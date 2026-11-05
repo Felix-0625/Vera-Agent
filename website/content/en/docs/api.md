@@ -6,14 +6,14 @@ The VeraAgent desktop UI talks to a local Starlette API. This page summarizes it
 
 | Item | Contract |
 | --- | --- |
-| Base URL | `http://127.0.0.1:<port>`; usually 8000, with 8001–8100 as desktop fallback |
-| Authentication | None; keep on loopback. CORS is `*`. |
+| Base URL | `http://127.0.0.1:<port>`; the desktop app picks the first free port from 8000 and serves the UI from the same origin |
+| Authentication | None; keep on loopback. `server/security.py` rejects non-loopback `Host` (400) and `Origin` (403); CORS allows loopback origins only. |
 | Body | JSON with `snake_case` field names |
 | Errors | Non-2xx responses generally contain `{"error":"<message>"}`; some errors are in Chinese |
 | Common status codes | `400` invalid input; `403` rejected action/path; `404` missing; `409` conflict; `413` too large; `502`/`504` upstream marketplace errors |
 | Project scope | Most project-data requests require a bound `project_id` |
 
-`GET /api/health` checks liveness. `GET /api/topology` is the desktop launcher's readiness probe. Vite proxies `/api` during development.
+`GET /api/health` checks liveness. Vite proxies `/api` during development.
 
 ## Chat stream (`chat.py`)
 
@@ -54,8 +54,6 @@ Binding stores a path; it does not copy or isolate project files.
 | POST | `/api/groups/instances` | Instantiate a template; 1–60 nodes and at most 120 edges |
 | POST | `/api/groups/compose` | Write a protocol-level graph; many accepted node kinds lack executors |
 | POST | `/api/groups/provision` | Provision node threads and related resources |
-| GET | `/api/groups/{group_id}/registry` | Explicit agent registry |
-| POST / DELETE | `/api/groups/{group_id}/edges` | Add/remove an edge |
 | GET / POST | `/api/groups/{group_id}/threads` | Read/create node threads |
 | POST | `/api/groups/{group_id}/runs` | Create a run with `project_id`, input (up to 100,000 characters), and string confirmation `"Y"`; creates isolated node threads |
 | PATCH | `/api/groups/{group_id}/runs/{run_id}` | Validate and persist run/node state changes; the backend does not schedule nodes |
@@ -112,7 +110,7 @@ Paths are checked against the bound project as an **application-level policy, no
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/topology`, `/api/gitflow/topology` | Launcher readiness and branch topology |
+| GET | `/api/gitflow/topology` | Branch topology of a project |
 | GET / POST | `/api/branches` | List/create branches |
 | DELETE | `/api/branches/{name}` | Delete a branch |
 | POST | `/api/branches/checkout`, `/api/branches/merge` | Switch or merge branches |
@@ -124,7 +122,7 @@ Paths are checked against the bound project as an **application-level policy, no
 | --- | --- | --- |
 | GET | `/api/worktrees/refs`, `/api/worktrees/diff` | Available refs and changes |
 | POST | `/api/worktrees/stage`, `/api/worktrees/discard` | Stage or discard selected files |
-| POST | `/api/worktrees/checkpoint`, `/api/worktrees/reset` | Commit or reset a worktree; reset may be `hard` |
+| POST | `/api/worktrees/checkpoint` | Commit a worktree checkpoint |
 
 These operate on node-specific local worktrees used by a workflow/organization run, not a general project-wide Git client.
 
@@ -175,13 +173,11 @@ Model API keys are plaintext in `models_config.json` and omitted from API respon
 | --- | --- | --- |
 | GET | `/api/analytics/dashboard` | Aggregate recent token use, cost, and activity from stored threads |
 
-## Session routing and health (`sessions.py`)
+## Health (`sessions.py`)
 
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/api/health` | Liveness |
-| POST | `/api/sessions/attach`, `/api/sessions/detach` | Attach/detach a thread to an organization/workflow session bus |
-| POST | `/api/messages/send` | Route a message between attached sessions |
 
 ## Terminal (`terminal.py`)
 

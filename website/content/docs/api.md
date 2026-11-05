@@ -6,14 +6,14 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 
 | 项 | 约定 |
 | --- | --- |
-| 地址 | `http://127.0.0.1:<port>`；通常 8000，被占用时桌面脚本从 8001–8100 选择 |
-| 鉴权 | 当前无调用者认证；只能保持在 loopback 上，CORS 为 `*` |
+| 地址 | `http://127.0.0.1:<port>`；桌面应用从 8000 起选第一个空闲端口，界面与 API 同源 |
+| 鉴权 | 无调用者认证，只能保持在 loopback 上；`server/security.py` 拒绝非 loopback 的 `Host`（400）和 `Origin`（403），CORS 只放行 loopback 来源 |
 | 正文 | JSON；字段名为 `snake_case` |
 | 错误 | 非 2xx 一般为 `{"error":"<message>"}`；部分消息是中文，会被界面直接展示 |
 | 常见状态码 | `400` 无效输入，`403` 权限/确认拒绝或路径越界，`404` 未找到，`409` 状态冲突，`413` 内容超限，`502`/`504` 市场类接口的上游错误 |
 | 项目范围 | 多数项目数据请求必须带已绑定的 `project_id`，服务端据此在该项目目录内解析路径 |
 
-`GET /api/health` 用于轻量存活检查；`GET /api/topology` 是桌面启动脚本使用的就绪探针。Vite 开发服务用 `/api` 代理本地后端。
+`GET /api/health` 用于轻量存活检查。Vite 开发服务用 `/api` 代理本地后端。
 
 ## 对话流（chat.py）
 
@@ -69,8 +69,6 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 | POST | `/api/groups/instances` | 从模板创建项目实例；`project_id`、`name`、`group_mode`、节点（1–60）与连线（≤120） |
 | POST | `/api/groups/compose` | 按协议直接写入实例；可用 18 种协议层节点类型，但多数类型目前没有运行时执行器 |
 | POST | `/api/groups/provision` | 批量生成节点会话等配套资源 |
-| GET | `/api/groups/{group_id}/registry` | 读取该实例下各角色的显式 Agent 注册表 |
-| POST / DELETE | `/api/groups/{group_id}/edges` | 增删一条连线 |
 | GET / POST | `/api/groups/{group_id}/threads` | 读取 / 创建实例下的节点会话 |
 | POST | `/api/groups/{group_id}/runs` | 创建运行；`project_id`、输入（≤100,000 字符）、字符串确认值 `"Y"`；为每个节点创建隔离会话 |
 | PATCH | `/api/groups/{group_id}/runs/{run_id}` | 更新运行或节点状态；服务端只校验状态转换合法性并落盘，不参与调度决策 |
@@ -131,7 +129,6 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
-| GET | `/api/topology` | 桌面启动器的就绪探针 |
 | GET | `/api/gitflow/topology` | 项目的分支拓扑 |
 | GET / POST | `/api/branches` | 列出 / 创建分支 |
 | DELETE | `/api/branches/{name}` | 删除分支 |
@@ -148,7 +145,6 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 | POST | `/api/worktrees/stage` | 暂存指定文件（`git add`） |
 | POST | `/api/worktrees/discard` | 放弃指定文件的本地改动 |
 | POST | `/api/worktrees/checkpoint` | 创建一次提交 |
-| POST | `/api/worktrees/reset` | 回退工作树，可选 `hard` 硬重置 |
 
 面向工作流/组织运行中某个节点独立持有的本地 Git 工作树（按 `group_id` 或显式 `worktree_path` 定位目录），服务于 diff 查看器和节点级代码变更追踪，不是通用的项目级 Git 客户端。
 
@@ -203,16 +199,11 @@ Skill 是影响 Agent 行为的指令包文本，安装后落在应用级 `<proj
 
 数据来源是已绑定项目下持久化的对话会话文件（逐条读取消息里的 usage/cost 字段聚合），不是额外的独立统计数据库。
 
-## 会话路由与健康检查（sessions.py）
+## 健康检查（sessions.py）
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
 | GET | `/api/health` | 存活检查 |
-| POST | `/api/sessions/attach` | 把一个对话（`thread_id`）接入某个组织/工作流实例（`group_id`）的会话总线 |
-| POST | `/api/sessions/detach` | 断开接入 |
-| POST | `/api/messages/send` | 通过 `SessionRouter` 在已接入的会话之间转发消息 |
-
-服务于协作窗口/子智能体之间的消息路由，和 `threads.py` 的对话 CRUD 是不同层面的概念。
 
 ## 终端（terminal.py）
 

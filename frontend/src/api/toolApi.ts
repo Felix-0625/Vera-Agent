@@ -1,11 +1,11 @@
 /**
- * Right-side tool panel client: diff/worktree, files, terminal, task board, scheduled tasks, Git, analytics.
+ * Right-side tool panel client: diff/worktree, files, task board, scheduled tasks, Git, analytics.
+ * (The terminal panel talks to the WebSocket in `stores/terminalStore.ts`.)
  *
- * Backend: `server/routes/{worktrees,files,terminal,taskboard,tasks,gitflow,analytics}.py`.
+ * Backend: `server/routes/{worktrees,files,taskboard,tasks,gitflow,analytics}.py`.
  */
 import {
   AnalyticsDashboard,
-  BranchInfo,
   FilePreviewData,
   FileTreeNode,
   GitFlowTopology,
@@ -61,17 +61,6 @@ export async function discardWorktreeFile(
   });
 }
 
-export async function createWorktreeCheckpoint(
-  message: string,
-  groupId?: string,
-  projectId?: string,
-): Promise<{ success: boolean; commit: string }> {
-  return request('/api/worktrees/checkpoint', {
-    method: 'POST',
-    body: JSON.stringify({ message, group_id: groupId, project_id: projectId }),
-  });
-}
-
 // 2. Files
 export async function fetchFileTree(groupId?: string, projectId?: string): Promise<FileTreeNode> {
   const query = new URLSearchParams();
@@ -80,35 +69,11 @@ export async function fetchFileTree(groupId?: string, projectId?: string): Promi
   return request(`/api/files/tree${query.size ? `?${query.toString()}` : ''}`);
 }
 
-export async function fetchFileContent(
-  path: string,
-  groupId?: string,
-  projectId?: string,
-): Promise<{
-  path: string;
-  name: string;
-  content: string;
-  lines: number;
-  size: number;
-}> {
-  const query = new URLSearchParams({ path });
-  if (groupId) query.set('group_id', groupId);
-  if (projectId) query.set('project_id', projectId);
-  return request(`/api/files/content?${query.toString()}`);
-}
-
 export async function fetchFilePreview(path: string, groupId?: string, projectId?: string): Promise<FilePreviewData> {
   const query = new URLSearchParams({ path });
   if (groupId) query.set('group_id', groupId);
   if (projectId) query.set('project_id', projectId);
   return request(`/api/files/preview?${query.toString()}`);
-}
-
-export function getRawFileUrl(path: string, groupId?: string, projectId?: string): string {
-  const query = new URLSearchParams({ path });
-  if (groupId) query.set('group_id', groupId);
-  if (projectId) query.set('project_id', projectId);
-  return `/api/files/raw?${query.toString()}`;
 }
 
 export async function saveTextFile(path: string, content: string, groupId?: string, projectId?: string): Promise<void> {
@@ -130,42 +95,7 @@ export async function saveExcelFile(
   });
 }
 
-export async function checkCodeSyntax(code: string): Promise<{ valid: boolean; message: string }> {
-  return request('/api/code/check-syntax', {
-    method: 'POST',
-    body: JSON.stringify({ code }),
-  });
-}
-
-export async function searchCodeSymbols(
-  query: string,
-  symbol_type = 'all',
-): Promise<{ results: Array<{ name: string; kind: string; file: string; line: number }> }> {
-  return request('/api/code/search-symbols', {
-    method: 'POST',
-    body: JSON.stringify({ query, symbol_type }),
-  });
-}
-
-// 3. Terminal
-export async function execTerminalCommand(
-  command: string,
-  groupId?: string,
-  timeout = 30,
-): Promise<{
-  command: string;
-  cwd: string;
-  exit_code: number;
-  stdout: string;
-  stderr: string;
-}> {
-  return request('/api/terminal/exec', {
-    method: 'POST',
-    body: JSON.stringify({ command, group_id: groupId, timeout }),
-  });
-}
-
-// 4. Scheduled Tasks
+// 3. Scheduled Tasks
 export async function fetchScheduledTasks(): Promise<{ tasks: ScheduledTask[] }> {
   return request('/api/tasks/scheduled');
 }
@@ -230,12 +160,7 @@ export async function deleteScheduledTask(taskId: string): Promise<{ status: str
   });
 }
 
-// 5. GitFlow & Analytics
-export async function fetchBranches(projectId?: string): Promise<{ current_branch: string; branches: BranchInfo[] }> {
-  const query = projectId ? `?project_id=${encodeURIComponent(projectId)}` : '';
-  return request(`/api/branches${query}`);
-}
-
+// 4. GitFlow & Analytics
 export async function fetchGitFlowTopology(projectId: string): Promise<GitFlowTopology> {
   let data: Partial<GitFlowTopology>;
   try {

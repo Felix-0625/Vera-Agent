@@ -123,10 +123,6 @@ export async function fetchMcpServers(): Promise<{ servers: McpServerConfig[] }>
   return request('/api/mcp/servers');
 }
 
-export async function scanMcpServers(): Promise<{ servers: McpServerConfig[] }> {
-  return request('/api/mcp/scan', { method: 'POST' });
-}
-
 export async function createMcpServer(data: Partial<McpServerConfig>): Promise<{ server: McpServerConfig }> {
   return request('/api/mcp/servers', {
     method: 'POST',
@@ -222,16 +218,6 @@ export async function installMcpFromMarket(
 // 4. Skills
 export async function fetchSkills(): Promise<{ skills: SkillItem[] }> {
   return request('/api/skills');
-}
-
-export async function scanSkills(): Promise<{ skills: SkillItem[] }> {
-  return request('/api/skills/scan', { method: 'POST' });
-}
-
-export async function toggleSkill(name: string): Promise<{ status: string; state: string }> {
-  return request(`/api/skills/${name}/toggle`, {
-    method: 'PATCH',
-  });
 }
 
 export async function deleteSkill(name: string): Promise<{ status: string }> {

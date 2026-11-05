@@ -55,13 +55,6 @@ export async function fetchMemories(
   return request(`/api/memories${query(params)}`);
 }
 
-export async function updateMemory(memoryId: string, content: string): Promise<{ memory: MemoryItem }> {
-  return request(`/api/memories/${encodeURIComponent(memoryId)}`, {
-    method: 'PATCH',
-    body: JSON.stringify({ content }),
-  });
-}
-
 export async function deleteMemory(memoryId: string): Promise<unknown> {
   return request(`/api/memories/${encodeURIComponent(memoryId)}`, { method: 'DELETE' });
 }

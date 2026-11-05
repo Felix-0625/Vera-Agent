@@ -1,7 +1,7 @@
 """Git working-tree routes used by the diff viewer.
 
 Routes: GET /api/worktrees/refs, /api/worktrees/diff; POST /api/worktrees/stage,
-/api/worktrees/discard, /api/worktrees/checkpoint, /api/worktrees/reset.
+/api/worktrees/discard, /api/worktrees/checkpoint.
 """
 
 from __future__ import annotations
@@ -253,39 +253,10 @@ async def create_checkpoint(request: Request) -> JSONResponse:
     return JSONResponse({"success": True, "commit": commit})
 
 
-async def reset_worktree(request: Request) -> JSONResponse:
-    state = _get_state(request)
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-
-    wt_path = body.get("worktree_path")
-    group_id = body.get("group_id")
-    if not wt_path and group_id and state.graph and group_id in state.graph.groups:
-        wt_path = str(state.graph.groups[group_id].worktree_path)
-    if not wt_path:
-        target_dir = _resolve_target_dir(state, group_id, None, body.get("project_id"))
-        if target_dir is None:
-            return JSONResponse({"error": "项目不存在或项目目录不可用"}, status_code=404)
-        wt_path = str(target_dir)
-
-    hard = body.get("hard", True)
-    if not wt_path:
-        return JSONResponse({"error": "worktree_path required"}, status_code=400)
-
-    if not state.wt_manager:
-        return JSONResponse({"error": "WorktreeManager not initialized"}, status_code=500)
-
-    success = state.wt_manager.reset_worktree(wt_path, hard=hard)
-    return JSONResponse({"success": success})
-
-
 worktree_routes = [
     Route("/api/worktrees/refs", get_worktree_refs, methods=["GET"]),
     Route("/api/worktrees/diff", get_worktree_diff, methods=["GET"]),
     Route("/api/worktrees/stage", stage_worktree_file, methods=["POST"]),
     Route("/api/worktrees/discard", discard_worktree_file, methods=["POST"]),
     Route("/api/worktrees/checkpoint", create_checkpoint, methods=["POST"]),
-    Route("/api/worktrees/reset", reset_worktree, methods=["POST"]),
 ]

@@ -15,7 +15,7 @@ import { BranchInfo, GitCommitInfo, GitFlowTopology } from '../../types/tool';
 import { IconButton } from '../common/IconButton';
 import './gitflow.css';
 import { BranchNodeData, FlowNode, branchColor, buildGraph } from './gitFlowGraph';
-export const BranchNode: React.FC<{ data: BranchNodeData; selected?: boolean }> = ({ data, selected }) => {
+const BranchNode: React.FC<{ data: BranchNodeData; selected?: boolean }> = ({ data, selected }) => {
   const branch = data.branch;
   const color = branchColor(branch.name);
   return (

@@ -5,10 +5,8 @@ Covers:
 2. One-click group provisioning (POST /api/groups/provision) with goal injection
 3. Verification of physical Worktree, multiple threads, and kickoff prompt
 4. Physical explicit registry generation under .agents/registries/{group_id}.json
-5. Querying registry (GET /api/groups/{group_id}/registry)
-6. Canvas dynamic edge connection & disconnection (POST & DELETE /api/groups/{group_id}/edges)
-7. React Flow topology export for one-click jumping to conversation windows
-8. Host-level write protection of .agents/registries against agent modification
+5. Host-level write protection of .agents/registries against agent modification
+6. Registry status sync (running -> idle) during a chat turn
 """
 
 import json
@@ -152,70 +150,6 @@ def test_one_click_provisioning_supervisor(temp_git_repo: Path):
     assert "read" in lead_entry["allowed_tools"]
     assert lead_entry["status"] == "idle"
 
-    # 5. Test GET /api/groups/{group_id}/registry
-    res_reg = client.get(f"/api/groups/{gid}/registry")
-    assert res_reg.status_code == 200
-    assert res_reg.json()["group_id"] == gid
-
-
-def test_visual_canvas_edges_and_direct_jump(temp_git_repo: Path):
-    """Test canvas edge connection/disconnection and React Flow node jump mapping."""
-    app = create_app(repo_root=temp_git_repo)
-    client = TestClient(app)
-
-    # Provision a sequential workflow
-    res = client.post(
-        "/api/groups/provision",
-        json={
-            "group_name": "用户中心迭代组",
-            "branch_name": "feat/user-center",
-            "goal": "新增 OAuth2 GitHub 登录功能",
-            "template_id": "sequential_workflow",
-        },
-    )
-    assert res.status_code == 200
-    data = res.json()
-    gid = data["group"]["group_id"]
-    threads = data["threads"]
-    t1_id = threads[0]["thread_id"]
-    t2_id = threads[1]["thread_id"]
-
-    # 1. Connect a new custom edge between t1 and t2 (e.g. from React Flow onConnect)
-    res_edge = client.post(
-        f"/api/groups/{gid}/edges",
-        json={"source_thread_id": t1_id, "target_thread_id": t2_id, "relation": "manual_collab"},
-    )
-    assert res_edge.status_code == 200
-    assert res_edge.json()["status"] == "ok"
-
-    # Verify edge present in registry
-    res_reg = client.get(f"/api/groups/{gid}/registry")
-    reg_edges = res_reg.json()["edges"]
-    assert any(e["source_thread_id"] == t1_id and e["target_thread_id"] == t2_id for e in reg_edges)
-
-    # 2. Test React Flow topology export has direct-jump metadata
-    res_topo = client.get("/api/topology")
-    assert res_topo.status_code == 200
-    topo_nodes = res_topo.json()["nodes"]
-
-    session_nodes = [n for n in topo_nodes if n["type"] == "sessionNode"]
-    assert len(session_nodes) >= 4
-
-    # Verify each sessionNode has thread_id and title so frontend can click-to-jump
-    for sn in session_nodes:
-        assert "thread_id" in sn["data"]
-        assert "title" in sn["data"]
-        assert "role" in sn["data"]
-
-    # 3. Disconnect edge
-    res_del_edge = client.request(
-        "DELETE",
-        f"/api/groups/{gid}/edges",
-        json={"source_thread_id": t1_id, "target_thread_id": t2_id},
-    )
-    assert res_del_edge.status_code == 200
-    assert res_del_edge.json()["status"] == "ok"
-
 
 def test_agent_write_protection_on_registries(temp_git_repo: Path):
     """Test that agent tools cannot tamper with .agents/registries."""
@@ -280,8 +214,7 @@ def test_chat_stream_updates_registry_status(temp_git_repo: Path):
         assert res_stream.status_code == 200
         assert "event: finish" in res_stream.text
 
-    # After completion, status in registry must be 'idle'
-    res_reg = client.get(f"/api/groups/{gid}/registry")
-    assert res_reg.status_code == 200
-    agent_entry = next(a for a in res_reg.json()["agents"] if a["thread_id"] == tid)
+    # After completion, status in the registry file must be 'idle'
+    registry = json.loads((temp_git_repo / ".agents" / "registries" / f"{gid}.json").read_text(encoding="utf-8"))
+    agent_entry = next(a for a in registry["agents"] if a["thread_id"] == tid)
     assert agent_entry["status"] == "idle"

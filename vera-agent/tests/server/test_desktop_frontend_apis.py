@@ -10,7 +10,6 @@ Validates:
 7. GitFlow branches: GET/POST/DELETE /api/branches, checkout, merge
 8. Terminal: POST /api/terminal/exec
 9. Model/MCP/Skill patches: PUT /api/mcp/servers/{id}, PATCH /api/settings/models/{id}, PATCH /api/skills/{name}/toggle
-10. Direct message dispatch: POST /api/messages/send
 """
 
 import os
@@ -132,13 +131,10 @@ def test_threads_and_sidechat_probe(test_git_repo: Path):
     assert create_res.status_code == 200
     tid = create_res.json()["thread_id"]
 
-    # 2. Send message
-    msg_res = client.post(
-        "/api/messages/send",
-        json={"thread_id": tid, "content": "How do we handle stripe webhooks?", "sender_id": "user"},
-    )
-    assert msg_res.status_code == 200
-    assert msg_res.json()["status"] == "delivered"
+    # 2. Add a user message directly to the persisted session
+    session = app.state.server_state.get_or_create_session(tid)
+    session.add_messages({"role": "user", "content": "How do we handle stripe webhooks?"})
+    session.save(app.state.server_state.get_sessions_dir() / f"{tid}.json")
 
     # 3. Search threads
     search_res = client.get("/api/threads", params={"search": "stripe"})
@@ -264,8 +260,8 @@ def test_gitflow_branch_operations(test_git_repo: Path):
     client = TestClient(app)
     project_id = client.get("/api/projects").json()["projects"][0]["id"]
 
-    # 1. List branches
-    list_res = client.get(f"/api/branches?project_id={project_id}")
+    # 1. List branches through the topology the UI renders
+    list_res = client.get(f"/api/gitflow/topology?project_id={project_id}")
     assert list_res.status_code == 200
     assert len(list_res.json()["branches"]) >= 1
 

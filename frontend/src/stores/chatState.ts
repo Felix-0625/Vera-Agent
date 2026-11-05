@@ -70,7 +70,7 @@ export function saveConversationQueue(
   return next;
 }
 
-export function stopActiveStream(): void {
+function stopActiveStream(): void {
   streamState.activeStreamToken += 1;
   const cancel = streamState.cancelCurrentStream;
   streamState.cancelCurrentStream = null;

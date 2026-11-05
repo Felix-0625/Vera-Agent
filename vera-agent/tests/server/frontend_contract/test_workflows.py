@@ -127,10 +127,14 @@ def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_rep
     assert group["project_id"] == project_id
     assert len(result["threads"]) == 2
     assert all((agents_dir / "sessions" / f"{thread['thread_id']}.json").exists() for thread in result["threads"])
-    registry = client.get(f"/api/groups/{group['group_id']}/registry", params={"project_id": project_id})
-    assert registry.status_code == 200
-    assert len(registry.json()["agents"]) == 2
-    assert len(registry.json()["edges"]) == 1
+
+    def read_registry() -> dict:
+        path = agents_dir / "registries" / f"{group['group_id']}.json"
+        return json.loads(path.read_text(encoding="utf-8"))
+
+    registry = read_registry()
+    assert len(registry["agents"]) == 2
+    assert len(registry["edges"]) == 1
     assert len(client.get("/api/groups", params={"project_id": project_id}).json()["groups"]) == 1
 
     updated_nodes = group["nodes"]
@@ -140,7 +144,7 @@ def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_rep
         f"/api/groups/{group['group_id']}", params={"project_id": project_id}, json={"nodes": updated_nodes}
     )
     assert update_response.status_code == 200
-    updated_registry = client.get(f"/api/groups/{group['group_id']}/registry", params={"project_id": project_id}).json()
+    updated_registry = read_registry()
     coordinator = next(
         agent for agent in updated_registry["agents"] if agent["thread_id"] == updated_nodes[0]["thread_id"]
     )
@@ -157,10 +161,7 @@ def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_rep
     assert added_thread["metadata"]["group_goal"] == "Prepare a release"
     refreshed_group = client.get("/api/groups", params={"project_id": project_id}).json()["groups"][0]
     assert any(node.get("thread_id") == added_thread["thread_id"] for node in refreshed_group["nodes"])
-    refreshed_registry = client.get(
-        f"/api/groups/{group['group_id']}/registry", params={"project_id": project_id}
-    ).json()
-    assert len(refreshed_registry["agents"]) == 3
+    assert len(read_registry()["agents"]) == 3
 
 
 def test_mcp_market_search_uses_registry_search_parameter(temp_git_repo: Path):

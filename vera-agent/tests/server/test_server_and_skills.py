@@ -112,14 +112,7 @@ def test_server_api_endpoints(temp_git_repo: Path):
     assert res_health.status_code == 200
     assert res_health.json()["status"] == "ok"
 
-    # 2. Topology export
-    res_topo = client.get("/api/topology")
-    assert res_topo.status_code == 200
-    topo_data = res_topo.json()
-    assert "nodes" in topo_data
-    assert "edges" in topo_data
-
-    # 3. Create ProjectGroup
+    # 2. Create ProjectGroup
     res_group = client.post(
         "/api/groups",
         json={"group_id": "grp_auth", "branch_name": "feat/auth", "base_branch": "main"},
@@ -127,15 +120,7 @@ def test_server_api_endpoints(temp_git_repo: Path):
     assert res_group.status_code == 200
     assert res_group.json()["group_id"] == "grp_auth"
 
-    # 4. Attach & Detach Session
-    res_attach = client.post(
-        "/api/sessions/attach",
-        json={"thread_id": "th_window_01", "group_id": "grp_auth"},
-    )
-    # Session th_window_01 is not registered yet, but let's test API handles it
-    assert res_attach.status_code == 200
-
-    # 5. Checkpoint & Reset
+    # 3. Checkpoint
     wt_path = res_group.json()["worktree_path"]
     (Path(wt_path) / "test_scratch.txt").write_text("wip", encoding="utf-8")
     res_cp = client.post(
@@ -145,12 +130,12 @@ def test_server_api_endpoints(temp_git_repo: Path):
     assert res_cp.status_code == 200
     assert res_cp.json()["success"] is True
 
-    # 6. Syntax validation endpoint
+    # 4. Syntax validation endpoint
     res_syntax = client.post("/api/code/check-syntax", json={"code": "x = 1 + 2"})
     assert res_syntax.status_code == 200
     assert res_syntax.json()["valid"] is True
 
-    # 7. Merge Review endpoint
+    # 5. Merge Review endpoint
     project_id = client.get("/api/projects").json()["projects"][0]["id"]
     res_merge = client.post(
         "/api/merge-review",

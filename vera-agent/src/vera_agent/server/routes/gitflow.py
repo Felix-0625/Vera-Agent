@@ -1,7 +1,6 @@
 """Git branch and topology routes.
 
-Routes: GET /api/topology (also the desktop launcher readiness probe),
-GET /api/gitflow/topology, GET/POST /api/branches, DELETE /api/branches/{name},
+Routes: GET /api/gitflow/topology, POST /api/branches, DELETE /api/branches/{name},
 POST /api/branches/checkout, /api/branches/merge, /api/merge-review.
 """
 
@@ -33,13 +32,6 @@ def _project_root(state: ServerState, project_id: str | None):
         return None
     candidates = [project.get("path"), *(project.get("folders") or [])]
     return next((Path(path).resolve() for path in candidates if isinstance(path, str) and Path(path).is_dir()), None)
-
-
-async def get_topology(request: Request) -> JSONResponse:
-    state = _get_state(request)
-    if not state.graph:
-        return JSONResponse({"nodes": [], "edges": []})
-    return JSONResponse(state.graph.export_topology(graph_id="active_gitflow_topology").model_dump())
 
 
 async def get_gitflow_topology(request: Request) -> JSONResponse:
@@ -130,39 +122,6 @@ async def get_gitflow_topology(request: Request) -> JSONResponse:
             "current_branch": get_git_branch(root),
             "branches": branches,
             "commits": commits,
-        }
-    )
-
-
-async def get_branches(request: Request) -> JSONResponse:
-    state = _get_state(request)
-    root = _project_root(state, request.query_params.get("project_id"))
-    if root is None:
-        return JSONResponse({"error": "请绑定有效项目后使用 GitFlow"}, status_code=404)
-    code, stdout, _ = state.run_git(["branch", "-a"], cwd=root)
-    branches: list[dict] = []
-    current_branch = get_git_branch(root)
-
-    for line in stdout.splitlines():
-        line_clean = line.strip()
-        if not line_clean:
-            continue
-        is_curr = line_clean.startswith("*")
-        name = line_clean.lstrip("* ").strip()
-        if "->" in name:  # remote HEAD pointer like origin/HEAD -> origin/main
-            continue
-        branches.append(
-            {
-                "name": name,
-                "is_current": is_curr or (name == current_branch),
-                "is_remote": name.startswith("remotes/"),
-            }
-        )
-
-    return JSONResponse(
-        {
-            "current_branch": current_branch,
-            "branches": branches,
         }
     )
 
@@ -298,9 +257,7 @@ async def merge_review(request: Request) -> JSONResponse:
 
 
 gitflow_routes = [
-    Route("/api/topology", get_topology, methods=["GET"]),
     Route("/api/gitflow/topology", get_gitflow_topology, methods=["GET"]),
-    Route("/api/branches", get_branches, methods=["GET"]),
     Route("/api/branches", create_branch, methods=["POST"]),
     Route("/api/branches/{branch_name:path}", delete_branch, methods=["DELETE"]),
     Route("/api/branches/checkout", checkout_branch, methods=["POST"]),

@@ -46,13 +46,6 @@ export async function fetchGroups(projectId?: string): Promise<{ groups: Group[]
   return request(`/api/groups${projectId ? `?project_id=${encodeURIComponent(projectId)}` : ''}`);
 }
 
-export async function createGroup(data: { branch_name: string; base_branch?: string; name?: string }): Promise<Group> {
-  return request('/api/groups', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
-}
-
 export async function updateGroup(groupId: string, data: Partial<Group>, projectId?: string): Promise<Group> {
   return request(`/api/groups/${groupId}${projectId ? `?project_id=${encodeURIComponent(projectId)}` : ''}`, {
     method: 'PATCH',
@@ -63,23 +56,6 @@ export async function updateGroup(groupId: string, data: Partial<Group>, project
 export async function deleteGroup(groupId: string, projectId?: string): Promise<{ status: string }> {
   return request(`/api/groups/${groupId}${projectId ? `?project_id=${encodeURIComponent(projectId)}` : ''}`, {
     method: 'DELETE',
-  });
-}
-
-export async function createGroupThread(
-  groupId: string,
-  projectId: string,
-  data: {
-    title: string;
-    role: string;
-    responsibilities: string[];
-    allowed_tools?: string[];
-    position?: { x: number; y: number };
-  },
-): Promise<import('../types/chat').Thread> {
-  return request(`/api/groups/${groupId}/threads?project_id=${encodeURIComponent(projectId)}`, {
-    method: 'POST',
-    body: JSON.stringify(data),
   });
 }
 
@@ -96,29 +72,6 @@ export async function saveTopologyTemplate(data: {
   edges: import('../types/project').WorkflowEdgeDefinition[];
 }): Promise<{ status: string; template: TopologyTemplate }> {
   return request('/api/templates/topology', { method: 'POST', body: JSON.stringify(data) });
-}
-
-export async function composeGroup(data: {
-  project_id: string;
-  group_mode: 'team' | 'workflow';
-  name: string;
-  goal: string;
-  template_id?: string | null;
-  template_name?: string | null;
-  topology_type?: string;
-  nodes: import('../types/project').WorkflowNodeDefinition[];
-  edges: import('../types/project').WorkflowEdgeDefinition[];
-  layout?: Record<string, unknown>;
-}): Promise<{
-  status: string;
-  group: Group;
-  threads: import('../types/chat').Thread[];
-  registry: Record<string, unknown>;
-}> {
-  return request('/api/groups/compose', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
 }
 
 export async function createGroupInstance(data: {
@@ -170,17 +123,4 @@ export async function updateGroupRun(
     `/api/groups/${encodeURIComponent(groupId)}/runs/${encodeURIComponent(run.run_id)}?project_id=${encodeURIComponent(projectId)}`,
     { method: 'PATCH', body: JSON.stringify(run) },
   );
-}
-
-export async function provisionGroup(data: {
-  template_id: string;
-  branch_name: string;
-  base_branch?: string;
-  group_name?: string;
-  goal?: string;
-}): Promise<{ status: string; group: Group }> {
-  return request('/api/groups/provision', {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
 }
