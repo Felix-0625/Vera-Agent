@@ -68,7 +68,8 @@ def in_process_caller(data_root: Path) -> Iterator[Caller]:
     from starlette.testclient import TestClient
     from vera_agent.server.app import create_app
 
-    with TestClient(create_app(repo_root=data_root)) as client:
+    # The API only accepts loopback Host headers, so the in-process client must not use the default "testserver".
+    with TestClient(create_app(repo_root=data_root), base_url="http://127.0.0.1") as client:
 
         def call(method: str, path: str, body: dict[str, Any] | None) -> tuple[int, dict[str, Any]]:
             response = client.request(method, path, json=body)

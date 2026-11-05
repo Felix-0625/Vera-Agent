@@ -23,6 +23,14 @@ def pytest_addoption(parser):
 _global_stats_lock = threading.Lock()
 
 
+@pytest.fixture(autouse=True)
+def allow_asgi_test_hosts(monkeypatch):
+    """Let Starlette/httpx test clients ("testserver", "test") pass the production loopback Host check."""
+    from vera_agent.server import security
+
+    monkeypatch.setattr(security, "ALLOWED_HOSTS", [*security.ALLOWED_HOSTS, "testserver", "test"])
+
+
 @pytest.fixture
 def reset_global_stats():
     """Reset global model stats and ensure exclusive access for tests that need it.

@@ -11,8 +11,7 @@ Run from `frontend/` after `npm ci`:
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Vite dev server on <http://localhost:5173>; proxies `/api` (HTTP and WebSocket) to the backend |
-| `npm run build` | Type-check (`tsc -b`, including tests) and build `dist/` for the browser |
-| `npm run build:desktop` | Same, with `--mode desktop`: relative asset paths and an absolute API URL |
+| `npm run build` | Type-check (`tsc -b`, including tests) and build `dist/`, which the desktop app serves |
 | `npm run lint` | Oxlint (`.oxlintrc.json`) |
 | `npm run format` / `npm run format:check` | Apply/check Prettier formatting; CI runs the check |
 | `npm test` | Vitest unit tests (`src/**/*.test.ts`) |
@@ -24,14 +23,11 @@ Start the backend for `npm run dev` from `vera-agent/`:
 uv run uvicorn vera_agent.server.app:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-## API base URL
+## API origin
 
-`vite.config.ts` injects `import.meta.env.VITE_API_BASE_URL`:
-
-| Mode | Value | Used by |
-| --- | --- | --- |
-| dev / browser build | `VITE_API_BASE_URL` or empty (same origin; Vite proxies `/api` to `VITE_API_PROXY_TARGET`, default `http://127.0.0.1:8000`) | `npm run dev`, `npm run build` |
-| desktop | `VITE_API_BASE_URL` or `http://127.0.0.1:8000` | `npm run build:desktop`; `start-desktop.ps1` sets the chosen port |
+The UI always calls the API on its own origin. In `npm run dev`, Vite proxies `/api` to `VITE_API_PROXY_TARGET`
+(default `http://127.0.0.1:8000`); in the desktop app, `vera_agent.desktop` serves `dist/` and `/api` from the same
+loopback server. The backend rejects any non-loopback `Host` or `Origin`.
 
 All HTTP calls go through `request()` in `src/api/client.ts`.
 

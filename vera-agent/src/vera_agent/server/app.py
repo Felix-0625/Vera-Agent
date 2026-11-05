@@ -22,9 +22,9 @@
 - memories.py: scoped versioned memories, pending changes, version history
 - evolution.py: improvement proposals, eval gate results, adoption and rollback
 
-The API has no authentication and is meant to listen on loopback only. CORS is
-currently open (`*`) so the Vite dev server and the desktop shell can call it.
-See docs/API.md for the endpoint reference.
+The API has no authentication and is meant to listen on loopback only. `security.py` refuses non-loopback
+`Host` and `Origin` headers so a web page cannot drive it from the browser. The desktop window loads the
+built UI from this same server (`frontend_dist`). See docs/API.md for the endpoint reference.
 """
 
 from __future__ import annotations
@@ -34,9 +34,8 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from starlette.applications import Starlette
-from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware
-from starlette.routing import Route
+from starlette.routing import BaseRoute, Mount
+from starlette.staticfiles import StaticFiles
 
 from vera_agent.server.routes.analytics import analytics_routes
 from vera_agent.server.routes.chat import chat_routes
@@ -56,6 +55,7 @@ from vera_agent.server.routes.terminal import terminal_routes
 from vera_agent.server.routes.threads import thread_routes
 from vera_agent.server.routes.traces import trace_routes
 from vera_agent.server.routes.worktrees import worktree_routes
+from vera_agent.server.security import security_middleware
 from vera_agent.server.state import ServerState
 from vera_agent.session.graph import GitFlowGraph
 
@@ -65,11 +65,16 @@ logger = logging.getLogger("vera_server")
 def create_app(
     repo_root: Path | str | None = None,
     graph: GitFlowGraph | None = None,
+    frontend_dist: Path | str | None = None,
 ) -> Starlette:
-    """Factory creating the modular ASGI application for multi-agent Web control."""
+    """Factory creating the modular ASGI application for multi-agent Web control.
+
+    ``frontend_dist`` is the built UI directory to serve at ``/``; leave it unset for API-only use (tests, Vite dev).
+    """
+    frontend_dist = Path(frontend_dist) if frontend_dist else None
     server_state = ServerState(repo_root=repo_root, graph=graph)
 
-    routes: list[Route] = [
+    routes: list[BaseRoute] = [
         *session_routes,
         *chat_routes,
         *project_routes,
@@ -90,14 +95,10 @@ def create_app(
         *evolution_routes,
     ]
 
-    middleware = [
-        Middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-    ]
+    # The built UI is served last so every /api route wins; same-origin hosting means the desktop window needs
+    # no CORS and no absolute API address.
+    if frontend_dist is not None and frontend_dist.is_dir():
+        routes.append(Mount("/", app=StaticFiles(directory=frontend_dist, html=True)))
 
     @asynccontextmanager
     async def lifespan(app: Starlette):
@@ -107,6 +108,6 @@ def create_app(
         finally:
             await stop_scheduler(app)
 
-    app = Starlette(routes=routes, middleware=middleware, lifespan=lifespan)
+    app = Starlette(routes=routes, middleware=security_middleware(), lifespan=lifespan)
     app.state.server_state = server_state
     return app

@@ -15,7 +15,7 @@ Python Starlette API (Uvicorn, 127.0.0.1:8000)
           └── local project files, Git, terminal, MCP and Skill adapters
 ```
 
-`start-desktop.ps1` builds the UI, starts the local API when port 8000 is free, checks `/api/topology`, and opens `vera_agent.desktop` through pywebview/WebView2. In development the Vite server proxies `/api` to the local backend. The API is not a hosted multi-tenant service.
+`start-desktop.ps1` builds the UI and runs `vera_agent.desktop`, which starts the local API on the first free port from 8000, serves the built UI from the same origin, and opens a pywebview/WebView2 window. In development the Vite server proxies `/api` to the local backend. The API is not a hosted multi-tenant service; `server/security.py` rejects non-loopback `Host` and `Origin` headers.
 
 ## Module map
 
@@ -70,7 +70,7 @@ The task board tracks durable project work items; it is intentionally separate f
 ## Workflow and architecture instances
 
 Code ownership: `server/routes/groups.py` registers the group routes; `group_instances.py`,
-`group_threads.py`, `group_registry.py`, `group_composition.py` and `group_materialization.py`
+`group_threads.py`, `group_composition.py` and `group_materialization.py`
 own their respective operations. Frontend `WorkflowTab.tsx` is a small entry point using
 controller hooks, separate views, canvas/node components and the tested `workflowRunner.ts`.
 Conversation state is split between `chatStore.ts`, stream/queue state in `chatState.ts`

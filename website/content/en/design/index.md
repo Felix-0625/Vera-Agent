@@ -27,7 +27,7 @@ Python Starlette API (Uvicorn, starting at 127.0.0.1:8000)
 Local data: application/project .agents (JSON and SQLite), project files, Git state
 ```
 
-`start-desktop.ps1` builds the UI, starts the local API on an available port starting at 8000, checks `GET /api/topology`, and opens a pywebview/WebView2 window. During development, Vite proxies `/api` to the local backend.
+`start-desktop.ps1` builds the UI and runs `vera_agent.desktop`, which starts the local API on the first free port from 8000, serves the built UI from the same server, and opens a pywebview/WebView2 window. During development, Vite proxies `/api` to the local backend.
 
 | Layer | Main code | Responsibility |
 | --- | --- | --- |

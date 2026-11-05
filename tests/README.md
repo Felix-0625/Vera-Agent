@@ -39,7 +39,8 @@ cd frontend; npm test                                         # frontend
   (`test_taskboard.py`, `codeEditorUtils.test.ts`), not after a development phase.
 - Use pytest (not unittest). Each test module starts with a one-line docstring saying what it covers.
 - API tests use `starlette.testclient.TestClient(create_app(repo_root=tmp_path))` so data
-  goes to a temporary directory.
+  goes to a temporary directory. A `conftest.py` fixture lets the default `testserver`
+  host pass the loopback check; standalone scripts need `base_url="http://127.0.0.1"`.
 - Do not call live model providers. Tests that need public network services are
   skipped unless `VERA_RUN_NETWORK_TESTS=1`; real-provider "fire" tests need `--run-fire`.
 - A mock-only test is not evidence that a live provider or external MCP server works;

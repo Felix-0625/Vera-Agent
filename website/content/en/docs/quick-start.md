@@ -27,7 +27,7 @@ cd ..
 .\start-desktop.ps1
 ```
 
-The script builds the frontend, starts the local API, and opens the desktop window. If port 8000 is occupied, it chooses an available port between 8001 and 8100. You can also double-click `start.bat` from the repository root.
+The script builds the frontend, starts the local API, and opens the desktop window. If port 8000 is occupied, the next free port up to 8100 is used. You can also double-click `start.bat` from the repository root.
 
 ## First use
 

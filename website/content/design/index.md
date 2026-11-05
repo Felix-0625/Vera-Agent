@@ -38,7 +38,7 @@ Python Starlette API（Uvicorn, 127.0.0.1:8000 起）
 本地数据：应用级 / 项目级 .agents（JSON + SQLite）、项目文件与 Git 状态
 ```
 
-`start-desktop.ps1` 构建前端产物、在 8000 起始的空闲端口启动本地 API、轮询 `GET /api/topology` 确认就绪，再用 pywebview/WebView2 打开桌面窗口。开发模式下 Vite 把 `/api` 代理到本地后端。API 没有做成托管服务，只是把三层（界面、业务逻辑、数据）跑在同一台机器上。
+`start-desktop.ps1` 构建前端产物，再运行 `vera_agent.desktop`：它在 8000 起始的空闲端口启动本地 API，由同一个服务托管前端产物，并用 pywebview/WebView2 打开桌面窗口。开发模式下 Vite 把 `/api` 代理到本地后端。API 没有做成托管服务，只是把三层（界面、业务逻辑、数据）跑在同一台机器上。
 
 | 层 | 主要代码 | 职责 |
 | --- | --- | --- |

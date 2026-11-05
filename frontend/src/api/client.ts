@@ -1,19 +1,16 @@
 /**
  * Shared fetch wrapper for the local VeraAgent API.
  *
- * `VITE_API_BASE_URL` is injected by vite.config.ts: empty in dev (Vite proxies `/api`),
- * an absolute loopback URL in desktop builds. Non-2xx responses throw `Error(body.error)`.
+ * Requests are same-origin: the backend serves the built UI, and the Vite dev server proxies `/api`.
+ * Non-2xx responses throw `Error(body.error)`.
  */
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
-
 export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`;
   const headers = {
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   };
 
-  const response = await fetch(url, {
+  const response = await fetch(endpoint, {
     ...options,
     headers,
   });

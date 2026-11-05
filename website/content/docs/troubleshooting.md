@@ -6,7 +6,7 @@
 | --- | --- |
 | 提示找不到后端 Python 环境 | 在 `vera-agent/` 运行 `uv sync --locked --no-dev --extra desktop` |
 | 提示桌面窗口依赖缺失 | 确认安装了 `desktop` extra 和 WebView2 Runtime |
-| 本地 API 没有就绪 | 查看 `%TEMP%\vera-agent-desktop-backend-error.log`；确认所选端口未被其他程序占用 |
+| 本地 API 没有就绪 | 在终端运行 `vera-agent\.venv\Scripts\python.exe -m vera_agent.desktop` 查看报错；8000–8100 可能全部被占用 |
 | 终端工具找不到 Bash | 安装 Git for Windows，或设置 `VERA_AGENT_BASH_PATH` 指向 `bash.exe` |
 | 模型无法回答 | 检查应用的模型配置、服务商地址、密钥和网络；不要把密钥贴入 issue 或截图 |
 | 开发前端无法访问 API | 检查 Vite 的 `VITE_API_PROXY_TARGET` 与本地后端端口是否一致 |

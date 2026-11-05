@@ -9,7 +9,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:desktop": "tsc -b && vite build --mode desktop",
     "lint": "oxlint",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"*.json\" vite.config.ts \"../website/**/*.{js,css,html}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"*.json\" vite.config.ts \"../website/**/*.{js,css,html}\"",

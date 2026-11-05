@@ -45,6 +45,7 @@ dependencies = [
     "uvicorn>=0.54.0",
     "websockets>=16.1.1",
     "mcp>=1.12,<2",
+    "defusedxml>=0.7.1",  # safe parsing of user-opened .xlsx/.pptx XML
 ]
 
 [project.optional-dependencies]

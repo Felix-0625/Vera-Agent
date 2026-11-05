@@ -6,7 +6,7 @@
 | --- | --- |
 | Backend Python environment missing | Run `uv sync --locked --no-dev --extra desktop` in `vera-agent/` |
 | Desktop-window dependency missing | Install the `desktop` extra and WebView2 Runtime |
-| Local API never becomes ready | Read `%TEMP%\vera-agent-desktop-backend-error.log`; check the selected port |
+| Local API never becomes ready | Run `vera-agent\.venv\Scripts\python.exe -m vera_agent.desktop` in a terminal and read the traceback; ports 8000–8100 may all be taken |
 | Terminal tool cannot find Bash | Install Git for Windows or set `VERA_AGENT_BASH_PATH` to `bash.exe` |
 | Model does not answer | Check model Settings, provider URL, key, and network; do not paste keys into issues |
 | Dev frontend cannot reach API | Match `VITE_API_PROXY_TARGET` to the local backend port |

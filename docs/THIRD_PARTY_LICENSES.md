@@ -1,23 +1,12 @@
 # Third-party dependency license inventory
 
-Generated on 2026-10-18 from the locked Windows desktop runtime environments and `frontend/package-lock.json`.
+Generated on 2026-11-05 from the locked Windows desktop runtime environments and `frontend/package-lock.json`.
 The Python sections cover the declared minimum runtime and the current release-test Python version; both environments are resolved from the locked `desktop` extra.
 The npm section includes every package in the lockfile, including development-only and platform-specific packages.
 License strings come from distribution metadata, license files, classifiers, or npm lock metadata. `UNKNOWN` requires maintainer review.
 This inventory is not legal advice and does not replace retaining upstream notices in redistributed artifacts.
 
-## Vendored website dependency
-
-The static documentation viewer vendors Marked v18.1.1 at
-`website/assets/vendor/marked.umd.js`. Its MIT copyright and license notices are retained in
-[marked-LICENSE.txt](../website/assets/vendor/marked-LICENSE.txt). This vendored browser asset is
-separate from the generated Python/npm inventories below.
-
 ## Regenerate on Windows
-
-If only the frontend lockfile changes, run `python scripts/generate_license_inventory.py --frontend-only`.
-This refreshes npm rows and keeps the dated Python inventory unchanged. For backend changes, use
-the clean runtime environments below.
 
 Run these commands from the repository root after changing a dependency lockfile:
 
@@ -32,14 +21,14 @@ Remove-Item Env:UV_PROJECT_ENVIRONMENT
 python scripts/generate_license_inventory.py --python (Join-Path $python310 'Scripts/python.exe') (Join-Path $python312 'Scripts/python.exe')
 ```
 
-Python package rows across supported runtimes: 200; frontend lockfile packages: 122.
+Python package rows across supported runtimes: 202; frontend lockfile packages: 122.
 
 ## Python 3.10 Windows desktop runtime
 
 | Package | Version | License metadata |
 | --- | --- | --- |
 | `aiohappyeyeballs` | `2.7.1` | PSF-2.0 |
-| `aiohttp` | `3.14.3` | Apache-2.0 AND MIT |
+| `aiohttp` | `3.14.5` | Apache-2.0 AND MIT |
 | `aiosignal` | `1.4.0` | Apache 2.0 |
 | `annotated-doc` | `0.0.5` | MIT |
 | `annotated-types` | `0.8.0` | MIT |
@@ -49,7 +38,7 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `boto3` | `1.43.108` | Apache-2.0 |
 | `botocore` | `1.43.108` | Apache-2.0 |
 | `bottle` | `0.13.4` | MIT |
-| `certifi` | `2026.7.22` | MPL-2.0 |
+| `certifi` | `2026.10.23` | MPL-2.0 |
 | `cffi` | `2.1.1` | MIT-0 |
 | `charset-normalizer` | `3.5.2` | MIT |
 | `click` | `8.5.0` | BSD-3-Clause |
@@ -57,11 +46,12 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `colorama` | `0.4.6` | OSI Approved :: BSD License |
 | `cryptography` | `50.0.2` | Apache-2.0 OR BSD-3-Clause |
 | `datasets` | `5.0.1` | Apache 2.0 |
+| `defusedxml` | `0.7.1` | PSFL |
 | `dill` | `0.4.1` | BSD-3-Clause |
 | `distro` | `1.9.0` | Apache License, Version 2.0 |
 | `exceptiongroup` | `1.3.1` | OSI Approved :: MIT License |
 | `fastuuid` | `0.14.0` | OSI Approved :: BSD License |
-| `filelock` | `4.0.9` | MIT |
+| `filelock` | `4.1.0` | MIT |
 | `frozenlist` | `1.8.0` | Apache-2.0 |
 | `fsspec` | `2026.6.0` | BSD-3-Clause |
 | `h11` | `0.16.0` | MIT |
@@ -146,7 +136,7 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | Package | Version | License metadata |
 | --- | --- | --- |
 | `aiohappyeyeballs` | `2.7.1` | PSF-2.0 |
-| `aiohttp` | `3.14.3` | Apache-2.0 AND MIT |
+| `aiohttp` | `3.14.5` | Apache-2.0 AND MIT |
 | `aiosignal` | `1.4.0` | Apache 2.0 |
 | `annotated-doc` | `0.0.5` | MIT |
 | `annotated-types` | `0.8.0` | MIT |
@@ -155,7 +145,7 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `boto3` | `1.43.108` | Apache-2.0 |
 | `botocore` | `1.43.108` | Apache-2.0 |
 | `bottle` | `0.13.4` | MIT |
-| `certifi` | `2026.7.22` | MPL-2.0 |
+| `certifi` | `2026.10.23` | MPL-2.0 |
 | `cffi` | `2.1.1` | MIT-0 |
 | `charset-normalizer` | `3.5.2` | MIT |
 | `click` | `8.5.0` | BSD-3-Clause |
@@ -163,10 +153,11 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `colorama` | `0.4.6` | OSI Approved :: BSD License |
 | `cryptography` | `50.0.2` | Apache-2.0 OR BSD-3-Clause |
 | `datasets` | `5.0.1` | Apache 2.0 |
+| `defusedxml` | `0.7.1` | PSFL |
 | `dill` | `0.4.1` | BSD-3-Clause |
 | `distro` | `1.9.0` | Apache License, Version 2.0 |
 | `fastuuid` | `0.14.0` | OSI Approved :: BSD License |
-| `filelock` | `4.0.9` | MIT |
+| `filelock` | `4.2.9` | MIT |
 | `frozenlist` | `1.8.0` | Apache-2.0 |
 | `fsspec` | `2026.6.0` | BSD-3-Clause |
 | `h11` | `0.16.0` | MIT |
@@ -245,8 +236,6 @@ Python package rows across supported runtimes: 200; frontend lockfile packages: 
 | `zipp` | `4.1.0` | MIT |
 
 ## Frontend npm lockfile
-
-npm metadata refreshed on 2026-11-02; Python inventory above is unchanged.
 
 | Package | Version | License metadata | Scope |
 | --- | --- | --- | --- |

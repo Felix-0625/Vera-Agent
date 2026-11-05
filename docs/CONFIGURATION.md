@@ -24,7 +24,7 @@ where a `VERA_*` alias exists it takes precedence.
 | `VERA_GLOBAL_CONFIG_DIR` | `vera_agent/__init__.py` | Directory containing the Python `.env` file (alias: `MSWEA_GLOBAL_CONFIG_DIR`) | platformdirs user config dir |
 | `VERA_SILENT_STARTUP` | `vera_agent/__init__.py` | Suppress the startup banner (alias: `MSWEA_SILENT_STARTUP`) | unset |
 | `VERA_AGENT_BASH_PATH` | `environments/local.py` | Path to Git for Windows `bash.exe` for the local command tool | auto-detected |
-| `VERA_AGENT_DESKTOP_URL` | `desktop.py` | URL loaded by the desktop window instead of `frontend/dist/index.html` (e.g. the Vite dev server) | built frontend |
+| `VERA_AGENT_DESKTOP_URL` | `desktop.py` | URL loaded by the desktop window instead of the bundled API's own UI (e.g. the Vite dev server) | built frontend served by the local API |
 | `VERA_MINI_CONFIG_PATH` | `run/mini.py` | YAML config for the inherited single-agent CLI (alias: `MSWEA_MINI_CONFIG_PATH`) | built-in `mini.yaml` |
 | `VERA_RUN_NETWORK_TESTS` | backend tests | Set to `1` to run tests that call public web services | unset |
 | `MSWEA_MODEL_NAME` | `models/__init__.py` | Default model for the Python CLI/adapters when none is given | unset |
@@ -39,7 +39,6 @@ where a `VERA_*` alias exists it takes precedence.
 | `MSWEA_GLOBAL_CALL_LIMIT` | `models/__init__.py` | Process-wide model call limit; `0` disables | `0` |
 | `MSWEA_MODEL_RETRY_STOP_AFTER_ATTEMPT` | `models/utils/retry.py` | Maximum attempts per model request | `10` |
 | `MSWEA_INSPECTOR_STYLE_PATH` | `run/utilities/inspector.py` | Optional stylesheet for the inherited trajectory inspector CLI | built-in `inspector.tcss` |
-| `VITE_API_BASE_URL` | `frontend/vite.config.ts` | API origin compiled into the UI; set by `start-desktop.ps1` | dev: same origin; desktop: `http://127.0.0.1:8000` |
 | `VITE_API_PROXY_TARGET` | `frontend/vite.config.ts` | Backend address for the `npm run dev` proxy | `http://127.0.0.1:8000` |
 
 Provider keys such as `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, or `DEEPSEEK_API_KEY` are

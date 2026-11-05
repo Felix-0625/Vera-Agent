@@ -30,7 +30,7 @@ The frontend and Python dependencies are installed from their lockfiles (`fronte
 
 Next: try [examples/workflow-quickstart](../examples/workflow-quickstart/README.md).
 
-The launcher checks whether port `8000` already serves VeraAgent. If another application owns that port, it selects the first available port from `8001` through `8100` and builds the desktop frontend with that API address.
+The launcher builds the UI, then `vera_agent.desktop` starts the local API on the first free port from `8000` through `8100`, serves the UI from it, and opens the window.
 
 You can also double-click `start.bat`, which runs the same launcher.
 
@@ -40,7 +40,7 @@ You can also double-click `start.bat`, which runs the same launcher.
 | --- | --- |
 | `找不到后端 Python 环境` | Run `uv sync --locked --no-dev --extra desktop` in `vera-agent/` |
 | `未安装桌面窗口依赖` | The `desktop` extra is missing; rerun the command above |
-| Backend not ready | Read `%TEMP%\vera-agent-desktop-backend-error.log` |
+| `API server failed to start` | Ports 8000–8100 are all taken, or a dependency failed to import; run `vera-agent\.venv\Scripts\python.exe -m vera_agent.desktop` and read the traceback |
 | Terminal tool cannot find bash | Install Git for Windows or set `VERA_AGENT_BASH_PATH` |
 
 ## Updating and local data
