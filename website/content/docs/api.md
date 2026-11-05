@@ -67,9 +67,6 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 | GET / POST | `/api/groups` | 列出 / 创建项目下的实例 |
 | PATCH / DELETE | `/api/groups/{group_id}` | 更新 / 删除实例 |
 | POST | `/api/groups/instances` | 从模板创建项目实例；`project_id`、`name`、`group_mode`、节点（1–60）与连线（≤120） |
-| POST | `/api/groups/compose` | 按协议直接写入实例；可用 18 种协议层节点类型，但多数类型目前没有运行时执行器 |
-| POST | `/api/groups/provision` | 批量生成节点会话等配套资源 |
-| GET / POST | `/api/groups/{group_id}/threads` | 读取 / 创建实例下的节点会话 |
 | POST | `/api/groups/{group_id}/runs` | 创建运行；`project_id`、输入（≤100,000 字符）、字符串确认值 `"Y"`；为每个节点创建隔离会话 |
 | PATCH | `/api/groups/{group_id}/runs/{run_id}` | 更新运行或节点状态；服务端只校验状态转换合法性并落盘，不参与调度决策 |
 
@@ -84,7 +81,7 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 | PATCH / DELETE | `/api/threads/{id}` | 更新 / 删除对话 |
 | POST | `/api/threads/{id}/messages/deliver` | 把工作流/组织运行的最终复核结果写入发起该次运行的原始对话；是运行结束后唯一的结果回传路径 |
 | POST | `/api/threads/{id}/messages/truncate` | 从某条用户消息开始截断对话历史，用于回到之前某一步重新回答 |
-| GET | `/api/threads/{id}/context-probe`、`/context-status` | 查询当前对话相对所选模型上下文窗口的占用情况 |
+| GET | `/api/threads/{id}/context-status` | 查询当前对话相对所选模型上下文窗口的占用情况 |
 | GET | `/api/context-status` | 同上，不带 `thread_id` 的草稿态版本 |
 | POST | `/api/threads/{id}/context-rebirth` | 仅用于工作流/组织节点会话：上下文过长时重建一个精简新会话延续同一节点 |
 
@@ -120,8 +117,6 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 | GET | `/api/files/raw` | 原始文件下载/展示 |
 | PUT | `/api/files/content` | 保存文本文件 |
 | PUT | `/api/files/excel` | 保存 Excel 文件，走独立于文本保存的处理逻辑 |
-| POST | `/api/code/check-syntax` | 语法检查 |
-| POST | `/api/code/search-symbols` | 符号搜索 |
 
 所有路径都会被解析到已绑定项目目录内并校验不越界，**这是应用层路径策略，不是操作系统沙箱**。
 
@@ -144,7 +139,6 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 | GET | `/api/worktrees/diff` | 读取工作树改动差异 |
 | POST | `/api/worktrees/stage` | 暂存指定文件（`git add`） |
 | POST | `/api/worktrees/discard` | 放弃指定文件的本地改动 |
-| POST | `/api/worktrees/checkpoint` | 创建一次提交 |
 
 面向工作流/组织运行中某个节点独立持有的本地 Git 工作树（按 `group_id` 或显式 `worktree_path` 定位目录），服务于 diff 查看器和节点级代码变更追踪，不是通用的项目级 Git 客户端。
 
@@ -157,7 +151,6 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 | PATCH | `/api/mcp/servers/{id}/toggle` | 启用 / 停用 |
 | POST | `/api/mcp/servers/{id}/restart` | 重启连接 |
 | DELETE | `/api/mcp/servers/{id}` | 删除 |
-| POST | `/api/mcp/scan` | 扫描可用服务器 |
 | GET | `/api/mcp/market` | 读取市场列表 |
 | POST | `/api/mcp/market/install` | 从市场安装 |
 
@@ -168,11 +161,11 @@ VeraAgent 桌面界面通过本地 Starlette API 通信。本页覆盖全部 **1
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
 | GET | `/api/skills` | 列出已安装 Skill |
-| POST | `/api/skills/scan` | 扫描本地 Skill |
 | GET | `/api/skills/market` | 读取市场列表 |
 | POST | `/api/skills/install` | 从市场安装 |
 | DELETE | `/api/skills/{name}` | 删除 |
-| PATCH | `/api/skills/{name}/toggle` | 启用 / 停用 |
+
+禁用某个 Skill 目前靠编辑 `skills_config.json` 的 `disabled_skills`，界面没有开关。
 
 Skill 是影响 Agent 行为的指令包文本，安装后落在应用级 `<projects_config_root>/.agents/skills/<name>/SKILL.md`。安装来源限定在几个预设的 GitHub 仓库（代码写死候选仓库列表，客户端不能自定义下载地址），但**Skill 文本本身仍是不可信输入**，来源受限不等于内容安全。与 MCP 的区别：MCP 是外部进程/服务的连接配置，Skill 是直接注入到 Agent 上下文里的指令文本。
 
@@ -209,7 +202,6 @@ Skill 是影响 Agent 行为的指令包文本，安装后落在应用级 `<proj
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
-| POST | `/api/terminal/exec` | 一次性非交互命令执行 |
 | WS | `/api/terminal/session?project_id=<id>` | 在项目目录打开 PowerShell 会话（也可用 `group_id`） |
 
 WebSocket 客户端发送 `{"type":"input","data":"…"}`；服务端返回 `connected`、`output`、`exit` 或 `error` 消息。进程以当前 Windows 用户权限运行；会拒绝非 loopback 的 `Origin`。

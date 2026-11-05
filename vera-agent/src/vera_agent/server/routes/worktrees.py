@@ -1,7 +1,7 @@
 """Git working-tree routes used by the diff viewer.
 
 Routes: GET /api/worktrees/refs, /api/worktrees/diff; POST /api/worktrees/stage,
-/api/worktrees/discard, /api/worktrees/checkpoint.
+and /api/worktrees/discard.
 """
 
 from __future__ import annotations
@@ -225,38 +225,9 @@ async def discard_worktree_file(request: Request) -> JSONResponse:
     return JSONResponse({"status": "discarded", "files": files, "returncode": code})
 
 
-async def create_checkpoint(request: Request) -> JSONResponse:
-    state = _get_state(request)
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-
-    wt_path = body.get("worktree_path")
-    group_id = body.get("group_id")
-    if not wt_path and group_id and state.graph and group_id in state.graph.groups:
-        wt_path = str(state.graph.groups[group_id].worktree_path)
-    if not wt_path:
-        target_dir = _resolve_target_dir(state, group_id, None, body.get("project_id"))
-        if target_dir is None:
-            return JSONResponse({"error": "项目不存在或项目目录不可用"}, status_code=404)
-        wt_path = str(target_dir)
-
-    msg = body.get("message", "automated checkpoint")
-    if not wt_path:
-        return JSONResponse({"error": "worktree_path required"}, status_code=400)
-
-    if not state.wt_manager:
-        return JSONResponse({"error": "WorktreeManager not initialized"}, status_code=500)
-
-    commit = state.wt_manager.create_checkpoint(wt_path, msg)
-    return JSONResponse({"success": True, "commit": commit})
-
-
 worktree_routes = [
     Route("/api/worktrees/refs", get_worktree_refs, methods=["GET"]),
     Route("/api/worktrees/diff", get_worktree_diff, methods=["GET"]),
     Route("/api/worktrees/stage", stage_worktree_file, methods=["POST"]),
     Route("/api/worktrees/discard", discard_worktree_file, methods=["POST"]),
-    Route("/api/worktrees/checkpoint", create_checkpoint, methods=["POST"]),
 ]

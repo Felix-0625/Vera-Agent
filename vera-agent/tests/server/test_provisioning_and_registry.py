@@ -1,12 +1,10 @@
-"""Tests for Multi-Agent Topology Provisioning & Explicit Registry Management.
+"""Topology templates, group instances and the on-disk agent registry.
 
 Covers:
 1. Declarative topology templates query (GET /api/templates/topology)
-2. One-click group provisioning (POST /api/groups/provision) with goal injection
-3. Verification of physical Worktree, multiple threads, and kickoff prompt
-4. Physical explicit registry generation under .agents/registries/{group_id}.json
-5. Host-level write protection of .agents/registries against agent modification
-6. Registry status sync (running -> idle) during a chat turn
+2. Group instance creation (POST /api/groups/instances) writes sessions and a registry file
+3. Host-level write protection of .agents/registries against agent modification
+4. Registry status sync (running -> idle) during a chat turn
 """
 
 import json
@@ -22,10 +20,16 @@ from vera_agent.environments.local import LocalEnvironment
 from vera_agent.models.litellm_model import LitellmModel
 from vera_agent.server.app import create_app
 
+INSTANCE_NODES = [
+    {"id": "lead", "type": "agent", "title": "Supervisor", "role": "supervisor", "responsibilities": ["coordinate"]},
+    {"id": "dev", "type": "agent", "title": "Implementer", "role": "implementer", "responsibilities": ["build"]},
+]
+INSTANCE_EDGES = [{"source": "lead", "target": "dev", "relation": "assign"}]
+
 
 @pytest.fixture
 def temp_git_repo(tmp_path: Path):
-    """Create a temporary initialized git repo for provisioning and registry tests."""
+    """Create a temporary initialized git repo for group and registry tests."""
     repo = tmp_path / "provision_test_repo"
     repo.mkdir(parents=True, exist_ok=True)
 
@@ -52,6 +56,23 @@ def temp_git_repo(tmp_path: Path):
     run_git(["commit", "-m", "init repo commit"])
 
     return repo
+
+
+def _create_instance(client: TestClient, name: str = "Delivery group") -> dict:
+    project_id = client.get("/api/projects").json()["projects"][0]["id"]
+    response = client.post(
+        "/api/groups/instances",
+        json={
+            "project_id": project_id,
+            "group_mode": "architecture",
+            "name": name,
+            "goal": "Ship the payment gateway",
+            "nodes": [dict(node) for node in INSTANCE_NODES],
+            "edges": [dict(edge) for edge in INSTANCE_EDGES],
+        },
+    )
+    assert response.status_code == 201, response.text
+    return response.json()["group"]
 
 
 def test_list_topology_templates(temp_git_repo: Path):
@@ -87,67 +108,25 @@ def test_list_topology_templates(temp_git_repo: Path):
     }
 
 
-def test_one_click_provisioning_supervisor(temp_git_repo: Path):
-    """Test one-click group & multi-window provisioning (POST /api/groups/provision)."""
-    app = create_app(repo_root=temp_git_repo)
-    client = TestClient(app)
+def test_group_instance_writes_sessions_and_registry(temp_git_repo: Path):
+    """Creating an instance gives every agent node a session and an entry in the registry file."""
+    client = TestClient(create_app(repo_root=temp_git_repo))
 
-    goal_text = "重构原有单体支付网关为微服务架构，支持微信 V3 签名回调与支付宝，单测覆盖率 90% 以上"
-    res = client.post(
-        "/api/groups/provision",
-        json={
-            "group_name": "支付网关重构组",
-            "branch_name": "feat/payment-gateway",
-            "base_branch": "main",
-            "goal": goal_text,
-            "template_id": "supervisor_dev",
-        },
-    )
+    group = _create_instance(client)
 
-    assert res.status_code == 200
-    res_data = res.json()
-    assert res_data["status"] == "ok"
+    gid = group["group_id"]
+    agent_threads = {node["role"]: node["thread_id"] for node in group["nodes"] if node["type"] == "agent"}
+    assert set(agent_threads) == {"supervisor", "implementer"}
+    for thread_id in agent_threads.values():
+        assert (temp_git_repo / ".agents" / "sessions" / f"{thread_id}.json").exists()
 
-    group_info = res_data["group"]
-    gid = group_info["group_id"]
-    assert group_info["topology_type"] == "architecture"
-    assert group_info["goal"] == goal_text
-
-    # 1. Verify physical worktree exists
-    wt_path = Path(group_info["worktree_path"])
-    assert wt_path.exists()
-    assert (wt_path / ".git").exists()
-
-    # 2. Verify 3 thread windows provisioned
-    threads = res_data["threads"]
-    assert len(threads) == 3
-    thread_roles = {t["role"]: t for t in threads}
-    assert "supervisor" in thread_roles
-    assert "implementer" in thread_roles
-    assert "reviewer" in thread_roles
-
-    # 3. Verify kickoff message in lead supervisor window
-    sup_thread_id = thread_roles["supervisor"]["thread_id"]
-    res_msgs = client.get(f"/api/threads/{sup_thread_id}/messages")
-    assert res_msgs.status_code == 200
-    msgs = res_msgs.json()["messages"]
-    assert len(msgs) == 1
-    assert "[SYSTEM INITIATIVE: Group Goal Activated]" in msgs[0]["content"]
-    assert goal_text in msgs[0]["content"]
-
-    # 4. Verify explicit physical registry created under .agents/registries/{group_id}.json
     registry_file = temp_git_repo / ".agents" / "registries" / f"{gid}.json"
     assert registry_file.exists()
-    reg_content = json.loads(registry_file.read_text(encoding="utf-8"))
-    assert reg_content["group_id"] == gid
-    assert reg_content["topology_type"] == "architecture"
-    assert len(reg_content["agents"]) == 3
-    assert len(reg_content["edges"]) == 2
-
-    # Check agent registry entries have responsibilities and tools
-    lead_entry = next(a for a in reg_content["agents"] if a["role"] == "supervisor")
-    assert len(lead_entry["responsibilities"]) > 0
-    assert "read" in lead_entry["allowed_tools"]
+    registry = json.loads(registry_file.read_text(encoding="utf-8"))
+    assert registry["group_id"] == gid
+    assert len(registry["agents"]) == 2
+    lead_entry = next(a for a in registry["agents"] if a["role"] == "supervisor")
+    assert lead_entry["responsibilities"] == ["coordinate"]
     assert lead_entry["status"] == "idle"
 
 
@@ -180,23 +159,10 @@ def test_agent_write_protection_on_registries(temp_git_repo: Path):
 
 def test_chat_stream_updates_registry_status(temp_git_repo: Path):
     """Test that chat_stream dynamically updates registry status to running then idle."""
-    app = create_app(repo_root=temp_git_repo)
-    client = TestClient(app)
-
-    # Provision group
-    res_prov = client.post(
-        "/api/groups/provision",
-        json={
-            "group_name": "测试自动化组",
-            "branch_name": "feat/auto-test",
-            "goal": "验证状态同步机制",
-            "template_id": "adversarial_audit",
-        },
-    )
-    assert res_prov.status_code == 200
-    data = res_prov.json()
-    gid = data["group"]["group_id"]
-    tid = data["threads"][0]["thread_id"]
+    client = TestClient(create_app(repo_root=temp_git_repo))
+    group = _create_instance(client, name="Status sync group")
+    gid = group["group_id"]
+    tid = next(node["thread_id"] for node in group["nodes"] if node["type"] == "agent")
 
     mock_responses = [
         {

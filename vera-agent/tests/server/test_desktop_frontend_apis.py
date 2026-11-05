@@ -3,13 +3,12 @@
 Validates:
 1. Projects history: GET/DELETE /api/projects
 2. Scheduled tasks: GET/POST/PATCH/DELETE /api/tasks/scheduled
-3. Global threads: GET/POST /api/threads, GET /api/threads/{id}/context-probe
+3. Global threads: GET/POST /api/threads
 4. Rules (AGENTS.md): GET/POST /api/settings/rules
 5. File tree & preview: GET /api/files/tree, GET /api/files/content
 6. Worktree diff & stage: GET /api/worktrees/diff, POST /api/worktrees/stage, POST /api/worktrees/discard
-7. GitFlow branches: GET/POST/DELETE /api/branches, checkout, merge
-8. Terminal: POST /api/terminal/exec
-9. Model/MCP/Skill patches: PUT /api/mcp/servers/{id}, PATCH /api/settings/models/{id}, PATCH /api/skills/{name}/toggle
+7. GitFlow branches: POST/DELETE /api/branches, checkout, merge
+8. Model/MCP/Skill settings: PUT /api/mcp/servers/{id}, PATCH /api/settings/models/{id}, skills_config.json
 """
 
 import os
@@ -118,8 +117,8 @@ def test_scheduled_tasks_api(test_git_repo: Path):
     assert del_res.json()["status"] == "deleted"
 
 
-def test_threads_and_sidechat_probe(test_git_repo: Path):
-    """Test standalone threads, search, and context probe."""
+def test_threads_create_and_search(test_git_repo: Path):
+    """Test standalone threads and search by message content."""
     app = create_app(repo_root=test_git_repo)
     client = TestClient(app)
 
@@ -140,13 +139,6 @@ def test_threads_and_sidechat_probe(test_git_repo: Path):
     search_res = client.get("/api/threads", params={"search": "stripe"})
     assert search_res.status_code == 200
     assert any(t["thread_id"] == tid for t in search_res.json()["threads"])
-
-    # 4. Probe thread context (for SideChatTab)
-    probe_res = client.get(f"/api/threads/{tid}/context-probe")
-    assert probe_res.status_code == 200
-    probe_data = probe_res.json()
-    assert probe_data["thread_id"] == tid
-    assert "stripe" in probe_data["last_user_message"].lower()
 
 
 def test_rules_memory_api(test_git_repo: Path):
@@ -299,21 +291,6 @@ def test_gitflow_topology_uses_repository_commit_history(test_git_repo: Path):
     assert topology["branches"][0]["head"] == topology["commits"][0]["hash"]
 
 
-def test_terminal_exec(test_git_repo: Path):
-    """Test terminal command execution."""
-    app = create_app(repo_root=test_git_repo)
-    client = TestClient(app)
-
-    res = client.post(
-        "/api/terminal/exec",
-        json={"command": "python -c \"print('terminal works')\"", "timeout": 10},
-    )
-    assert res.status_code == 200
-    data = res.json()
-    assert data["exit_code"] == 0
-    assert "terminal works" in data["stdout"]
-
-
 def test_mcp_and_skills_and_models_enhancements(test_git_repo: Path):
     """Test editing MCP server, toggling skill, and updating single model."""
     app = create_app(repo_root=test_git_repo)
@@ -339,22 +316,16 @@ def test_mcp_and_skills_and_models_enhancements(test_git_repo: Path):
     assert edit_mcp_res.status_code == 200
     assert edit_mcp_res.json()["server"]["name"] == "Renamed Dev MCP"
 
-    # 2. Toggle skill
-    toggle_sk_res = client.patch("/api/skills/gitflow-spec/toggle")
-    assert toggle_sk_res.status_code == 200
-    assert toggle_sk_res.json()["status"] == "ok"
+    # 2. A Skill named in skills_config.json is hidden from chat and listed as disabled
+    state = client.app.state.server_state
+    state.save_json_config("skills_config.json", {"disabled_skills": ["gitflow-spec"]})
     listed_skill = next(
         skill for skill in client.get("/api/skills").json()["skills"] if skill["name"] == "gitflow-spec"
     )
     assert listed_skill["enabled"] is False
-    assert _enabled_attached_skills(client.app.state.server_state, ["gitflow-spec"]) == []
-    assert client.patch("/api/skills/missing-skill/toggle").status_code == 404
-    assert client.patch("/api/skills/gitflow-spec/toggle").status_code == 200
-    listed_skill = next(
-        skill for skill in client.post("/api/skills/scan").json()["skills"] if skill["name"] == "gitflow-spec"
-    )
-    assert listed_skill["enabled"] is True
-    assert _enabled_attached_skills(client.app.state.server_state, ["gitflow-spec"]) == ["gitflow-spec"]
+    assert _enabled_attached_skills(state, ["gitflow-spec"]) == []
+    state.save_json_config("skills_config.json", {"disabled_skills": []})
+    assert _enabled_attached_skills(state, ["gitflow-spec"]) == ["gitflow-spec"]
 
     # 3. Patch model config
     patch_model_res = client.patch(

@@ -1,8 +1,7 @@
 """Project file explorer routes.
 
 Routes: GET /api/files/tree, /api/files/content, /api/files/preview, /api/files/raw;
-PUT /api/files/content, /api/files/excel; POST /api/code/check-syntax,
-/api/code/search-symbols.
+PUT /api/files/content, /api/files/excel.
 
 Paths are resolved against the bound project and checked to stay inside it.
 This is an application-level path policy, not an OS sandbox.
@@ -23,7 +22,6 @@ from starlette.routing import Route
 
 from vera_agent.server.routes.office_files import read_pptx_slides, read_xlsx, write_xlsx, xlsx_layout
 from vera_agent.server.state import ServerState
-from vera_agent.tools.code_tools import check_syntax_op, symbol_search_op
 
 logger = logging.getLogger("vera_server.files")
 
@@ -405,30 +403,6 @@ async def save_excel_file(request: Request) -> JSONResponse:
     return JSONResponse({"status": "saved", "path": str(target)})
 
 
-async def check_syntax(request: Request) -> JSONResponse:
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-
-    code = body.get("code", "")
-    valid, msg = check_syntax_op(code)
-    return JSONResponse({"valid": valid, "message": msg})
-
-
-async def search_symbols(request: Request) -> JSONResponse:
-    state = _get_state(request)
-    try:
-        body = await request.json()
-    except Exception:
-        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
-
-    query = body.get("query", "")
-    sym_type = body.get("symbol_type", "all")
-    results = symbol_search_op(state.root_path, query=query, symbol_type=sym_type)
-    return JSONResponse({"results": results})
-
-
 file_routes = [
     Route("/api/files/tree", get_files_tree, methods=["GET"]),
     Route("/api/files/content", get_file_content, methods=["GET"]),
@@ -436,6 +410,4 @@ file_routes = [
     Route("/api/files/raw", get_raw_file, methods=["GET"]),
     Route("/api/files/content", save_file_content, methods=["PUT"]),
     Route("/api/files/excel", save_excel_file, methods=["PUT"]),
-    Route("/api/code/check-syntax", check_syntax, methods=["POST"]),
-    Route("/api/code/search-symbols", search_symbols, methods=["POST"]),
 ]

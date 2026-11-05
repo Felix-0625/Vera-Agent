@@ -15,7 +15,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
-from vera_agent.server.routes.group_instances import compose_group, create_group_instance, provision_group
+from vera_agent.server.routes.group_instances import create_group_instance
 from vera_agent.server.routes.group_materialization import _materialize_group_sessions
 from vera_agent.server.routes.group_store import (
     _get_state,
@@ -25,7 +25,6 @@ from vera_agent.server.routes.group_store import (
     _save_group,
     organization_tree_error,
 )
-from vera_agent.server.routes.group_threads import create_group_thread, get_group_threads
 from vera_agent.server.routes.runs import create_group_run, update_group_run
 from vera_agent.server.routes.templates import get_templates, save_topology_template
 from vera_agent.session.registry import RegistryEdge, RegistryManager
@@ -295,13 +294,9 @@ group_routes = [
     Route("/api/groups", create_group, methods=["POST"]),
     Route("/api/groups/{group_id}", update_group, methods=["PATCH"]),
     Route("/api/groups/{group_id}", delete_group, methods=["DELETE"]),
-    Route("/api/groups/{group_id}/threads", get_group_threads, methods=["GET"]),
-    Route("/api/groups/{group_id}/threads", create_group_thread, methods=["POST"]),
     Route("/api/templates/topology", get_templates, methods=["GET"]),
     Route("/api/templates/topology", save_topology_template, methods=["POST"]),
     Route("/api/groups/instances", create_group_instance, methods=["POST"]),
     Route("/api/groups/{group_id}/runs", create_group_run, methods=["POST"]),
     Route("/api/groups/{group_id}/runs/{run_id}", update_group_run, methods=["PATCH"]),
-    Route("/api/groups/provision", provision_group, methods=["POST"]),
-    Route("/api/groups/compose", compose_group, methods=["POST"]),
 ]

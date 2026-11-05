@@ -48,23 +48,12 @@ def test_module4_mcp_servers(temp_git_repo: Path):
     assert res_restart.status_code == 200
     assert res_restart.json()["status"] == "ok"
 
-    # 5. POST /api/mcp/scan
-    # Discovery scans the app's `.agents/mcp` integration directory.
-    mcp_dir = temp_git_repo / ".agents" / "mcp"
-    mcp_dir.mkdir(parents=True, exist_ok=True)
-    (mcp_dir / "server.py").write_text("# dummy mcp server", encoding="utf-8")
-
-    res_scan = client.post("/api/mcp/scan")
-    assert res_scan.status_code == 200
-    server_ids = [s["id"] for s in res_scan.json()["servers"]]
-    assert "mcp" in server_ids
-
-    # 6. GET /api/mcp/market
+    # 5. GET /api/mcp/market
     res_market = client.get("/api/mcp/market")
     assert res_market.status_code == 200
     assert len(res_market.json()["market"]) > 0
 
-    # 7. DELETE /api/mcp/servers/{server_id}
+    # 6. DELETE /api/mcp/servers/{server_id}
     res_del = client.delete("/api/mcp/servers/my-mcp")
     assert res_del.status_code == 200
     assert res_del.json()["status"] == "ok"
@@ -163,10 +152,8 @@ def test_module5_skills_ecosystem(temp_git_repo: Path, monkeypatch: pytest.Monke
     assert res_install.status_code == 200
     assert res_install.json()["installed_skill"] == "custom-tester"
 
-    # 3. POST /api/skills/scan
-    res_scan = client.post("/api/skills/scan")
-    assert res_scan.status_code == 200
-    installed_names = [s["name"] for s in res_scan.json()["skills"]]
+    # 3. GET /api/skills lists the installed Skill
+    installed_names = [s["name"] for s in client.get("/api/skills").json()["skills"]]
     assert "custom-tester" in installed_names
 
     # 4. DELETE /api/skills/{skill_name}
@@ -174,8 +161,7 @@ def test_module5_skills_ecosystem(temp_git_repo: Path, monkeypatch: pytest.Monke
     assert res_del.status_code == 200
     assert res_del.json()["status"] == "ok"
 
-    res_scan_after = client.post("/api/skills/scan")
-    names_after = [s["name"] for s in res_scan_after.json()["skills"]]
+    names_after = [s["name"] for s in client.get("/api/skills").json()["skills"]]
     assert "custom-tester" not in names_after
 
 

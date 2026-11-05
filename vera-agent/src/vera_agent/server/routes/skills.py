@@ -1,10 +1,11 @@
 """Skill discovery and market routes.
 
-Routes: GET /api/skills, POST /api/skills/scan, GET /api/skills/market,
-POST /api/skills/install, DELETE /api/skills/{name}, PATCH /api/skills/{name}/toggle.
+Routes: GET /api/skills, GET /api/skills/market, POST /api/skills/install,
+DELETE /api/skills/{name}.
 
 Installed Skills live in `<projects_config_root>/.agents/skills/<name>/SKILL.md`;
-disabled names are kept in `skills_config.json`. Skill text is untrusted input.
+names listed under `disabled_skills` in `skills_config.json` are hidden from chat (edit the file to
+disable one; there is no UI switch). Skill text is untrusted input.
 """
 
 from __future__ import annotations
@@ -65,14 +66,6 @@ async def list_skills(request: Request) -> JSONResponse:
     return JSONResponse({"skills": skills})
 
 
-async def scan_skills(request: Request) -> JSONResponse:
-    state = _get_state(request)
-    if state.skill_mgr:
-        state.skill_mgr.refresh()
-    skills = _listed_skills(state)
-    return JSONResponse({"skills": skills})
-
-
 async def delete_skill(request: Request) -> JSONResponse:
     state = _get_state(request)
     skill_name = request.path_params["skill_name"]
@@ -89,27 +82,6 @@ async def delete_skill(request: Request) -> JSONResponse:
 
     state.skill_mgr.refresh()
     return JSONResponse({"status": "ok", "deleted_skill": skill_name})
-
-
-async def toggle_skill(request: Request) -> JSONResponse:
-    """Toggles skill enabled/disabled state in skills_config.json."""
-    state = _get_state(request)
-    skill_name = request.path_params.get("skill_name")
-    if not state.skill_mgr or not state.skill_mgr.get_skill(skill_name):
-        return JSONResponse({"error": f"Skill '{skill_name}' not found"}, status_code=404)
-    cfg = state.load_json_config("skills_config.json", {"disabled_skills": []})
-    disabled = set(cfg.get("disabled_skills", []))
-
-    if skill_name in disabled:
-        disabled.remove(skill_name)
-        status = "enabled"
-    else:
-        disabled.add(skill_name)
-        status = "disabled"
-
-    cfg["disabled_skills"] = list(disabled)
-    state.save_json_config("skills_config.json", cfg)
-    return JSONResponse({"status": "ok", "skill_name": skill_name, "state": status})
 
 
 async def get_skills_market(request: Request) -> JSONResponse:
@@ -398,9 +370,7 @@ async def install_skill(request: Request) -> JSONResponse:
 
 skill_routes = [
     Route("/api/skills", list_skills, methods=["GET"]),
-    Route("/api/skills/scan", scan_skills, methods=["POST"]),
     Route("/api/skills/market", get_skills_market, methods=["GET"]),
     Route("/api/skills/install", install_skill, methods=["POST"]),
     Route("/api/skills/{skill_name}", delete_skill, methods=["DELETE"]),
-    Route("/api/skills/{skill_name}/toggle", toggle_skill, methods=["PATCH"]),
 ]

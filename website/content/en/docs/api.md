@@ -52,9 +52,6 @@ Binding stores a path; it does not copy or isolate project files.
 | GET / POST | `/api/groups` | List/create project instances |
 | PATCH / DELETE | `/api/groups/{group_id}` | Update/delete an instance |
 | POST | `/api/groups/instances` | Instantiate a template; 1–60 nodes and at most 120 edges |
-| POST | `/api/groups/compose` | Write a protocol-level graph; many accepted node kinds lack executors |
-| POST | `/api/groups/provision` | Provision node threads and related resources |
-| GET / POST | `/api/groups/{group_id}/threads` | Read/create node threads |
 | POST | `/api/groups/{group_id}/runs` | Create a run with `project_id`, input (up to 100,000 characters), and string confirmation `"Y"`; creates isolated node threads |
 | PATCH | `/api/groups/{group_id}/runs/{run_id}` | Validate and persist run/node state changes; the backend does not schedule nodes |
 
@@ -69,7 +66,7 @@ See the [run data model](../../../../docs/DATA_MODEL.md#run-record) for transiti
 | PATCH / DELETE | `/api/threads/{id}` | Update/delete a conversation |
 | POST | `/api/threads/{id}/messages/deliver` | Deliver the final workflow/organization review back to the initiating conversation |
 | POST | `/api/threads/{id}/messages/truncate` | Truncate history from a user message to retry from that point |
-| GET | `/api/threads/{id}/context-probe`, `/context-status` | Inspect context use against the selected model |
+| GET | `/api/threads/{id}/context-status` | Inspect context use against the selected model |
 | GET | `/api/context-status` | Draft-state context status without `thread_id` |
 | POST | `/api/threads/{id}/context-rebirth` | Compact/recreate an overlong workflow node thread |
 
@@ -102,7 +99,6 @@ These tasks live in `<project>/.agents/scheduled_tasks.json` and run through the
 | GET | `/api/files/tree`, `/api/files/content` | Read file tree/text |
 | GET | `/api/files/preview`, `/api/files/raw` | Preview or retrieve a file |
 | PUT | `/api/files/content`, `/api/files/excel` | Save text or Excel content |
-| POST | `/api/code/check-syntax`, `/api/code/search-symbols` | Syntax check or symbol search |
 
 Paths are checked against the bound project as an **application-level policy, not an OS sandbox**.
 
@@ -122,7 +118,6 @@ Paths are checked against the bound project as an **application-level policy, no
 | --- | --- | --- |
 | GET | `/api/worktrees/refs`, `/api/worktrees/diff` | Available refs and changes |
 | POST | `/api/worktrees/stage`, `/api/worktrees/discard` | Stage or discard selected files |
-| POST | `/api/worktrees/checkpoint` | Commit a worktree checkpoint |
 
 These operate on node-specific local worktrees used by a workflow/organization run, not a general project-wide Git client.
 
@@ -135,7 +130,6 @@ These operate on node-specific local worktrees used by a workflow/organization r
 | PATCH | `/api/mcp/servers/{id}/toggle` | Enable/disable |
 | POST | `/api/mcp/servers/{id}/restart` | Restart connection |
 | DELETE | `/api/mcp/servers/{id}` | Delete server |
-| POST | `/api/mcp/scan` | Scan servers |
 | GET | `/api/mcp/market` | Read marketplace |
 | POST | `/api/mcp/market/install` | Install from marketplace |
 
@@ -146,11 +140,11 @@ Settings are application-level, not project-isolated. Marketplace listings are n
 | Method | Path | Purpose |
 | --- | --- | --- |
 | GET | `/api/skills` | List installed Skills |
-| POST | `/api/skills/scan` | Scan local Skills |
 | GET | `/api/skills/market` | Read marketplace |
 | POST | `/api/skills/install` | Install a Skill |
 | DELETE | `/api/skills/{name}` | Delete |
-| PATCH | `/api/skills/{name}/toggle` | Enable/disable |
+
+To disable a Skill, list it under `disabled_skills` in `skills_config.json`; the UI has no switch for it.
 
 A Skill is instruction text injected into agent context and should be treated as untrusted. MCP is an external process/service connection.
 
@@ -183,7 +177,6 @@ Model API keys are plaintext in `models_config.json` and omitted from API respon
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| POST | `/api/terminal/exec` | One-shot noninteractive command |
 | WS | `/api/terminal/session?project_id=<id>` | PowerShell session in the project directory; `group_id` is also supported |
 
 The process runs with the current Windows user's permissions. The WebSocket rejects a non-loopback `Origin`.

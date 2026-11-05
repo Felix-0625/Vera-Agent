@@ -178,7 +178,7 @@ def test_module6_analytics_dashboard(temp_git_repo: Path):
         "/api/groups",
         json={"group_id": "grp_analytics", "branch_name": "feat/ana", "base_branch": "main", "name": "Analytics Group"},
     )
-    client.post("/api/groups/grp_analytics/threads", json={"title": "Test Task", "role": "main"})
+    client.post("/api/threads", json={"title": "Test Task", "role": "main", "group_id": "grp_analytics"})
 
     res_dash = client.get("/api/analytics/dashboard")
     assert res_dash.status_code == 200

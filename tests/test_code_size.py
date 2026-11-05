@@ -13,8 +13,7 @@ MAX_FUNCTION_LINES = 120
 # Existing files above the limit, with their current size as a ceiling. Lower a ceiling when a
 # file shrinks; remove the entry once the file is under MAX_FILE_LINES. Do not raise ceilings.
 FILE_CEILINGS = {
-    "vera-agent/src/vera_agent/server/routes/threads.py": 525,
-    "vera-agent/src/vera_agent/server/routes/mcp.py": 480,
+    "vera-agent/src/vera_agent/server/routes/threads.py": 495,
 }
 
 # Existing long functions (name -> ceiling); same rule as FILE_CEILINGS.

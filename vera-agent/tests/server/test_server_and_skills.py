@@ -120,22 +120,7 @@ def test_server_api_endpoints(temp_git_repo: Path):
     assert res_group.status_code == 200
     assert res_group.json()["group_id"] == "grp_auth"
 
-    # 3. Checkpoint
-    wt_path = res_group.json()["worktree_path"]
-    (Path(wt_path) / "test_scratch.txt").write_text("wip", encoding="utf-8")
-    res_cp = client.post(
-        "/api/worktrees/checkpoint",
-        json={"worktree_path": wt_path, "message": "api checkpoint test"},
-    )
-    assert res_cp.status_code == 200
-    assert res_cp.json()["success"] is True
-
-    # 4. Syntax validation endpoint
-    res_syntax = client.post("/api/code/check-syntax", json={"code": "x = 1 + 2"})
-    assert res_syntax.status_code == 200
-    assert res_syntax.json()["valid"] is True
-
-    # 5. Merge Review endpoint
+    # 3. Merge Review endpoint
     project_id = client.get("/api/projects").json()["projects"][0]["id"]
     res_merge = client.post(
         "/api/merge-review",

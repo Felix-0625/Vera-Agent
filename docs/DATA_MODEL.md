@@ -56,7 +56,7 @@ lives in `VERA_GLOBAL_CONFIG_DIR` (see [CONFIGURATION.md](CONFIGURATION.md)).
 ├── runs/<group_id>/<run_id>.json   # workflow runs
 ├── registries/<group_id>.json   # explicit agent registry of a group
 ├── scheduled_tasks.json         # one-time scheduled Agent prompts
-└── mcp/                         # optional project-local MCP server discovered by /api/mcp/scan
+└── mcp/                         # optional project-local MCP server files (npm installs from the market go here)
 ```
 
 **Secrets:** `models_config.json` stores provider API keys unencrypted; API

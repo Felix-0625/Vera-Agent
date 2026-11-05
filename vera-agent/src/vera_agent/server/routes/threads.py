@@ -3,8 +3,8 @@
 Routes: GET/POST /api/threads, PATCH/DELETE /api/threads/{id},
 GET /api/threads/{id}/messages, POST /api/threads/{id}/messages/deliver
 (deliver a workflow result to the originating chat), POST /api/threads/{id}/messages/truncate,
-GET /api/threads/{id}/context-probe, GET /api/threads/{id}/context-status,
-GET /api/context-status, POST /api/threads/{id}/context-rebirth.
+GET /api/threads/{id}/context-status, GET /api/context-status,
+POST /api/threads/{id}/context-rebirth.
 """
 
 from __future__ import annotations
@@ -294,36 +294,6 @@ async def delete_thread(request: Request) -> JSONResponse:
     return JSONResponse({"status": "ok", "deleted_thread_id": thread_id})
 
 
-async def probe_thread_context(request: Request) -> JSONResponse:
-    """Provide a lightweight context probe for the side chat and attach it."""
-    state = _get_state(request)
-    thread_id = request.path_params["thread_id"]
-    session = state.get_or_create_session(thread_id)
-
-    last_user_msg = ""
-    last_assistant_msg = ""
-    for m in reversed(session.messages):
-        if m.get("role") == "user" and not last_user_msg:
-            last_user_msg = str(m.get("content", ""))
-        elif m.get("role") == "assistant" and not last_assistant_msg:
-            last_assistant_msg = str(m.get("content", ""))
-        if last_user_msg and last_assistant_msg:
-            break
-
-    summary = last_user_msg[:300] if last_user_msg else (session.title or "")
-    return JSONResponse(
-        {
-            "thread_id": session.thread_id,
-            "title": session.title,
-            "role": session.role,
-            "message_count": len(session.messages),
-            "last_user_message": last_user_msg,
-            "last_assistant_message": last_assistant_msg,
-            "summary": summary,
-        }
-    )
-
-
 async def get_thread_context_status(request: Request) -> JSONResponse:
     """Return context data for a thread, or model capacity for a new draft."""
     state = _get_state(request)
@@ -513,7 +483,6 @@ thread_routes = [
     Route("/api/threads/{thread_id}/messages/truncate", truncate_from_user_message, methods=["POST"]),
     Route("/api/threads/{thread_id}", update_thread, methods=["PATCH"]),
     Route("/api/threads/{thread_id}", delete_thread, methods=["DELETE"]),
-    Route("/api/threads/{thread_id}/context-probe", probe_thread_context, methods=["GET"]),
     Route("/api/threads/{thread_id}/context-status", get_thread_context_status, methods=["GET"]),
     Route("/api/context-status", get_thread_context_status, methods=["GET"]),
     Route("/api/threads/{thread_id}/context-rebirth", rebirth_group_thread_context, methods=["POST"]),

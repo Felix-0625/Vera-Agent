@@ -11,17 +11,17 @@ def client(tmp_path):
     return TestClient(create_app(repo_root=tmp_path), base_url="http://127.0.0.1")
 
 
-def test_cross_site_post_is_refused_before_running_a_command(client):
-    response = client.post(
-        "/api/terminal/exec", json={"command": "echo pwned"}, headers={"Origin": "https://evil.example"}
-    )
+def test_cross_site_write_is_refused_before_it_runs(client):
+    """A web page must not be able to create state, for example a conversation, through the API."""
+    response = client.post("/api/threads", json={"title": "planted"}, headers={"Origin": "https://evil.example"})
+
     assert response.status_code == 403
-    assert "pwned" not in response.text
+    assert client.get("/api/threads").json()["threads"] == []
 
 
 def test_cross_site_preflight_gets_no_cors_grant(client):
     response = client.options(
-        "/api/terminal/exec",
+        "/api/threads",
         headers={"Origin": "https://evil.example", "Access-Control-Request-Method": "POST"},
     )
     assert response.status_code == 403
@@ -33,6 +33,7 @@ def test_dns_rebinding_host_is_refused(client):
 
 
 def test_foreign_websocket_origin_is_closed(client):
+    """The terminal WebSocket runs a shell, so a cross-site page must not be able to open it."""
     with (
         pytest.raises(Exception),
         client.websocket_connect("/api/terminal/session", headers={"Origin": "https://evil.example"}),

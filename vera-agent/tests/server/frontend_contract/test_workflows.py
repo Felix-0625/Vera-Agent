@@ -37,10 +37,10 @@ def test_module3_groups_and_threads_lifecycle(temp_git_repo: Path):
     assert res_patch_grp.json()["name"] == "Payment Modernization"
     assert res_patch_grp.json()["is_pinned"] is True
 
-    # 3. POST /api/groups/{group_id}/threads (create thread)
+    # 3. POST /api/threads with group_id (create a thread inside the group)
     res_thread = client.post(
-        "/api/groups/grp_pay/threads",
-        json={"title": "Stripe Webhook Bugfix", "role": "main"},
+        "/api/threads",
+        json={"title": "Stripe Webhook Bugfix", "role": "main", "group_id": "grp_pay"},
     )
     assert res_thread.status_code == 200
     th_info = res_thread.json()
@@ -88,8 +88,8 @@ def test_module3_groups_and_threads_lifecycle(temp_git_repo: Path):
     assert res_del_grp.json()["status"] == "ok"
 
 
-def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_repo: Path):
-    """Final composition persists actual Agent windows, graph, and directed registry edges."""
+def test_group_instance_creates_project_scoped_windows_and_registry(temp_git_repo: Path):
+    """Creating an instance persists actual Agent windows, graph, and directed registry edges."""
     app = create_app(repo_root=temp_git_repo)
     client = TestClient(app)
     project = client.get("/api/projects").json()["projects"][0]
@@ -120,21 +120,19 @@ def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_rep
     assert not list((agents_dir / "groups").glob("*.json")) if (agents_dir / "groups").exists() else True
     assert not list((agents_dir / "sessions").glob("*.json")) if (agents_dir / "sessions").exists() else True
 
-    response = client.post("/api/groups/compose", json=body)
-    assert response.status_code == 200, response.text
-    result = response.json()
-    group = result["group"]
+    response = client.post("/api/groups/instances", json=body)
+    assert response.status_code == 201, response.text
+    group = response.json()["group"]
     assert group["project_id"] == project_id
-    assert len(result["threads"]) == 2
-    assert all((agents_dir / "sessions" / f"{thread['thread_id']}.json").exists() for thread in result["threads"])
+    agent_threads = [node["thread_id"] for node in group["nodes"] if node["type"] == "agent"]
+    assert len(agent_threads) == 2
+    assert all((agents_dir / "sessions" / f"{thread_id}.json").exists() for thread_id in agent_threads)
 
     def read_registry() -> dict:
         path = agents_dir / "registries" / f"{group['group_id']}.json"
         return json.loads(path.read_text(encoding="utf-8"))
 
-    registry = read_registry()
-    assert len(registry["agents"]) == 2
-    assert len(registry["edges"]) == 1
+    assert len(read_registry()["agents"]) == 2
     assert len(client.get("/api/groups", params={"project_id": project_id}).json()["groups"]) == 1
 
     updated_nodes = group["nodes"]
@@ -150,17 +148,19 @@ def test_composed_group_creates_project_scoped_windows_and_registry(temp_git_rep
     )
     assert coordinator["title"] == "Release coordinator"
     assert coordinator["responsibilities"] == ["dispatch and summarize"]
+    # Editing the group rebuilds the registry's directed edges between agent windows.
+    assert len(updated_registry["edges"]) == 1
 
-    added = client.post(
-        f"/api/groups/{group['group_id']}/threads",
-        params={"project_id": project_id},
-        json={"title": "Release operator", "role": "operator", "responsibilities": "prepare release notes"},
+    updated_nodes.append(
+        {"id": "operator", "type": "agent", "title": "Release operator", "role": "operator", "responsibilities": []}
+    )
+    added = client.patch(
+        f"/api/groups/{group['group_id']}", params={"project_id": project_id}, json={"nodes": updated_nodes}
     )
     assert added.status_code == 200
-    added_thread = added.json()
-    assert added_thread["metadata"]["group_goal"] == "Prepare a release"
     refreshed_group = client.get("/api/groups", params={"project_id": project_id}).json()["groups"][0]
-    assert any(node.get("thread_id") == added_thread["thread_id"] for node in refreshed_group["nodes"])
+    new_node = next(node for node in refreshed_group["nodes"] if node["id"] == "operator")
+    assert new_node.get("thread_id")
     assert len(read_registry()["agents"]) == 3
 
 

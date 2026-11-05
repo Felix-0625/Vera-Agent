@@ -2,7 +2,7 @@
 
 Routes: GET/POST /api/mcp/servers, PUT/DELETE /api/mcp/servers/{id},
 PATCH /api/mcp/servers/{id}/toggle, POST /api/mcp/servers/{id}/restart,
-POST /api/mcp/scan, GET /api/mcp/market, POST /api/mcp/market/install.
+GET /api/mcp/market, POST /api/mcp/market/install.
 
 Configuration is application-scoped in `<projects_config_root>/.agents/mcp_servers.json`.
 Market installs of npm packages run `npm install --ignore-scripts` into a local
@@ -51,38 +51,6 @@ def _load_mcp_config(state: ServerState) -> dict:
 async def get_mcp_servers(request: Request) -> JSONResponse:
     state = _get_state(request)
     cfg = _load_mcp_config(state)
-    return JSONResponse(cfg)
-
-
-async def scan_mcp_servers(request: Request) -> JSONResponse:
-    state = _get_state(request)
-    cfg = _load_mcp_config(state)
-    servers = list(cfg.get("servers", []))
-    known_ids = {s["id"] for s in servers}
-
-    ws_root = state.root_path
-    candidate_dirs = [ws_root / ".agents" / "mcp"]
-    for c_dir in candidate_dirs:
-        if c_dir.exists() and (c_dir / "server.py").exists():
-            sid = c_dir.name
-            if sid not in known_ids:
-                servers.append(
-                    {
-                        "id": sid,
-                        "name": sid,
-                        "type": "local",
-                        "status": "stopped",
-                        "enabled": False,
-                        "command": "",
-                        "args": [],
-                        "env": {},
-                        "tools": [],
-                    }
-                )
-                known_ids.add(sid)
-
-    cfg["servers"] = servers
-    state.save_json_config("mcp_servers.json", cfg)
     return JSONResponse(cfg)
 
 
@@ -468,7 +436,6 @@ mcp_routes = [
     Route("/api/mcp/servers", get_mcp_servers, methods=["GET"]),
     Route("/api/mcp/servers", create_mcp_server, methods=["POST"]),
     Route("/api/mcp/servers/{server_id}", update_mcp_server, methods=["PUT"]),
-    Route("/api/mcp/scan", scan_mcp_servers, methods=["POST"]),
     Route("/api/mcp/servers/{server_id}/toggle", toggle_mcp_server, methods=["PATCH"]),
     Route("/api/mcp/servers/{server_id}/restart", restart_mcp_server, methods=["POST"]),
     Route("/api/mcp/servers/{server_id}", delete_mcp_server, methods=["DELETE"]),
