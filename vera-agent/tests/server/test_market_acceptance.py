@@ -52,7 +52,7 @@ def test_attached_skill_resources_can_be_read_without_opening_other_external_pat
 
 
 def test_market_installs_registry_remote_disabled_by_default(tmp_path: Path, monkeypatch):
-    import vera_agent.server.routes.mcp as mcp_routes
+    import vera_agent.server.routes.mcp_market as mcp_routes
 
     app_root = tmp_path / "app"
     app_root.mkdir()

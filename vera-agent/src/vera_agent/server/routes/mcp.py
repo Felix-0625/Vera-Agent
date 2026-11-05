@@ -16,13 +16,10 @@ import hashlib
 import json
 import logging
 import os
-import re
 import shutil
-import subprocess
 import time
 import uuid
-from pathlib import Path
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import urlencode
 from urllib.request import Request as UrlRequest
 from urllib.request import urlopen
 
@@ -30,6 +27,13 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
+from vera_agent.server.routes.mcp_market import (
+    McpInstallError,
+    fetch_registry_server,
+    npm_entry,
+    remote_entry,
+    save_new_server,
+)
 from vera_agent.server.state import ServerState
 
 logger = logging.getLogger("vera_server.mcp")
@@ -266,7 +270,7 @@ async def get_mcp_market(request: Request) -> JSONResponse:
 
 
 async def install_mcp_market(request: Request) -> JSONResponse:
-    """Install a version-pinned npm server from the Official MCP Registry."""
+    """Install a version-pinned npm server (or a credential-free HTTPS remote) from the Official MCP Registry."""
     state = _get_state(request)
     try:
         body = await request.json()
@@ -275,157 +279,26 @@ async def install_mcp_market(request: Request) -> JSONResponse:
     registry_id = body.get("registry_id") if isinstance(body, dict) else None
     if not isinstance(registry_id, str) or not registry_id or len(registry_id) > 200:
         return JSONResponse({"error": "A Registry server ID is required."}, status_code=400)
-    existing_config = _load_mcp_config(state)
-    if any(item.get("registry_id") == registry_id for item in existing_config.get("servers", [])):
+    if any(item.get("registry_id") == registry_id for item in _load_mcp_config(state).get("servers", [])):
         return JSONResponse({"error": "This Registry MCP server is already installed."}, status_code=409)
 
     target_id = f"mcp_{uuid.uuid4().hex[:16]}"
     target_dir = state.projects_config_root / ".agents" / "mcp" / target_id
-
-    def fetch_server() -> dict | None:
-        url = "https://registry.modelcontextprotocol.io/v0.1/servers?" + urlencode(
-            {"q": registry_id, "limit": 50, "version": "latest"}
-        )
-        req = UrlRequest(url, headers={"Accept": "application/json", "User-Agent": "VeraAgent/1.0"})
-        with urlopen(req, timeout=15) as response:
-            records = json.loads(response.read(2_000_000)).get("servers", [])
-        for record in records:
-            server = record.get("server", record)
-            if server.get("name") == registry_id:
-                return server
-        return None
-
     try:
-        server = await asyncio.to_thread(fetch_server)
+        server = await asyncio.to_thread(fetch_registry_server, registry_id)
         if not server:
             return JSONResponse({"error": "MCP server was not found in the Official Registry."}, status_code=404)
         package = next((item for item in server.get("packages", []) if item.get("registryType") == "npm"), None)
-        if not package:
-            remote = next(
-                (
-                    item
-                    for item in server.get("remotes", [])
-                    if isinstance(item, dict) and item.get("type") == "streamable-http"
-                ),
-                None,
-            )
-            remote_url = str(remote.get("url") or "") if remote else ""
-            parsed_url = urlsplit(remote_url)
-            if (
-                not remote
-                or parsed_url.scheme != "https"
-                or not parsed_url.hostname
-                or parsed_url.username
-                or parsed_url.password
-            ):
-                return JSONResponse(
-                    {"error": "This MCP server has no supported, credential-free HTTPS Streamable HTTP endpoint."},
-                    status_code=400,
-                )
-            config = _load_mcp_config(state)
-            servers = list(config.get("servers", []))
-            if any(item.get("registry_id") == registry_id for item in servers):
-                return JSONResponse({"error": "This Registry MCP server is already installed."}, status_code=409)
-            repository = server.get("repository") or {}
-            repository_url = repository.get("url", "") if isinstance(repository, dict) else str(repository)
-            server_entry = {
-                "id": target_id,
-                "registry_id": registry_id,
-                "name": server.get("title") or server.get("name") or registry_id,
-                "type": "remote",
-                "transport": "streamable-http",
-                "url": remote_url,
-                "status": "stopped",
-                "enabled": False,
-                "command": "",
-                "args": [],
-                "env": {},
-                "headers": {},
-                "tools": [],
-                "repository": repository_url,
-                "registry_version": server.get("version", ""),
-            }
-            servers.append(server_entry)
-            config["servers"] = servers
-            state.save_json_config("mcp_servers.json", config)
-            return JSONResponse({"status": "ok", "server": server_entry, "install_scripts": "not_applicable"})
-        package_name = str(package.get("identifier") or "")
-        version = str(package.get("version") or server.get("version") or "")
-        if not re.fullmatch(r"(?:@[a-zA-Z0-9._-]+/)?[a-zA-Z0-9._-]+", package_name) or not re.fullmatch(
-            r"[a-zA-Z0-9.+_-]+", version
-        ):
-            return JSONResponse(
-                {"error": "The Registry returned an invalid npm package name or version."}, status_code=400
-            )
-
-        target_dir.parent.mkdir(parents=True, exist_ok=True)
-        target_dir.mkdir(exist_ok=False)
-        npm = shutil.which("npm.cmd" if os.name == "nt" else "npm") or shutil.which("npm")
-        if not npm:
-            raise RuntimeError("npm is not installed or is not available on PATH.")
-        args = [
-            npm,
-            "install",
-            "--ignore-scripts",
-            "--no-audit",
-            "--no-fund",
-            "--registry=https://registry.npmjs.org",
-            "--prefix",
-            str(target_dir),
-            f"{package_name}@{version}",
-        ]
-        if os.name == "nt" and npm.lower().endswith((".cmd", ".bat")):
-            command = os.environ.get("COMSPEC", "cmd.exe")
-            command_args = ["/d", "/s", "/c", subprocess.list2cmdline(args)]
-        else:
-            command, command_args = args[0], args[1:]
-
-        def install_package() -> subprocess.CompletedProcess:
-            return subprocess.run([command, *command_args], cwd=target_dir, capture_output=True, text=True, timeout=180)
-
-        result = await asyncio.to_thread(install_package)
-        if result.returncode:
-            raise RuntimeError((result.stderr or result.stdout or "npm install failed")[-3000:])
-        package_dir = target_dir / "node_modules" / Path(*package_name.split("/"))
-        package_manifest = json.loads((package_dir / "package.json").read_text(encoding="utf-8"))
-        binaries = package_manifest.get("bin")
-        if isinstance(binaries, str):
-            entrypoint = binaries
-        elif isinstance(binaries, dict) and binaries:
-            entrypoint = next(iter(binaries.values()))
-        else:
-            raise RuntimeError("Installed npm package does not expose a command-line entry point.")
-        executable = (package_dir / entrypoint).resolve()
-        if package_dir.resolve() not in executable.parents or not executable.is_file():
-            raise RuntimeError("The npm package entry point is missing or escapes its package directory.")
-
-        config = _load_mcp_config(state)
-        servers = list(config.get("servers", []))
-        if any(item.get("registry_id") == registry_id for item in servers):
-            shutil.rmtree(target_dir, ignore_errors=True)
-            return JSONResponse({"error": "This Registry MCP server is already installed."}, status_code=409)
-        repository = server.get("repository") or {}
-        repository_url = repository.get("url", "") if isinstance(repository, dict) else str(repository)
-        server_entry = {
-            "id": target_id,
-            "registry_id": registry_id,
-            "name": server.get("title") or server.get("name") or package_name,
-            "type": "stdio",
-            "status": "stopped",
-            "enabled": False,
-            "command": "node",
-            "args": [str(executable)],
-            "env": {},
-            "tools": [],
-            "repository": repository_url,
-            "registry_version": version,
-            "package": package_name,
-            "install_path": str(target_dir),
-        }
-        servers.append(server_entry)
-        config["servers"] = servers
-        state.save_json_config("mcp_servers.json", config)
-        return JSONResponse({"status": "ok", "server": server_entry, "install_scripts": "disabled"})
+        if package:
+            entry = await npm_entry(server, package, registry_id, target_id, target_dir)
+            save_new_server(state, entry)
+            return JSONResponse({"status": "ok", "server": entry, "install_scripts": "disabled"})
+        entry = remote_entry(server, registry_id, target_id)
+        save_new_server(state, entry)
+        return JSONResponse({"status": "ok", "server": entry, "install_scripts": "not_applicable"})
+    except McpInstallError as error:
+        shutil.rmtree(target_dir, ignore_errors=True)
+        return JSONResponse({"error": str(error)}, status_code=error.status_code)
     except Exception as error:
         logger.warning("MCP Registry install failed for %s: %s", registry_id, error)
         shutil.rmtree(target_dir, ignore_errors=True)

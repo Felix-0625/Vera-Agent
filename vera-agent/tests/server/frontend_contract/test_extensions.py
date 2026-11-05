@@ -60,6 +60,7 @@ def test_module4_mcp_servers(temp_git_repo: Path):
 
 
 def test_skill_market_does_not_cache_an_empty_upstream_failure(temp_git_repo: Path, monkeypatch: pytest.MonkeyPatch):
+    from vera_agent.server.routes import skill_market
     from vera_agent.server.routes import skills as skills_routes
 
     def unavailable_upstream(*_args, **_kwargs):
@@ -69,7 +70,7 @@ def test_skill_market_does_not_cache_an_empty_upstream_failure(temp_git_repo: Pa
     monkeypatch.setattr(
         skills_routes, "SKILL_SOURCES", {"sample": {"repo": "sample/skills", "root": "skills", "label": "Test source"}}
     )
-    monkeypatch.setattr(skills_routes, "urlopen", unavailable_upstream)
+    monkeypatch.setattr(skill_market, "urlopen", unavailable_upstream)
     client = TestClient(create_app(repo_root=temp_git_repo))
 
     response = client.get("/api/skills/market")
@@ -85,6 +86,7 @@ def test_skill_market_serves_saved_catalog_when_sources_are_unavailable(
 ):
     import time
 
+    from vera_agent.server.routes import skill_market
     from vera_agent.server.routes import skills as skills_routes
 
     stale_item = {"market_id": "sample:review", "name": "review", "description": "Saved catalog item"}
@@ -101,7 +103,7 @@ def test_skill_market_serves_saved_catalog_when_sources_are_unavailable(
     monkeypatch.setattr(
         skills_routes, "SKILL_SOURCES", {"sample": {"repo": "sample/skills", "root": "skills", "label": "Test source"}}
     )
-    monkeypatch.setattr(skills_routes, "urlopen", unavailable_upstream)
+    monkeypatch.setattr(skill_market, "urlopen", unavailable_upstream)
     client = TestClient(create_app(repo_root=temp_git_repo))
 
     response = client.get("/api/skills/market")

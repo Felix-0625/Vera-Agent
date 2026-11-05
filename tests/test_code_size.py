@@ -16,19 +16,8 @@ FILE_CEILINGS = {
     "vera-agent/src/vera_agent/server/routes/threads.py": 495,
 }
 
-# Existing long functions (name -> ceiling); same rule as FILE_CEILINGS.
-FUNCTION_CEILINGS = {
-    "models/litellm_model.py:query_stream": 130,
-    "models/utils/actions_toolcall.py:parse_toolcall_actions": 122,
-    "server/chat/request.py:parse_chat_request": 149,
-    "server/routes/analytics.py:get_analytics_dashboard": 170,
-    "server/routes/mcp.py:install_mcp_market": 165,
-    "server/routes/runs.py:update_group_run": 150,
-    "server/routes/skills.py:get_skills_market": 163,
-    "server/routes/skills.py:fetch_market": 137,
-    "server/routes/tasks.py:_execute_task": 129,
-    "session/context_management.py:compact_session": 169,
-}
+# Existing long functions (name -> ceiling); same rule as FILE_CEILINGS. Empty: every function fits the limit.
+FUNCTION_CEILINGS: dict[str, int] = {}
 
 SOURCE_GLOBS = ("vera-agent/src/vera_agent/**/*.py", "frontend/src/**/*.ts", "frontend/src/**/*.tsx")
 CODE_SUFFIXES = {".py", ".ts", ".tsx", ".js", ".jsx", ".css", ".html", ".ps1", ".bat"}

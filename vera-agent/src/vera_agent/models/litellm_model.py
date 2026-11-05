@@ -32,6 +32,90 @@ class _StreamFailedAfterOutputError(Exception):
         self.original = original
 
 
+class _StreamAccumulator:
+    """Collects one streamed completion: text, reasoning, tool-call fragments, usage and response metadata."""
+
+    def __init__(self, model_name: str) -> None:
+        self.content_parts: list[str] = []
+        self.reasoning_parts: list[str] = []
+        self.tool_calls: dict[int, dict[str, Any]] = {}
+        self.usage: dict[str, Any] | None = None
+        self.response_id = None
+        self.created = None
+        self.model = model_name
+        self.finish_reason = None
+        self.streamed_text = False
+
+    @property
+    def reasoning(self) -> str:
+        return "".join(self.reasoning_parts)
+
+    def add(self, chunk: Any, on_text: Callable[[str], None]) -> None:
+        """Fold one stream chunk in, forwarding visible text to ``on_text`` immediately."""
+        self.response_id = getattr(chunk, "id", self.response_id)
+        self.created = getattr(chunk, "created", self.created)
+        self.model = getattr(chunk, "model", self.model)
+        if getattr(chunk, "usage", None) is not None:
+            self.usage = chunk.usage.model_dump() if hasattr(chunk.usage, "model_dump") else dict(chunk.usage)
+        choices = getattr(chunk, "choices", None) or []
+        if not choices:
+            return
+        choice = choices[0]
+        self.finish_reason = getattr(choice, "finish_reason", None) or self.finish_reason
+        final_reasoning = getattr(getattr(choice, "message", None), "reasoning_content", None)
+        if isinstance(final_reasoning, str) and final_reasoning and final_reasoning != self.reasoning:
+            self.reasoning_parts = [final_reasoning]  # some providers resend the whole trace in the final message
+        delta = getattr(choice, "delta", None)
+        if delta is None:
+            return
+        text = getattr(delta, "content", None)
+        if isinstance(text, str) and text:
+            self.content_parts.append(text)
+            self.streamed_text = True
+            on_text(text)
+        reasoning = getattr(delta, "reasoning_content", None)
+        if isinstance(reasoning, str) and reasoning:
+            self.reasoning_parts.append(reasoning)
+        for call in getattr(delta, "tool_calls", None) or []:
+            self._add_tool_call_fragment(call)
+
+    def _add_tool_call_fragment(self, call: Any) -> None:
+        """Tool calls arrive in pieces: ids once, name and argument text appended chunk by chunk."""
+        current = self.tool_calls.setdefault(
+            getattr(call, "index", 0), {"id": "", "type": "function", "function": {"name": "", "arguments": ""}}
+        )
+        if getattr(call, "id", None):
+            current["id"] = call.id
+        if getattr(call, "type", None):
+            current["type"] = call.type
+        function = getattr(call, "function", None)
+        if function is not None:
+            if getattr(function, "name", None):
+                current["function"]["name"] += function.name
+            if getattr(function, "arguments", None):
+                current["function"]["arguments"] += function.arguments
+
+    def response(self) -> Any:
+        """The assembled assistant reply as a LiteLLM ``ModelResponse``."""
+        return litellm.ModelResponse(
+            id=self.response_id,
+            created=self.created,
+            model=self.model,
+            choices=[
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "".join(self.content_parts) or None,
+                        "tool_calls": [self.tool_calls[index] for index in sorted(self.tool_calls)] or None,
+                    },
+                    "finish_reason": self.finish_reason,
+                }
+            ],
+            usage=self.usage,
+        )
+
+
 class LitellmModelConfig(BaseModel):
     model_name: str
     """Model name. Highly recommended to include the provider in the model name, e.g., `anthropic/claude-sonnet-4-5-20250929`."""
@@ -159,15 +243,7 @@ class LitellmModel:
         stream_options.setdefault("include_usage", True)
         call_kwargs["stream_options"] = stream_options
 
-        content_parts: list[str] = []
-        reasoning_parts: list[str] = []
-        tool_calls: dict[int, dict[str, Any]] = {}
-        usage: dict[str, Any] | None = None
-        response_id = None
-        created = None
-        response_model = self.config.model_name
-        finish_reason = None
-        streamed_text = False
+        stream = _StreamAccumulator(self.config.model_name)
         try:
             for attempt in retry(
                 logger=logger,
@@ -177,81 +253,21 @@ class LitellmModel:
                     chunks = self._query(self._prepare_messages_for_api(messages), tools=passed_tools, **call_kwargs)
                     try:
                         for chunk in chunks:
-                            response_id = getattr(chunk, "id", response_id)
-                            created = getattr(chunk, "created", created)
-                            response_model = getattr(chunk, "model", response_model)
-                            choices = getattr(chunk, "choices", None) or []
-                            if getattr(chunk, "usage", None) is not None:
-                                usage = (
-                                    chunk.usage.model_dump()
-                                    if hasattr(chunk.usage, "model_dump")
-                                    else dict(chunk.usage)
-                                )
-                            if not choices:
-                                continue
-                            choice = choices[0]
-                            finish_reason = getattr(choice, "finish_reason", None) or finish_reason
-                            delta = getattr(choice, "delta", None)
-                            final_message = getattr(choice, "message", None)
-                            final_reasoning = getattr(final_message, "reasoning_content", None)
-                            if isinstance(final_reasoning, str) and final_reasoning:
-                                accumulated_reasoning = "".join(reasoning_parts)
-                                if final_reasoning != accumulated_reasoning:
-                                    reasoning_parts = [final_reasoning]
-                            if delta is None:
-                                continue
-                            text = getattr(delta, "content", None)
-                            if isinstance(text, str) and text:
-                                content_parts.append(text)
-                                streamed_text = True
-                                on_text(text)
-                            reasoning = getattr(delta, "reasoning_content", None)
-                            if isinstance(reasoning, str) and reasoning:
-                                reasoning_parts.append(reasoning)
-                            for call in getattr(delta, "tool_calls", None) or []:
-                                index = getattr(call, "index", 0)
-                                current = tool_calls.setdefault(
-                                    index, {"id": "", "type": "function", "function": {"name": "", "arguments": ""}}
-                                )
-                                if getattr(call, "id", None):
-                                    current["id"] = call.id
-                                if getattr(call, "type", None):
-                                    current["type"] = call.type
-                                function = getattr(call, "function", None)
-                                if function is not None:
-                                    if getattr(function, "name", None):
-                                        current["function"]["name"] += function.name
-                                    if getattr(function, "arguments", None):
-                                        current["function"]["arguments"] += function.arguments
+                            stream.add(chunk, on_text)
                     except Exception as error:
-                        if streamed_text:
+                        # Text the user already saw cannot be unsent, so a retry would show it twice.
+                        if stream.streamed_text:
                             raise _StreamFailedAfterOutputError(error) from error
                         raise
         except _StreamFailedAfterOutputError as error:
             raise error.original from error
 
-        response = litellm.ModelResponse(
-            id=response_id,
-            created=created,
-            model=response_model,
-            choices=[
-                {
-                    "index": 0,
-                    "message": {
-                        "role": "assistant",
-                        "content": "".join(content_parts) or None,
-                        "tool_calls": [tool_calls[index] for index in sorted(tool_calls)] or None,
-                    },
-                    "finish_reason": finish_reason,
-                }
-            ],
-            usage=usage,
-        )
-        # Some reasoning models require their reasoning trace to be echoed when
-        # a tool call is followed by another model turn. Keep it in the persisted
-        # assistant message even though it is not shown in the chat UI.
-        if reasoning_parts or "deepseek" in self.config.model_name.casefold():
-            response.choices[0].message.reasoning_content = "".join(reasoning_parts)
+        response = stream.response()
+        # Some reasoning models require their reasoning trace to be echoed when a tool call is followed by
+        # another model turn. Keep it in the persisted assistant message even though the chat UI hides it.
+        is_deepseek = "deepseek" in self.config.model_name.casefold()
+        if stream.reasoning_parts or is_deepseek:
+            response.choices[0].message.reasoning_content = stream.reasoning
         cost_output = self._calculate_cost(response)
         GLOBAL_MODEL_STATS.add(cost_output["cost"])
         try:
@@ -261,11 +277,10 @@ class LitellmModel:
             e.messages[0]["extra"]["response"] = response.model_dump(mode="json")
             raise
         message = response.choices[0].message.model_dump()
-        if "deepseek" in self.config.model_name.casefold():
-            # Keep the field present even when a particular streamed tool turn
-            # contains no reasoning tokens; DeepSeek validates it on follow-up
-            # requests whenever tools are enabled.
-            message["reasoning_content"] = "".join(reasoning_parts)
+        if is_deepseek:
+            # Keep the field present even when a streamed tool turn has no reasoning tokens: DeepSeek
+            # validates it on follow-up requests whenever tools are enabled.
+            message["reasoning_content"] = stream.reasoning
         message["extra"] = {
             "actions": actions,
             "response": response.model_dump(),

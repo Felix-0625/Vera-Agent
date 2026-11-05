@@ -143,3 +143,48 @@ def test_compaction_uses_minimum_summary_budget_and_retries_empty_response(monke
     assert event["summary_completion_tokens"] == 10
     assert event["token_count_basis"] == "local tokenizer estimate; not provider usage"
     assert session.n_calls == 2
+
+
+def _turns(*roles: str) -> list[dict]:
+    return [{"id": f"m{i}", "role": role, "content": "x" * 10} for i, role in enumerate(roles)]
+
+
+def test_cut_lands_on_a_user_message_so_tool_results_stay_with_their_call(monkeypatch):
+    monkeypatch.setattr(
+        context_management, "_token_count", lambda messages, _model: sum(len(m["content"]) for m in messages)
+    )
+    source = _turns("user", "assistant", "tool", "user", "assistant", "tool")
+
+    cut = context_management._cut_index(source, "m", keep_recent_tokens=25)
+
+    assert source[cut]["role"] == "user" and cut == 3
+
+
+def test_oversized_first_turn_is_summarized_instead_of_folding_nothing(monkeypatch):
+    monkeypatch.setattr(context_management, "_token_count", lambda messages, _model: 1000)
+    source = _turns("user", "assistant", "user", "assistant")
+
+    # Every message alone exceeds the budget, so the scan stops at the last message; the first eligible
+    # user boundary would be index 0, which folds nothing. The next user turn must be chosen.
+    assert context_management._cut_index(source, "m", keep_recent_tokens=10) == 2
+
+
+def test_without_a_retention_budget_only_the_last_user_turn_stays_raw():
+    source = _turns("user", "assistant", "user", "assistant")
+
+    assert context_management._cut_index(source, "m", keep_recent_tokens=0) == 2
+
+
+def test_cut_without_any_user_message_folds_everything():
+    source = _turns("assistant", "tool")
+
+    assert context_management._cut_index(source, "m", keep_recent_tokens=0) == len(source)
+
+
+def test_old_tool_output_is_clipped_in_a_copy_not_in_the_transcript():
+    original = [{"role": "tool", "content": "y" * 20_000}, {"role": "user", "content": "short"}]
+
+    clipped = context_management._clip_old_tool_output(original)
+
+    assert len(clipped[0]["content"]) < 7_000 and "clipped" in clipped[0]["content"]
+    assert len(original[0]["content"]) == 20_000 and clipped[1]["content"] == "short"

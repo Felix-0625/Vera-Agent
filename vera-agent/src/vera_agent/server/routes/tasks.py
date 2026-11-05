@@ -122,6 +122,93 @@ def _project_roots(state: ServerState) -> list[tuple[Path, str | None]]:
     return [(Path(path), project_id) for path, project_id in roots.items()]
 
 
+def _record_result(storage_root: Path, task: dict[str, Any], keys: tuple[str, ...]) -> None:
+    """Copy ``keys`` of the in-memory task onto the stored task so a concurrent edit of other fields survives."""
+    data = _load_tasks(storage_root)
+    current = next((item for item in data["tasks"] if item.get("id") == task["id"]), None)
+    if current is not None:
+        current.update({key: task.get(key) for key in keys})
+        _save_tasks(storage_root, data)
+
+
+def _fail_early(storage_root: Path, task: dict[str, Any], message: str) -> None:
+    task["last_status"] = "failed"
+    task["last_error"] = message
+    task["last_run"] = time.time()
+    _record_result(storage_root, task, ("last_run", "last_status", "last_error"))
+
+
+def _ensure_session(state: ServerState, thread_id: str, project_id: str | None, project_root: Path, name: Any) -> None:
+    """Create the task's conversation on first run, or attach the project to an existing one."""
+    session = state.sessions.get(thread_id)
+    if session is None:
+        session = ThreadSession(thread_id=thread_id, project_id=project_id, title=str(name or "计划任务"))
+        session.metadata["project_root"] = str(project_root)
+        state.sessions[thread_id] = session
+    else:
+        session.project_id = session.project_id or project_id
+        session.metadata.setdefault("project_root", str(project_root))
+    session.save(state.get_session_file(session))
+
+
+def _chat_request(state: ServerState, project_root: Path, payload: dict[str, Any]) -> Request:
+    """An in-process POST /api/chat/stream request, so a task runs through the same code as a typed message."""
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+    async def receive() -> dict[str, Any]:
+        return {"type": "http.request", "body": body, "more_body": False}
+
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "http",
+        "path": "/api/chat/stream",
+        "raw_path": b"/api/chat/stream",
+        "query_string": b"",
+        "headers": [(b"content-type", b"application/json")],
+        "client": ("127.0.0.1", 0),
+        "server": ("127.0.0.1", 0),
+        "app": SimpleNamespace(state=SimpleNamespace(server_state=_ProjectScopedState(state, project_root))),
+    }
+    return Request(scope, receive)
+
+
+def _event_data(event_text: str) -> dict[str, Any] | None:
+    """The JSON payload of one server-sent event, or None when it has none."""
+    try:
+        return json.loads(event_text.split("data:", 1)[1].strip())
+    except (IndexError, json.JSONDecodeError):
+        return None
+
+
+async def _consume_stream(state: ServerState, response: StreamingResponse, thread_id: str) -> bool:
+    """Read the chat stream to its end; returns True when an approval was needed (and refused).
+
+    Raises ``RuntimeError`` when the model failed or the stream ended without a finish event.
+    """
+    finished = approval_required = inference_failed = False
+    async for chunk in response.body_iterator:
+        event_text = chunk.decode("utf-8") if isinstance(chunk, bytes) else str(chunk)
+        if "event: text_chunk" in event_text and (body := _event_data(event_text)):
+            inference_failed = inference_failed or str(body.get("content", "")).startswith("Model inference error:")
+        if "event: approval_required" in event_text:
+            approval_required = True
+            body = _event_data(event_text) or {}
+            pending = state.pending_approvals.get(f"{thread_id}:{body.get('action_id')}")
+            if pending and not pending.done():
+                pending.set_result("N")  # a scheduled task has nobody to approve, so the request is refused
+        if "event: finish" in event_text:
+            finished = True
+            exit_status = json.loads(event_text.split("data:", 1)[1].strip()).get("exit_status", 0)
+            if exit_status not in (0, "0", "finish", None) or inference_failed:
+                raise RuntimeError("Agent 执行未成功")
+    if not finished:
+        raise RuntimeError("模型响应意外中断")
+    return approval_required
+
+
 async def _execute_task(
     state: ServerState, task: dict[str, Any], task_storage_root: Path, project_id: str | None
 ) -> None:
@@ -133,41 +220,19 @@ async def _execute_task(
     task["thread_id"] = thread_id
     model_id = task.get("model_id")
     if not model_id:
-        task["last_status"] = "failed"
-        task["last_error"] = "没有指定模型，请编辑任务并选择模型。"
-        task["last_run"] = time.time()
-        data = _load_tasks(task_storage_root)
-        current = next((item for item in data["tasks"] if item.get("id") == task_id), None)
-        if current is not None:
-            current.update({key: task.get(key) for key in ("last_run", "last_status", "last_error")})
-            _save_tasks(task_storage_root, data)
+        _fail_early(task_storage_root, task, "没有指定模型，请编辑任务并选择模型。")
         return
-
     try:
         project_root = state.get_project_root(project_id)
     except ValueError as error:
-        task["last_status"] = "failed"
-        task["last_error"] = "任务绑定的项目已不可用，请重新绑定项目后重建任务。"
-        task["last_run"] = time.time()
-        data = _load_tasks(task_storage_root)
-        current = next((item for item in data["tasks"] if item.get("id") == task_id), None)
-        if current is not None:
-            current.update({key: task.get(key) for key in ("last_run", "last_status", "last_error")})
-            _save_tasks(task_storage_root, data)
+        _fail_early(task_storage_root, task, "任务绑定的项目已不可用，请重新绑定项目后重建任务。")
         logger.warning("Scheduled task %s has an unavailable project: %s", task_id, error)
         return
 
-    session = state.sessions.get(thread_id)
-    if session is None:
-        session = ThreadSession(thread_id=thread_id, project_id=project_id, title=str(task.get("name") or "计划任务"))
-        session.metadata["project_root"] = str(project_root)
-        state.sessions[thread_id] = session
-    else:
-        session.project_id = session.project_id or project_id
-        session.metadata.setdefault("project_root", str(project_root))
-    session.save(state.get_session_file(session))
-
-    payload = json.dumps(
+    _ensure_session(state, thread_id, project_id, project_root, task.get("name"))
+    request = _chat_request(
+        state,
+        project_root,
         {
             "thread_id": thread_id,
             "content": str(task.get("prompt", "")),
@@ -175,65 +240,13 @@ async def _execute_task(
             "project_id": project_id,
             "scheduled_task_id": task_id,
         },
-        ensure_ascii=False,
-    ).encode("utf-8")
-
-    async def receive() -> dict[str, Any]:
-        return {"type": "http.request", "body": payload, "more_body": False}
-
-    request = Request(
-        {
-            "type": "http",
-            "asgi": {"version": "3.0"},
-            "http_version": "1.1",
-            "method": "POST",
-            "scheme": "http",
-            "path": "/api/chat/stream",
-            "raw_path": b"/api/chat/stream",
-            "query_string": b"",
-            "headers": [(b"content-type", b"application/json")],
-            "client": ("127.0.0.1", 0),
-            "server": ("127.0.0.1", 0),
-            "app": SimpleNamespace(state=SimpleNamespace(server_state=_ProjectScopedState(state, project_root))),
-        },
-        receive,
     )
-
     try:
         response = await chat_stream(request)
         if not isinstance(response, StreamingResponse) or response.status_code >= 400:
             detail = getattr(response, "body", b"").decode("utf-8", errors="replace")[:300]
             raise RuntimeError(f"模型请求未能启动：{detail}")
-        finished = False
-        approval_required = False
-        inference_failed = False
-        async for chunk in response.body_iterator:
-            event_text = chunk.decode("utf-8") if isinstance(chunk, bytes) else str(chunk)
-            if "event: text_chunk" in event_text:
-                try:
-                    body = json.loads(event_text.split("data:", 1)[1].strip())
-                    inference_failed = inference_failed or str(body.get("content", "")).startswith(
-                        "Model inference error:"
-                    )
-                except (IndexError, json.JSONDecodeError):
-                    pass
-            if "event: approval_required" in event_text:
-                approval_required = True
-                try:
-                    body = json.loads(event_text.split("data:", 1)[1].strip())
-                    pending = state.pending_approvals.get(f"{thread_id}:{body.get('action_id')}")
-                    if pending and not pending.done():
-                        pending.set_result("N")
-                except (IndexError, json.JSONDecodeError):
-                    pass
-            if "event: finish" in event_text:
-                body = json.loads(event_text.split("data:", 1)[1].strip())
-                finished = True
-                exit_status = body.get("exit_status", 0)
-                if exit_status not in (0, "0", "finish", None) or inference_failed:
-                    raise RuntimeError("Agent 执行未成功")
-        if not finished:
-            raise RuntimeError("模型响应意外中断")
+        approval_required = await _consume_stream(state, response, thread_id)
         task["last_status"] = "approval_required" if approval_required else "success"
         task["last_error"] = "需要人工审批的操作已拒绝；请在交互对话中执行。" if approval_required else None
     except Exception as error:
@@ -244,13 +257,7 @@ async def _execute_task(
         task["last_error"] = "任务执行失败，请检查模型配置、网络和任务权限。"
     finally:
         task["last_run"] = time.time()
-        data = _load_tasks(task_storage_root)
-        current = next((item for item in data["tasks"] if item.get("id") == task_id), None)
-        if current is not None:
-            current.update(
-                {key: task.get(key) for key in ("thread_id", "last_run", "last_status", "last_error", "enabled")}
-            )
-            _save_tasks(task_storage_root, data)
+        _record_result(task_storage_root, task, ("thread_id", "last_run", "last_status", "last_error", "enabled"))
 
 
 async def _scheduler_loop(state: ServerState) -> None:

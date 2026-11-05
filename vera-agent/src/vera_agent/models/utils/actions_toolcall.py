@@ -7,6 +7,7 @@ from jinja2 import StrictUndefined, Template
 
 from vera_agent.exceptions import FormatError
 from vera_agent.models.utils.openai_multimodal import expand_multimodal_content
+from vera_agent.models.utils.tool_arguments import build_action
 from vera_agent.tools import (
     ALL_TOOLS,
     BASH_TOOL,
@@ -28,6 +29,13 @@ __all__ = [
 ]
 
 
+def _format_error(template: str, template_kwargs: dict, *, error: str, has_tool_calls: bool) -> FormatError:
+    content = Template(template, undefined=StrictUndefined).render(
+        error=error, actions=[], has_tool_calls=has_tool_calls, **template_kwargs
+    )
+    return FormatError({"role": "user", "content": content, "extra": {"interrupt_type": "FormatError"}})
+
+
 def parse_toolcall_actions(
     tool_calls: list | None,
     *,
@@ -36,24 +44,14 @@ def parse_toolcall_actions(
     allow_empty: bool = False,
     additional_tool_names: set[str] | None = None,
 ) -> list[dict]:
-    """Parse tool calls from the response. Supports read, write, edit, and bash tools."""
+    """Parse tool calls from the response. Supports read, write, edit, bash, delegation and extra (MCP) tools."""
     template_kwargs = template_kwargs or {}
+    extra_tools = additional_tool_names or set()
     if not tool_calls:
         if allow_empty:
             return []
-        error_text = Template(format_error_template, undefined=StrictUndefined).render(
-            error="No tool calls found in the response. Every response MUST include at least one tool call.",
-            actions=[],
-            has_tool_calls=False,
-            **template_kwargs,
-        )
-        raise FormatError(
-            {
-                "role": "user",
-                "content": error_text,
-                "extra": {"interrupt_type": "FormatError"},
-            }
-        )
+        message = "No tool calls found in the response. Every response MUST include at least one tool call."
+        raise _format_error(format_error_template, template_kwargs, error=message, has_tool_calls=False)
     actions = []
     for tool_call in tool_calls:
         error_msg = ""
@@ -64,91 +62,21 @@ def parse_toolcall_actions(
             error_msg = f"Error parsing tool call arguments: {e}."
 
         tool_name = tool_call.function.name
-        if tool_name not in TOOL_NAMES and tool_name not in (additional_tool_names or set()):
+        if tool_name not in TOOL_NAMES and tool_name not in extra_tools:
             error_msg += f"Unknown tool '{tool_name}'. Available tools: {', '.join(sorted(TOOL_NAMES))}."
         elif not isinstance(args, dict):
             error_msg += f"Tool arguments for '{tool_name}' must be a JSON dictionary."
-        elif tool_name in (additional_tool_names or set()):
+        elif tool_name in extra_tools:
             actions.append(
                 {"tool_name": tool_name, "arguments": args, "command": f"MCP {tool_name}", "tool_call_id": tool_call.id}
             )
         else:
-            if tool_name == "bash":
-                if "command" not in args:
-                    error_msg += "Missing 'command' argument in bash tool call."
-                else:
-                    action = {"command": args["command"], "tool_call_id": tool_call.id}
-                    if "timeout" in args and args["timeout"] is not None:
-                        action["timeout"] = args["timeout"]
-                    actions.append(action)
-            elif tool_name == "read":
-                if "path" not in args:
-                    error_msg += "Missing 'path' argument in read tool call."
-                else:
-                    actions.append(
-                        {
-                            "tool_name": "read",
-                            "path": args["path"],
-                            "offset": args.get("offset", 1),
-                            "limit": args.get("limit", 2000),
-                            "command": f"read {args['path']}",
-                            "tool_call_id": tool_call.id,
-                        }
-                    )
-            elif tool_name == "write":
-                if "path" not in args or "content" not in args:
-                    error_msg += "Missing 'path' or 'content' argument in write tool call."
-                else:
-                    actions.append(
-                        {
-                            "tool_name": "write",
-                            "path": args["path"],
-                            "content": args["content"],
-                            "command": f"write {args['path']}",
-                            "tool_call_id": tool_call.id,
-                        }
-                    )
-            elif tool_name == "edit":
-                edits = args.get("edits")
-                if not edits and "oldText" in args and "newText" in args:
-                    edits = [{"oldText": args["oldText"], "newText": args["newText"]}]
-                if "path" not in args or not edits:
-                    error_msg += "Missing 'path' or 'edits' argument in edit tool call."
-                else:
-                    actions.append(
-                        {
-                            "tool_name": "edit",
-                            "path": args["path"],
-                            "edits": edits,
-                            "command": f"edit {args['path']}",
-                            "tool_call_id": tool_call.id,
-                        }
-                    )
-            elif tool_name in ("delegate_research", "delegate_review"):
-                task_text = args.get("task") or args.get("command") or ""
-                if not task_text:
-                    error_msg += f"Missing 'task' argument in {tool_name} tool call."
-                else:
-                    preview = (task_text[:50] + "...") if len(task_text) > 50 else task_text
-                    actions.append(
-                        {
-                            "tool_name": tool_name,
-                            "task": task_text,
-                            "command": f"{tool_name} {preview}",
-                            "tool_call_id": tool_call.id,
-                        }
-                    )
-
+            action, problem = build_action(tool_name, args, tool_call.id)
+            error_msg += problem
+            if action:
+                actions.append(action)
         if error_msg:
-            raise FormatError(
-                {
-                    "role": "user",
-                    "content": Template(format_error_template, undefined=StrictUndefined).render(
-                        actions=[], error=error_msg.strip(), has_tool_calls=True, **template_kwargs
-                    ),
-                    "extra": {"interrupt_type": "FormatError"},
-                }
-            )
+            raise _format_error(format_error_template, template_kwargs, error=error_msg.strip(), has_tool_calls=True)
     return actions
 
 
