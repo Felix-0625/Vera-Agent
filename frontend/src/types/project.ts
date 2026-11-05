@@ -39,7 +39,7 @@ export interface Group {
   threads?: Thread[];
 }
 
-export type WorkflowNodeType =
+type WorkflowNodeType =
   | 'agent'
   | 'start'
   | 'input'
@@ -84,22 +84,6 @@ export interface WorkflowEdgeDefinition {
   relation?: string;
   label?: string;
   config?: Record<string, unknown>;
-}
-
-export interface TopologyBlueprintNode {
-  role_key: string;
-  role: string;
-  title: string;
-  responsibilities: string[];
-  allowed_tools: string[];
-  prompt_template: string;
-  position?: { x: number; y: number };
-}
-
-export interface TopologyBlueprintEdge {
-  source_role: string;
-  target_role: string;
-  relation: string;
 }
 
 export interface TopologyTemplate {

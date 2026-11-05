@@ -47,7 +47,7 @@ export interface PermissionsConfig {
   max_tool_attempts: number;
 }
 
-export interface McpTool {
+interface McpTool {
   name: string;
   description: string;
 }

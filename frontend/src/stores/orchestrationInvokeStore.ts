@@ -3,7 +3,7 @@
  */
 import { create } from 'zustand';
 
-export interface OrchestrationInvocation {
+interface OrchestrationInvocation {
   requestId: string;
   conversationKey: string;
   projectId: string;

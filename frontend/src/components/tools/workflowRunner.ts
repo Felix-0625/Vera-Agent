@@ -9,13 +9,11 @@ import type {
 } from './workflowRunTypes';
 export type {
   NodeTurnRequest,
-  RunInputRecord,
   RunLogEntry,
   RunnerDeps,
   RunNodeState,
   RunOutcome,
   RunSession,
-  RunStage,
   WorkflowControlResult,
 } from './workflowRunTypes';
 /**

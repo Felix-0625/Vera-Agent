@@ -34,7 +34,7 @@ export type FilePreviewData =
   | { kind: 'excel'; sheets: Array<{ name: string; rows: string[][] }>; sheet_names: string[] }
   | { kind: 'unsupported'; message: string; url?: string };
 
-export interface DiffFile {
+interface DiffFile {
   file: string;
   status: string;
   additions?: number;

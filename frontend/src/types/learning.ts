@@ -3,7 +3,7 @@
  * Backend: `server/routes/traces.py`, `server/routes/memories.py`, `server/routes/evolution.py`.
  */
 
-export interface TraceScore {
+interface TraceScore {
   score_id: string;
   name: string;
   value: number;
@@ -54,7 +54,7 @@ export interface TaskTypeSuccess {
   success_rate: number | null;
 }
 
-export type MemoryScope = 'user' | 'project' | 'session';
+type MemoryScope = 'user' | 'project' | 'session';
 export type MemoryKind = 'profile' | 'preference' | 'habit' | 'feedback' | 'fact' | 'episode' | 'rule';
 
 export interface MemoryItem {

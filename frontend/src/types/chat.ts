@@ -10,7 +10,7 @@ export interface ChatImageAttachment {
 
 export type RuleTrigger = 'goal' | 'plan' | 'schedule' | 'learn' | 'grill-me' | null;
 
-export interface ToolAction {
+interface ToolAction {
   tool_name: string;
   [key: string]: unknown;
 }
@@ -23,7 +23,7 @@ export interface ChatActivityEvent {
   status: 'working' | 'done' | 'approval' | 'error';
 }
 
-export interface SubagentActivity {
+interface SubagentActivity {
   label: string;
   detail: string;
   status: string;
