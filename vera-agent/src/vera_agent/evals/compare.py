@@ -27,6 +27,8 @@ VERDICTS = ("better", "no_difference", "worse")
 
 @dataclass
 class Comparison:
+    """The outcome of comparing a candidate profile with a baseline on the cases both ran."""
+
     baseline: str
     candidate: str
     cases: int
@@ -46,12 +48,24 @@ class Comparison:
         return asdict(self)
 
 
+def _as_dict(result: Any) -> dict[str, Any]:
+    return result if isinstance(result, dict) else result.to_dict()
+
+
+def error_count(results: list[Any]) -> int:
+    """Runs that could not be judged (model or infrastructure failure), not agent failures."""
+    return sum(bool(_as_dict(result).get("error")) for result in results)
+
+
 def case_pass_rates(results: list[Any], profile_id: str) -> dict[str, float]:
-    """Mean acceptance pass per case for one profile (results are `CaseResult`s or dicts)."""
+    """Mean acceptance pass per case for one profile (results are `CaseResult`s or dicts).
+
+    A run with ``error`` set never reached a verdict about the agent, so it is left out instead
+    of counting as a failure; otherwise a provider outage on one side would look like a difference.
+    """
     passes: dict[str, list[float]] = defaultdict(list)
-    for result in results:
-        item = result if isinstance(result, dict) else result.to_dict()
-        if item["profile_id"] == profile_id:
+    for item in map(_as_dict, results):
+        if item["profile_id"] == profile_id and not item.get("error"):
             passes[item["case_id"]].append(1.0 if item["passed"] else 0.0)
     return {case_id: sum(values) / len(values) for case_id, values in passes.items()}
 

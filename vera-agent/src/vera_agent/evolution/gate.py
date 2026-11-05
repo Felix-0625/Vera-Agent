@@ -19,7 +19,7 @@ from collections.abc import Callable
 from typing import Any
 
 from vera_agent.evals.cases import EvalCase
-from vera_agent.evals.compare import compare_profiles, regressions
+from vera_agent.evals.compare import compare_profiles, error_count, regressions
 from vera_agent.evals.profile import AgentProfile
 from vera_agent.evolution.proposals import Proposal
 
@@ -27,6 +27,7 @@ SuiteRunner = Callable[[list[EvalCase], list[AgentProfile]], list[Any]]
 
 
 def candidate_profile(baseline: AgentProfile, proposal: Proposal) -> AgentProfile:
+    """The baseline with the proposal applied: an extra rule, prompt overlay text, or Skill."""
     candidate_id = f"cand-{proposal.proposal_id[4:]}"
     note = f"proposal {proposal.proposal_id}: {proposal.title}"
     if proposal.kind == "rule":
@@ -50,12 +51,26 @@ def _stage(
 ) -> dict[str, Any]:
     results = runner(cases, [baseline, candidate])
     comparison = compare_profiles(results, baseline.profile_id, candidate.profile_id).to_dict()
-    stage: dict[str, Any] = {"split": name, "cases": len(cases), **comparison}
+    stage: dict[str, Any] = {"split": name, "cases": len(cases), "errors": error_count(results), **comparison}
     if name == "guard":
         stage["regressions"] = regressions(results, baseline.profile_id, candidate.profile_id)
     if not private:
         stage["results"] = [item if isinstance(item, dict) else item.to_dict() for item in results]
     return stage
+
+
+def _stage_failure(stage: dict[str, Any]) -> str:
+    """Why this stage rejects the proposal, or an empty string when it passes."""
+    split = stage["split"]
+    if stage["errors"]:
+        return f"{stage['errors']} {split} run(s) failed to execute (model or network error); run the gate again."
+    if split == "train" and stage["verdict"] == "worse":
+        return "Candidate is worse on train cases."
+    if split == "holdout" and stage["verdict"] != "better":
+        return f"Holdout verdict is {stage['verdict']}; a proposal must be significantly better."
+    if split == "guard" and stage["regressions"]:
+        return f"Guard regressions: {', '.join(stage['regressions'])}."
+    return ""
 
 
 def run_gate(
@@ -71,18 +86,14 @@ def run_gate(
         return {"status": "not_recommended", "reason": "The gate needs holdout and guard cases.", "stages": []}
     stages: list[dict[str, Any]] = []
     reason = ""
-    if by_split["train"]:
-        stages.append(_stage("train", by_split["train"], runner, baseline, candidate, private=False))
-        if stages[-1]["verdict"] == "worse":
-            reason = "Candidate is worse on train cases."
-    if not reason:
-        stages.append(_stage("holdout", by_split["holdout"], runner, baseline, candidate, private=True))
-        if stages[-1]["verdict"] != "better":
-            reason = f"Holdout verdict is {stages[-1]['verdict']}; a proposal must be significantly better."
-    if not reason:
-        stages.append(_stage("guard", by_split["guard"], runner, baseline, candidate, private=True))
-        if stages[-1]["regressions"]:
-            reason = f"Guard regressions: {', '.join(stages[-1]['regressions'])}."
+    for split in ("train", "holdout", "guard"):
+        if not by_split[split]:
+            continue  # train is optional; holdout and guard were checked above
+        # Only train results are returned in full; holdout and guard stay aggregate-only.
+        stages.append(_stage(split, by_split[split], runner, baseline, candidate, private=split != "train"))
+        reason = _stage_failure(stages[-1])
+        if reason:
+            break
     return {
         "status": "not_recommended" if reason else "recommended",
         "reason": reason or "Holdout is significantly better and no guard case regressed.",

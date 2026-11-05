@@ -301,6 +301,24 @@ def test_monitor_does_not_roll_back_a_project_proposal_on_another_projects_trace
     assert store.get(proposal.proposal_id).status == "adopted"
 
 
+def test_monitor_ignores_a_drop_measured_against_too_few_baseline_traces(tmp_path: Path):
+    """Two healthy traces before adoption and ten failing ones after is not enough baseline to roll back."""
+    state = _state(tmp_path)
+    store = ProposalStore.for_state(state)
+    proposal = store.save(
+        Proposal(kind="rule", title="t", content="规则。", rationale="r", scope="user", status="recommended")
+    )
+    adopted_at = adopt(state, store, proposal.proposal_id).adoption["adopted_at"]
+    traces = TraceStore.for_state(state)
+    for index in range(2):
+        _trace(traces, "p1", True, adopted_at - 3600 - index)
+    for index in range(10):
+        _trace(traces, "p1", False, adopted_at + 1 + index)
+    report = check_adoptions(state, now=adopted_at + 60)[0]
+    assert report["action"] == "watching" and report["before_traces"] == 2
+    assert store.get(proposal.proposal_id).status == "adopted"
+
+
 # --- 5. a 1-2 character Chinese query must not silently return nothing -----------------------
 
 

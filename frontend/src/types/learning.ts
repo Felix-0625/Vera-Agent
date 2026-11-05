@@ -112,6 +112,8 @@ export interface GateStage {
   ci_high: number;
   sign_test_p: number;
   verdict: 'better' | 'no_difference' | 'worse';
+  /** Runs that crashed (model/network); any value above 0 rejects the stage. */
+  errors?: number;
   regressions?: string[];
 }
 

@@ -2,7 +2,7 @@
 
 For each adopted proposal, desktop traces (eval traces excluded) are split into a window before
 and after adoption (default 14 days each). The ``outcome`` score means of the two windows are
-compared once the after-window has at least ``min_traces`` scored traces. If the mean dropped by
+compared once both windows have at least ``min_traces`` scored traces. If the mean dropped by
 ``max_drop`` or more, the proposal is rolled back automatically and a notice is recorded; the
 user sees it in the proposal list and can re-adopt it. Otherwise the latest numbers are stored
 on the proposal so the review page can show the online effect.
@@ -68,7 +68,10 @@ def check_adoptions(
             "after_traces": after_count,
             "action": "watching",
         }
-        if before is not None and after is not None and after_count >= min_traces and before - after >= max_drop:
+        # Both windows need enough traces: a mean over two or three runs is noise, and a rollback
+        # based on it would undo a good proposal.
+        enough_data = before_count >= min_traces and after_count >= min_traces
+        if enough_data and before is not None and after is not None and before - after >= max_drop:
             report["action"] = "rolled_back"
             proposal.monitor = report
             store.save(proposal)

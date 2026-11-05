@@ -1,4 +1,6 @@
-# Evaluation, memory, and self-improvement
+# Tracing, memory, and the learning pipeline
+
+The evaluation gate and self-improvement rules have their own chapter: [EVAL_AND_RSI.md](EVAL_AND_RSI.md).
 
 By default, VeraAgent records each non-ephemeral desktop chat turn as a trace, scores it, keeps scoped long-term memory,
 and can propose improvements to its own rules and Skills. A proposal only takes effect after it
@@ -128,35 +130,10 @@ file is left untouched and old memory ids keep working).
 
 ## 5. Proposals, gate, adoption, rollback
 
-`evolution/` is the slow loop. Nothing in it runs on a timer; you start each step.
-
-1. **Analyze** (改进提案 → 分析, `POST /api/evolution/analyze`): the Critic model reads up to 8
-   recent desktop traces with `outcome` strictly below 0.5 (eval traces excluded) and returns up
-   to 3 proposals: `rule`, `skill`, `prompt_overlay` or `eval_case`. Tool inputs and outputs are wrapped in
-   `<untrusted_tool_output>` and described as data. Proposals that are too long, contain secrets,
-   have an invalid Skill name, or try to disable approvals / skip tests / ignore instructions are
-   dropped. Holdout and guard eval traces are refused outright. Each low-score trace also gets an
-   eval case draft in `.agents/evals/drafts/` with `accept: TODO`; it becomes a `train` case only
-   after you write a real acceptance check.
-2. **Gate** (运行评测): the baseline is the product plus every proposal already adopted in that
-   scope, so each new proposal is judged on top of the earlier ones. Baseline vs. baseline +
-   proposal on train (must not be `worse`), holdout (must be `better`), guard (zero regressions),
-   stopping at the first failure. Default 3 repeats. Only a proposal that clears all three is
-   `recommended`.
-3. **Adopt** (采纳, requires `{"confirm": true}`): a rule (≤300 chars) or prompt overlay (≤1,500
-   chars, line breaks kept) is stored as a `rule` memory, and every later turn renders the adopted
-   set through `evolution/active_profile.py` with the same function the gate used, outside the
-   memory budget. What the gate measured is therefore what you get. Adopting a rule identical to
-   one that already exists in the same scope is refused, so a later rollback can never delete your own rule.
-   A Skill is written to `.agents/skills/<name>/SKILL.md` with
-   `origin: evolved`, the proposal id, source traces and the holdout delta in its frontmatter, and
-   is used under the normal permission policy. Existing Skills are never overwritten.
-4. **Monitor** (`POST /api/evolution/monitor`): compares the mean `outcome` of scoped desktop traces in
-   the 14 days before and after adoption. Once at least 10 scored traces exist after adoption, a
-   drop of 0.15 or more rolls the proposal back automatically (rule soft-deleted, Skill moved to
-   `.agents/evolution/rolled_back/`). This is an observational check, so rollback is reversible.
-
-The optimizer never writes `evals/cases/`, the acceptance scripts, or the scorers.
+`evolution/` is the slow loop: analyze low-score traces, gate each proposal on train / holdout / guard
+cases, adopt only with your confirmation, then monitor real-use outcomes and roll back on a drop.
+Nothing in it runs on a timer. The full rules (stage conditions, crashed-run handling, adoption
+details, monitor thresholds) are in [EVAL_AND_RSI.md](EVAL_AND_RSI.md).
 
 ## Configuration files
 

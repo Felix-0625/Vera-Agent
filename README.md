@@ -118,7 +118,8 @@ website/        Static project website (introduction, design, documentation)
 | Data model and local storage | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) |
 | Configuration and environment variables | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
 | Tools, permissions, MCP, Skills | [docs/TOOLS_AND_MCP.md](docs/TOOLS_AND_MCP.md) |
-| Traces, memory, evals, self-improvement | [docs/LEARNING_LOOP.md](docs/LEARNING_LOOP.md) |
+| Evaluation and self-improvement (RSI) | [docs/EVAL_AND_RSI.md](docs/EVAL_AND_RSI.md) |
+| Traces, memory, configuration files | [docs/LEARNING_LOOP.md](docs/LEARNING_LOOP.md) |
 | System diagrams and editable source | [website/diagrams/README.md](website/diagrams/README.md) |
 | Testing and verification records | [docs/TESTING.md](docs/TESTING.md), [tests/README.md](tests/README.md) |
 | Website and deployment | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md), [website/README.md](website/README.md) |
