@@ -117,7 +117,7 @@ Critic and evals call the configured model and incur costs. Langfuse, Mem0, and 
 
 Workflow nodes run serially, even on separate graph branches. This gives deterministic ordering and simpler state validation at the cost of throughput. Task-board writes instead use optimistic locking with a `version` field; stale writes receive HTTP 409.
 
-The unauthenticated local API and permissive CORS must remain on loopback. Model providers receive prompts and selected project context. File, terminal, Git, MCP, and Skill tools run with the current Windows user's permissions; project-path restrictions are application-level checks, not an OS sandbox. Marketplace entries are not security certifications.
+The unauthenticated local API must remain on loopback. HTTP requests and terminal WebSocket connections validate Host and Origin headers and reject non-loopback origins. Model providers receive prompts and selected project context. File, terminal, Git, MCP, and Skill tools run with the current Windows user's permissions; project-path restrictions are application-level checks, not an OS sandbox. Marketplace entries are not security certifications.
 
 Chats, instances, and run records persist as JSON or SQLite, but the UI scheduler does not resume after a restart.
 
@@ -131,4 +131,4 @@ Chats, instances, and run records persist as JSON or SQLite, but the UI schedule
 
 See the repository's [architecture](../../../../docs/ARCHITECTURE.md), [data model](../../../../docs/DATA_MODEL.md), and [API index](../../../../docs/API.md) for further implementation detail.
 
-All diagrams have [SVG exports](../../../diagrams/README.md) and an [editable draw.io source](../../../diagrams/system-design.drawio).
+All diagrams have [SVG exports](https://github.com/Felix-0625/Vera-Agent/blob/main/website/diagrams/README.md) and an [editable draw.io source](https://github.com/Felix-0625/Vera-Agent/blob/main/website/diagrams/system-design.drawio).
