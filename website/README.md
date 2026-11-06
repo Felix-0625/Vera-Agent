@@ -14,6 +14,8 @@ The design page includes five diagrams in Chinese and English: runtime architect
 
 ## GitHub Pages
 
-`.github/workflows/website-pages.yml` deploys the `website/` directory when manually triggered. It first validates local routes and assets. GitHub Pages must already be enabled for the repository and configured to use GitHub Actions. The external Actions are pinned to commit SHAs and maintained by weekly Dependabot updates. The workflow has not been triggered from this workspace; a successful local validation does not prove a public deployment.
+Public site: https://felix-0625.github.io/Vera-Agent/.
+
+`.github/workflows/website-pages.yml` deploys the `website/` directory from `main` when manually triggered. It first validates local routes and assets. GitHub Pages must be enabled for the repository and configured to use GitHub Actions. The external Actions are pinned to commit SHAs and maintained by weekly Dependabot updates. Check the deployment workflow and the public home/design/docs routes after publishing; successful local validation alone does not prove a public deployment. The homepage links to the versioned source prerelease, not a hosted Agent service.
 
 For another static host, publish the contents of this directory as the site root. No server-side secrets or environment variables are required.

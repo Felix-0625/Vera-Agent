@@ -17,7 +17,7 @@ VeraAgent is distributed as source on GitHub and run from a local checkout. Ther
 In PowerShell, run:
 
 ```powershell
-git clone https://github.com/Felix-0625/Vera-Agent.git
+git clone --branch v0.1.0-alpha.1 --depth 1 https://github.com/Felix-0625/Vera-Agent.git
 cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent
@@ -33,6 +33,20 @@ Next: try [examples/workflow-quickstart](../examples/workflow-quickstart/README.
 The launcher builds the UI, then `vera_agent.desktop` starts the local API on the first free port from `8000` through `8100`, serves the UI from it, and opens the window.
 
 You can also double-click `start.bat`, which runs the same launcher.
+
+## Install the downloadable source archive
+
+Alternatively, download `VeraAgent-v0.1.0-alpha.1-source.zip` from the
+[release page](https://github.com/Felix-0625/Vera-Agent/releases/tag/v0.1.0-alpha.1).
+Compare its SHA-256 hash with `SHA256SUMS.txt` using `Get-FileHash -Algorithm SHA256`.
+Extract it to a writable directory, open PowerShell in the extracted project root,
+and run the commands above starting with `cd frontend` (skip the clone commands).
+Git must still be installed for the application's Git tools.
+The archive contains source, not a portable executable; it needs the same dependencies.
+Without Git history, history/branch operations are unavailable until you bind a Git project.
+
+The tag is an alpha prerelease. Python reports the equivalent PEP 440 version
+`0.1.0a1`; the frontend and release use `0.1.0-alpha.1`.
 
 ## Troubleshooting
 

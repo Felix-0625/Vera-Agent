@@ -2,11 +2,17 @@
 
 [English](README.md) | **简体中文**
 
+[项目官网](https://felix-0625.github.io/Vera-Agent/) · [下载 v0.1.0-alpha.1](https://github.com/Felix-0625/Vera-Agent/releases/tag/v0.1.0-alpha.1) · [安装说明](docs/INSTALL_WINDOWS.md) · [发行说明](CHANGELOG.md)
+
 VeraAgent 是面向软件项目的本地单用户 AI Agent 工作站：把项目任务看板、主 Agent 对话、子智能体、多 Agent 协作，以及**可自定义的工作流与组织架构**放在同一个桌面应用中。模板只需设计一次，就可以在项目中实例化，并从对话里直接调用。
 
 Agent 内核基于 [mini-swe-agent](https://github.com/SWE-agent/mini-swe-agent)，工具设计沿用 Pi Agent 的极简思路（read、write、edit、bash 四个原语）。这里说明的是技术渊源，不代表上游项目为 VeraAgent 背书。
 
-[项目网站](website/README.md)展示桌面界面、系统设计和使用文档。首页的界面示意是静态样例。
+[项目官网](https://felix-0625.github.io/Vera-Agent/)展示桌面界面、系统设计和使用文档。首页的界面示意是静态样例。
+
+![VeraAgent 桌面工作站](website/assets/workstation-no-right-panel.png)
+
+[本版真实模型运行记录与验证范围](docs/RELEASE_0_1_0_ALPHA_1.md)
 
 ## 功能
 
@@ -25,7 +31,7 @@ VeraAgent **不是**操作系统级沙箱：终端命令以当前 Windows 用户
 需要 Windows 10/11、Git、Python 3.10+、[uv](https://docs.astral.sh/uv/) 0.11+ 和 Microsoft Edge WebView2 Runtime。Node.js 推荐使用 24 LTS，也支持 20.19+ 或 22.12+。
 
 ```powershell
-git clone https://github.com/Felix-0625/Vera-Agent.git
+git clone --branch v0.1.0-alpha.1 --depth 1 https://github.com/Felix-0625/Vera-Agent.git
 cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent
