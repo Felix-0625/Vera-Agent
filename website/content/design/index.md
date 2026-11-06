@@ -161,7 +161,7 @@ Critic 和评测会调用配置的真实模型并产生费用。Langfuse 导出�
 
 **安全边界：**
 
-- 本地 API 没有调用者身份认证，CORS 开放为 `*`，只应绑定在 loopback 使用；终端 WebSocket 额外拒绝了非 loopback 的 `Origin`。
+- 本地 API 没有调用者身份认证，只应绑定在 loopback 使用；HTTP 请求和终端 WebSocket 均会检查 `Host` 与 `Origin`，拒绝非 loopback 来源。
 - 模型服务商是用户自行配置的外部服务，提示词和选定的项目上下文会被发送给它。
 - 文件、终端、Git、MCP、Skill 等工具按当前 Windows 用户权限执行，不是操作系统沙箱；"项目范围"只是应用层的路径策略。
 - 外部 MCP/Skill 包的市场条目不是安全认证，启用前需要自行检查源码、执行的命令、环境变量和网络访问。
@@ -178,4 +178,4 @@ Critic 和评测会调用配置的真实模型并产生费用。Langfuse 导出�
 
 完整模块地图与逐路由细节见[仓库架构文档](../../../docs/ARCHITECTURE.md)和[数据模型文档](../../../docs/DATA_MODEL.md)；接口契约以[使用文档的接口参考](../docs/api.md)和自动生成的[API 索引](../../../docs/API.md)为准。
 
-全部图稿提供 [SVG 图库](../../diagrams/README.md)和 [draw.io 可编辑源文件](../../diagrams/system-design.drawio)。
+全部图稿提供 [SVG 图库](https://github.com/Felix-0625/Vera-Agent/blob/main/website/diagrams/README.md)和 [draw.io 可编辑源文件](https://github.com/Felix-0625/Vera-Agent/blob/main/website/diagrams/system-design.drawio)。
