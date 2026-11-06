@@ -2,6 +2,8 @@
 
 **English** | [简体中文](README_zh-CN.md)
 
+[Website](https://felix-0625.github.io/Vera-Agent/) · [Download v0.1.0-alpha.1](https://github.com/Felix-0625/Vera-Agent/releases/tag/v0.1.0-alpha.1) · [Install](docs/INSTALL_WINDOWS.md) · [Release notes](CHANGELOG.md)
+
 VeraAgent is a local, single-user AI agent workstation for software projects.
 It puts a project task board, a main Agent conversation, subagents, multi-agent
 collaboration, and **user-defined workflows and organization structures** in one
@@ -12,8 +14,12 @@ The agent core is derived from [mini-swe-agent](https://github.com/SWE-agent/min
 and follows the minimal-tool philosophy of Pi Agent (four primitives: read, write, edit,
 bash). This describes lineage; it does not imply endorsement by either project.
 
-The [project website](website/README.md) introduces the desktop interface, system design,
+The [project website](https://felix-0625.github.io/Vera-Agent/) introduces the desktop interface, system design,
 and practical documentation. Its interface illustrations are static examples.
+
+![VeraAgent desktop workspace](website/assets/workstation-no-right-panel.png)
+
+[Real-provider release smoke and verification limits](docs/RELEASE_0_1_0_ALPHA_1.md)
 
 ## Features
 
@@ -42,7 +48,7 @@ Bind only trusted projects and review MCP servers and Skills before enabling the
 Requirements: Windows 10/11, Git, Node.js 24 LTS (or 20.19+ / 22.12+), Python 3.10+, [uv](https://docs.astral.sh/uv/) 0.11+, and the Microsoft Edge WebView2 Runtime.
 
 ```powershell
-git clone https://github.com/Felix-0625/Vera-Agent.git
+git clone --branch v0.1.0-alpha.1 --depth 1 https://github.com/Felix-0625/Vera-Agent.git
 cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent

@@ -2,6 +2,8 @@
 
 VeraAgent currently starts from GitHub source on Windows 10/11. Installing dependencies requires access to GitHub, npm, and Python package indexes. A model connection also depends on your own provider configuration.
 
+Source prerelease: [v0.1.0-alpha.1 downloads and release notes](https://github.com/Felix-0625/Vera-Agent/releases/tag/v0.1.0-alpha.1). It requires the dependencies below and your own model configuration; it is not a portable executable.
+
 ## Requirements
 
 | Dependency | Requirement |
@@ -18,7 +20,7 @@ VeraAgent currently starts from GitHub source on Windows 10/11. Installing depen
 Run in PowerShell:
 
 ```powershell
-git clone https://github.com/Felix-0625/Vera-Agent.git
+git clone --branch v0.1.0-alpha.1 --depth 1 https://github.com/Felix-0625/Vera-Agent.git
 cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent

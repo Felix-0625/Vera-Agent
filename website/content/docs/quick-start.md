@@ -2,6 +2,8 @@
 
 VeraAgent 目前在 Windows 10/11 上从 GitHub 源码启动。安装依赖需要访问 GitHub、npm 和 Python 包索引；模型服务是否可用取决于你自己的配置。
 
+源码预发布版：[v0.1.0-alpha.1 下载与发行说明](https://github.com/Felix-0625/Vera-Agent/releases/tag/v0.1.0-alpha.1)。需要自行安装下列依赖并配置模型，不是免安装程序。
+
 ## 准备环境
 
 | 依赖 | 版本或要求 |
@@ -18,7 +20,7 @@ VeraAgent 目前在 Windows 10/11 上从 GitHub 源码启动。安装依赖需�
 在 PowerShell 中执行：
 
 ```powershell
-git clone https://github.com/Felix-0625/Vera-Agent.git
+git clone --branch v0.1.0-alpha.1 --depth 1 https://github.com/Felix-0625/Vera-Agent.git
 cd Vera-Agent\frontend
 npm ci
 cd ..\vera-agent

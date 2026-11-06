@@ -1,5 +1,7 @@
 # Testing and verification
 
+The first public prerelease has a separate [v0.1.0-alpha.1 verification record](RELEASE_0_1_0_ALPHA_1.md).
+
 ## Test layers
 
 | Layer | Location | What it covers |

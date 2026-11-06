@@ -32,6 +32,7 @@ const englishText = {
     "See task delegation, collaboration, and results clearly",
   查看仓库: "View repository",
   "在 GitHub 查看源码": "View source on GitHub",
+  下载源码预发布版: "Download source prerelease",
   "VeraAgent 桌面工作站": "VeraAgent desktop workspace",
   "Vera Agent 统筹": "Vera Agent coordinates",
   专业角色各司其职: "Specialists handle their roles",
